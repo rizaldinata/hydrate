@@ -15,40 +15,6 @@ class _RegistrationDataState extends State<RegistrationData> {
 
   // Tambahkan state untuk menyimpan jenis kelamin
   String? _gender = "Female";
-
-// Fungsi untuk mengirim data
-  void kirimData() {
-    AlertDialog alertDialog = AlertDialog(
-      content: Container(
-        height: 200.0,
-        padding: EdgeInsets.all(10.0),
-        alignment: Alignment.centerLeft,
-        child: Column(
-          children: [
-            Text("Nama Lengkap : ${controllerName.text}"),
-            Text("Tinggi Badan : ${controllerHeight.text} cm"),
-            Text("Berat Badan : ${controllerWeight.text} kg"),
-            Text(
-                "Jenis Kelamin : ${_gender ?? 'Belum dipilih'}"), // Menampilkan gender
-            Padding(padding: EdgeInsets.only(top: 20.0)),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurpleAccent,
-                padding: EdgeInsets.symmetric(vertical: 15.0),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.0),
-                ),
-              ),
-              onPressed: () => Navigator.pop(context),
-              child: Text("Kembali", style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        ),
-      ),
-    );
-    showDialog(context: context, builder: (context) => alertDialog);
-  }
-
   String selectedGender = "Perempuan"; // Default gender
 
   @override

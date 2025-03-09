@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/view/coba.dart';
+import 'package:hydrate/view/screen/home_screen.dart';
 
 class RegistrationTime extends StatefulWidget {
   final String name;
@@ -106,13 +106,17 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildTimeInput("Jam Bangun", controllerWakeUpTime),
+                      TimePickerInput(
+                          label: "Jam Bangun",
+                          controller: controllerWakeUpTime),
                       const SizedBox(height: 20),
-                      _buildTimeInput("Jam Tidur", controllerSleepTime),
-                      const Spacer(),
+                      TimePickerInput(
+                          label: "Jam Tidur", controller: controllerSleepTime),
+                      Spacer(), // Jarak bawah otomatis menyesuaikan layar
                     ],
                   ),
                 ),
+
 
                 // Tombol Lanjut
                 Container(
@@ -146,12 +150,12 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => HomePage(
-                            name: widget.name,
-                            gender: widget.gender,
-                            weight: widget.weight,
-                            wakeUpTime: controllerWakeUpTime.text,
-                            sleepTime: controllerSleepTime.text,
+                          builder: (context) => HomeScreen(
+                            // name: widget.name,
+                            // gender: widget.gender,
+                            // weight: widget.weight,
+                            // wakeUpTime: controllerWakeUpTime.text,
+                            // sleepTime: controllerSleepTime.text,
                           ),
                         ),
                       );
@@ -204,6 +208,108 @@ class _RegistrationTimeState extends State<RegistrationTime> {
           onTap: () => _selectTime(context, controller),
           child: Container(
             padding: const EdgeInsets.all(12),
+            decoration: const BoxDecoration(
+              color: Color(0xFF00A6FB),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class TimePickerInput extends StatefulWidget {
+  final String label;
+  final TextEditingController controller;
+
+  const TimePickerInput(
+      {Key? key, required this.label, required this.controller})
+      : super(key: key);
+
+  @override
+  _TimePickerInputState createState() => _TimePickerInputState();
+}
+
+class _TimePickerInputState extends State<TimePickerInput> {
+  Future<void> _selectTime(BuildContext context) async {
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData(
+            primaryColor: const Color(0xFF00A6FB), // Warna utama biru
+            hintColor: const Color(0xFF00A6FB),
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF00A6FB), // Warna utama
+              onPrimary: Colors.white, // Warna teks di atas warna utama
+              onSurface: Colors.black, // Warna teks utama
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteColor: MaterialStateColor.resolveWith((states) =>
+                  states.contains(MaterialState.selected)
+                      ? const Color(0xFF00A6FB)
+                      : const Color(0xFFE8F7FF)),
+              hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
+                  states.contains(MaterialState.selected)
+                      ? Colors.white
+                      : Colors.black),
+              dialHandColor: const Color(0xFF00A6FB),
+              dialBackgroundColor: const Color(0xFFE8F7FF),
+              entryModeIconColor: const Color(0xFF00A6FB),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        widget.controller.text = picked.format(context);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: widget.controller,
+            readOnly: true,
+            textAlign: TextAlign.left,
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+            decoration: InputDecoration(
+              hintText: widget.label,
+              hintStyle: const TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: Colors.white,
+              enabledBorder: OutlineInputBorder(
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () => _selectTime(context),
+          child: Container(
+            // color: Color(0xFF00A6FB),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
             decoration: const BoxDecoration(
               color: Color(0xFF00A6FB),
               shape: BoxShape.circle,
