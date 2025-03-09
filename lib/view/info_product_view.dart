@@ -120,7 +120,10 @@ class InfoProduct extends StatelessWidget {
                       ),
                       onPressed: () {
                         // Aksi saat tombol diklik ke halaman selanjutnya
-                        RegistrationData();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegistrationData()),
+                        );
                       },
                       child: Text(
                         "SELANJUTNYA",

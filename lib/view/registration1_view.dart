@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/view/registration2_view.dart';
 
 class RegistrationData extends StatefulWidget {
   @override
@@ -359,9 +360,18 @@ class _RegistrationDataState extends State<RegistrationData> {
                         padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: () {
-                        // Aksi saat tombol diklik ke halaman selanjutnya
-                        kirimData();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RegistrationTime(
+                              name: controllerName.text,
+                              gender: _gender ?? "Belum dipilih",
+                              weight: controllerWeight.text,
+                            ),
+                          ),
+                        );
                       },
+
                       child: Text(
                         "SELANJUTNYA",
                         style: GoogleFonts.inter(
