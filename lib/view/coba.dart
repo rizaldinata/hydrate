@@ -1,149 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key});
-
+class RegistrationTimeCoba extends StatefulWidget {
   @override
-  State<Home> createState() => _HomeState();
+  _RegistrationTimeCobaState createState() => _RegistrationTimeCobaState();
 }
 
-class _HomeState extends State<Home> {
-
-  String? _gender;
-
-  TextEditingController controllerName = TextEditingController();
-  TextEditingController controllerHeight = TextEditingController();
-  TextEditingController controllerWeight = TextEditingController();
-
-  void _pilihgender(String? value) {
-    setState(() {
-      _gender = value;
-    });
-  }
+class _RegistrationTimeCobaState extends State<RegistrationTimeCoba> {
+  TextEditingController controllerWakeUpTime = TextEditingController();
+  TextEditingController controllerSleepTime = TextEditingController();
 
   void kirimData() {
-    AlertDialog alertDialog = AlertDialog(
-      content: Container(
-        height: 200.0,
-        padding: EdgeInsets.all(10.0),
-        alignment: Alignment.centerLeft,
-        child: Column(
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Nama Lengkap : ${controllerName.text}"),
-            Text("Heightword : ${controllerHeight.text}"),
-            Text("Weight Hidup : ${controllerWeight.text}"),
-            Text("Jenis Kelamin : $_gender"),
-            Padding(padding: EdgeInsets.only(top: 20.0)),
+            Text("Jam Bangun: ${controllerWakeUpTime.text}"),
+            Text("Jam Tidur: ${controllerSleepTime.text}"),
+            const SizedBox(height: 20),
             ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurpleAccent,
-              padding: EdgeInsets.symmetric(vertical: 15.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0), // Mengatur radius sudut
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Kembali", style: TextStyle(color: Colors.white)),
             ),
-            onPressed: () => Navigator.pop(context),
-            child: Text("Kembali", style: TextStyle(color: Colors.white)),
-          ),
           ],
         ),
       ),
     );
-    showDialog(context: context, builder: (context) => alertDialog);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.deepPurpleAccent,
-        title: Center(
-          child: Text(
-            "Formulir",
-            style: TextStyle(color: Colors.white),
+      backgroundColor: const Color(0xFFE8F7FF),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TimePickerInput(label: "Jam Bangun", controller: controllerWakeUpTime),
+                const SizedBox(height: 20),
+                TimePickerInput(label: "Jam Tidur", controller: controllerSleepTime),
+              ],
+            ),
           ),
         ),
       ),
-      body: ListView(
-        padding: EdgeInsets.all(16.0),
-        children: [
-          TextField(
-            controller: controllerName,
-            decoration: InputDecoration(
-              hintText: "Nama Lengkap",
-              labelText: "Nama Lengkap",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-            ),
-          ),
-          SizedBox(height: 20.0),
-          TextField(
-            controller: controllerHeight,
-            obscureText: true,
-            decoration: InputDecoration(
-              hintText: "Tinggi Badan",
-              labelText: "Tinggi Badan",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-            ),
-          ),
-          SizedBox(height: 20.0),
-          TextField(
-            controller: controllerWeight,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: "Berat Badan",
-              labelText: "Berat Badan",
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-            ),
-          ),
-          SizedBox(height: 20.0),
+    );
+  }
+}
 
-          // Radio Button Gender
-          RadioListTile(
-            value: "Laki-laki",
-            title: Text("Laki-laki"),
-            groupValue: _gender,
-            onChanged: (String? value) {
-              _pilihgender(value);
-            },
-            activeColor: Colors.deepPurple,
-            subtitle: Text("Pilih ini jika Anda Laki-laki"),
-          ),
-          RadioListTile(
-            value: "Perempuan",
-            title: Text("Perempuan"),
-            groupValue: _gender,
-            onChanged: (String? value) {
-              _pilihgender(value);
-            },
-            activeColor: Colors.deepPurple,
-            subtitle: Text("Pilih ini jika Anda Perempuan"), // Diperbaiki
-          ),
-          SizedBox(height: 20.0),
+class TimePickerInput extends StatefulWidget {
+  final String label;
+  final TextEditingController controller;
 
-          // Dropdown Agama dengan Padding agar tidak error
-          SizedBox(height: 20.0),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              padding: EdgeInsets.symmetric(vertical: 15.0),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0), // Mengatur radius sudut
-              ),
+  const TimePickerInput({Key? key, required this.label, required this.controller}) : super(key: key);
+
+  @override
+  _TimePickerInputState createState() => _TimePickerInputState();
+}
+
+class _TimePickerInputState extends State<TimePickerInput> {
+  Future<void> _selectTime(BuildContext context) async {
+    TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData(
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteColor: MaterialStateColor.resolveWith(
+                  (states) => states.contains(MaterialState.selected) ? Colors.blue : Colors.white),
+              hourMinuteTextColor: MaterialStateColor.resolveWith(
+                  (states) => states.contains(MaterialState.selected) ? Colors.white : Colors.black),
+              dialHandColor: Colors.blue,
+              dialBackgroundColor: Colors.white,
+              entryModeIconColor: Colors.blue,
             ),
-            onPressed: () {
-              kirimData();
-            },
-            child: Text("Simpan", style: TextStyle(color: Colors.white)),
           ),
+          child: child!,
+        );
+      },
+    );
 
-        ],
-      ),
+    if (picked != null) {
+      setState(() {
+        widget.controller.text = picked.format(context);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: widget.controller,
+            readOnly: true,
+            textAlign: TextAlign.left,
+            style: const TextStyle(fontSize: 16, color: Colors.black),
+            decoration: InputDecoration(
+              hintText: widget.label,
+              hintStyle: const TextStyle(color: Colors.grey),
+              filled: true,
+              fillColor: Colors.white,
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderRadius: BorderRadius.circular(50),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () => _selectTime(context),
+          child: Container(
+            // color: Color(0xFF00A6FB),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 50),
+            decoration: const BoxDecoration(
+              color: Color(0xFF00A6FB),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+          ),
+        ),
+      ],
     );
   }
 }
