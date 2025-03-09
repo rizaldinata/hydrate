@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/view/info_product_view.dart';
+// import 'package:hydrate/view/info_product_view.dart';
 import 'package:hydrate/view/screen/home_screen.dart';
 
 void main(List<String> args) {
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home: InfoProduct(),
+      home: HomeScreen(),
     );
   }
 }
