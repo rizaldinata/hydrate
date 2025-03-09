@@ -24,7 +24,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
   TextEditingController controllerSleepTime = TextEditingController();
 
   Future<void> _selectTime(
-      BuildContext context, TextEditingController controller) async {
+    BuildContext context, TextEditingController controller) async {
     TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -35,6 +35,26 @@ class _RegistrationTimeState extends State<RegistrationTime> {
         controller.text = picked.format(context);
       });
     }
+  }
+
+  void showAlert(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Peringatan"),
+          content: const Text("Harap isi jam bangun dan jam tidur sebelum melanjutkan."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Menutup dialog
+              },
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -147,6 +167,9 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                     onPressed: () {
+                      if (controllerWakeUpTime.text.isEmpty || controllerSleepTime.text.isEmpty){
+                        showAlert(context);
+                      } else {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -156,9 +179,10 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                             // weight: widget.weight,
                             // wakeUpTime: controllerWakeUpTime.text,
                             // sleepTime: controllerSleepTime.text,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
                     child: Text(
                       "DAFTAR",
@@ -284,19 +308,18 @@ class _TimePickerInputState extends State<TimePickerInput> {
             readOnly: true,
             textAlign: TextAlign.left,
             style: const TextStyle(fontSize: 16, color: Colors.black),
+            onTap: () => _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
             decoration: InputDecoration(
               hintText: widget.label,
               hintStyle: const TextStyle(color: Colors.grey),
               filled: true,
               fillColor: Colors.white,
               enabledBorder: OutlineInputBorder(
-                borderSide:
-                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide:
-                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               contentPadding:
