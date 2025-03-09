@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/view/registration2_view.dart';
 
@@ -13,9 +13,86 @@ class _RegistrationDataState extends State<RegistrationData> {
   TextEditingController controllerHeight = TextEditingController();
   TextEditingController controllerWeight = TextEditingController();
 
-  // Tambahkan state untuk menyimpan jenis kelamin
   String? _gender = "Female";
   String selectedGender = "Perempuan"; // Default gender
+  bool _showWarning = false;
+
+  // Validasi input
+  bool _isFormValid() {
+    return controllerName.text.isNotEmpty && 
+           _gender != null && 
+           controllerWeight.text.isNotEmpty;
+  }
+
+  // Fungsi untuk menampilkan modal peringatan
+  Future<void> _showWarningDialog() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Jangan bisa menutup modal dengan klik di luar
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: AnimatedScale(
+            duration: Duration(milliseconds: 300),
+            scale: 1.0,
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              elevation: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_outlined,
+                      color: Colors.orangeAccent,
+                      size: 60,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Tolong lengkapi semua data terlebih dahulu!",
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orangeAccent, // Background color
+                        foregroundColor: Colors.white, // Text color
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Menutup modal
+                      },
+                      child: Text(
+                        "OK",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +100,6 @@ class _RegistrationDataState extends State<RegistrationData> {
       backgroundColor: const Color(0xFFE8F7FF), // Warna background
       body: SafeArea(
         child: SingleChildScrollView(
-          // Agar bisa discroll saat keyboard muncul
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -43,7 +119,7 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 // Slogan
                 Transform.translate(
-                  offset: const Offset(0, -16), // Mengurangi jarak vertikal
+                  offset: const Offset(0, -16), 
                   child: Text(
                     "Hidrasi Tepat, Hidup Sehat",
                     style: GoogleFonts.inter(
@@ -76,7 +152,7 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 // Sub-judul
                 Text(
-                  "Isilah sesuai dengan data diri sama kamu",
+                  "Isilah sesuai dengan data diri kamu",
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     color: const Color(0xFF2F2E41),
@@ -93,18 +169,18 @@ class _RegistrationDataState extends State<RegistrationData> {
                     hintText: "Nama Lengkap",
                     hintStyle: TextStyle(
                         color: const Color(0xFF2F2E41).withOpacity(0.5)),
-                    filled: true, // Aktifkan pengisian warna latar belakang
+                    filled: true,
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: const Color(0xFF00A6FB),
-                          width: 2), // Warna border saat tidak fokus
+                          width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: const Color(0xFF00A6FB),
-                          width: 2), // Warna border saat fokus
+                          width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -119,8 +195,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(50),
-                    border:
-                        Border.all(color: const Color(0xFF00A6FB), width: 2),
+                    border: Border.all(color: const Color(0xFF00A6FB), width: 2),
                   ),
                   child: Row(
                     children: [
@@ -133,8 +208,6 @@ class _RegistrationDataState extends State<RegistrationData> {
                               _gender = "Female";
                             });
                           },
-
-                          // Simpan nilai
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
@@ -157,7 +230,6 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 const SizedBox(width: 5),
                                 Text(
                                   "Perempuan",
-                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: _gender == "Female"
                                         ? Colors.white
@@ -182,7 +254,6 @@ class _RegistrationDataState extends State<RegistrationData> {
                               _gender = "Male";
                             });
                           },
-                          // Simpan nilai
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             decoration: BoxDecoration(
@@ -205,7 +276,6 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 const SizedBox(width: 5),
                                 Text(
                                   "Laki - Laki",
-                                  textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: _gender == "Male"
                                         ? Colors.white
@@ -226,40 +296,6 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 const SizedBox(height: 10),
 
-                // Input Tinggi Badan
-                TextField(
-                  controller: controllerHeight,
-                  cursorColor: const Color(0xFF00A6FB),
-                  decoration: InputDecoration(
-                    hintText: "Tinggi Badan",
-                    suffixText: "cm",
-                    suffixStyle: TextStyle(
-                      color: const Color(0xFF2F2E41),
-                      fontSize: 16,
-                    ),
-                    hintStyle: TextStyle(
-                        color: const Color(0xFF2F2E41).withOpacity(0.5)),
-                    filled: true, // Aktifkan pengisian warna latar belakang
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color(0xFF00A6FB),
-                          width: 2), // Warna border saat tidak fokus
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color(0xFF00A6FB),
-                          width: 2), // Warna border saat fokus
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 15),
-                  ),
-                ),
-
-                const SizedBox(height: 10),
-
                 // Input Berat Badan
                 TextField(
                   controller: controllerWeight,
@@ -271,18 +307,18 @@ class _RegistrationDataState extends State<RegistrationData> {
                         TextStyle(color: const Color(0xFF2F2E41), fontSize: 16),
                     hintStyle: TextStyle(
                         color: const Color(0xFF2F2E41).withOpacity(0.5)),
-                    filled: true, // Aktifkan pengisian warna latar belakang
+                    filled: true,
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: const Color(0xFF00A6FB),
-                          width: 2), // Warna border saat tidak fokus
+                          width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderSide: BorderSide(
                           color: const Color(0xFF00A6FB),
-                          width: 2), // Warna border saat fokus
+                          width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -292,27 +328,42 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 const SizedBox(height: 20),
 
-                // Tombol Lanjut
-                SizedBox(
-                  width: double.infinity,
+                // Tombol Selanjutnya
+                GestureDetector(
+                  onTap: () {
+                    if (_isFormValid()) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => RegistrationTime(
+                            name: controllerName.text,
+                            gender: _gender ?? "Belum dipilih",
+                            weight: controllerWeight.text,
+                          ),
+                        ),
+                      );
+                    } else {
+                      _showWarningDialog();
+                    }
+                  },
                   child: Container(
-                    margin: const EdgeInsets.only(bottom: 50),
+                    height: 55,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
+                      gradient: LinearGradient(
                         colors: [
                           Color(0xFF4ACCFF),
                           Color(0xFF00A6FB),
-                        ], // Warna gradient
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(50),
                       boxShadow: [
                         BoxShadow(
-                          color: Color(0xFF00A6FB)
-                              .withOpacity(0.25), // Warna bayangan
+                          color: Color(0xFF00A6FB).withOpacity(0.25),
                           blurRadius: 8,
-                          offset: const Offset(0, 2),
+                          offset: Offset(0, 2),
                         ),
                       ],
                     ),
@@ -323,21 +374,24 @@ class _RegistrationDataState extends State<RegistrationData> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(50),
                         ),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        padding: EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegistrationTime(
-                              name: controllerName.text,
-                              gender: _gender ?? "Belum dipilih",
-                              weight: controllerWeight.text,
+                        if (_isFormValid()) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegistrationTime(
+                                name: controllerName.text,
+                                gender: _gender ?? "Belum dipilih",
+                                weight: controllerWeight.text,
+                              ),
                             ),
-                          ),
-                        );
+                          );
+                        } else {
+                          _showWarningDialog();
+                        }
                       },
-
                       child: Text(
                         "SELANJUTNYA",
                         style: GoogleFonts.inter(
