@@ -13,7 +13,7 @@ class WaterIndicatorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 16;
 
-    final backgroundPaint = Paint()
+    final backgroundPaint = Paint() 
       ..color = Colors.grey[300]!
       ..style = PaintingStyle.stroke
       ..strokeWidth = 16;

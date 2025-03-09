@@ -150,7 +150,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => HomeScreen(
+                          builder: (context) => HomeScreen(name: widget.name,
                             // name: widget.name,
                             // gender: widget.gender,
                             // weight: widget.weight,

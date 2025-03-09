@@ -5,7 +5,8 @@ import 'package:hydrate/view/screen/water_indicator.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String name;
+  const HomeScreen({super.key, required this.name});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -44,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen>
       backgroundColor: Colors.blue[50],
       body: Stack(
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(
               horizontal: 25.0,
               vertical: 60.0,
@@ -59,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen>
                         color: Colors.blue,
                         fontFamily: "Gluten")),
                 Text(
-                  "Hai, Hilmi Afifi",
+                  "Hai, ${widget.name}",
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
