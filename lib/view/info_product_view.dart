@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/view/registration1_view.dart';
 
 class InfoProduct extends StatelessWidget {
   @override
@@ -32,6 +33,7 @@ class InfoProduct extends StatelessWidget {
                 children: <Widget>[
                   Column(
                     children: [
+
                       // Logo HYDRATE
                       Text(
                         "HYDRATE",
@@ -84,23 +86,44 @@ class InfoProduct extends StatelessWidget {
                   ),
 
                   // Button Masuk
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 50), 
-                    width: double.infinity, // Lebar tombol penuh
+                  SizedBox(
+                  width: double.infinity,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 50),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF4ACCFF),
+                          Color(0xFF00A6FB),
+                        ], // Warna gradient
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF00A6FB)
+                              .withOpacity(0.25), // Warna bayangan
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF00A6FB), // Warna tombol
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(50),
                         ),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 12), // Padding tombol
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: () {
-                        Navigator.pop(context);
+                        // Aksi saat tombol diklik ke halaman selanjutnya
+                        RegistrationData();
                       },
                       child: Text(
-                        'Masuk',
+                        "SELANJUTNYA",
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -109,6 +132,7 @@ class InfoProduct extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
                 ],
               ),
             ),
