@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hydrate/view/info_product_view.dart';
 // import 'package:hydrate/view/info_product_view.dart';
 import 'package:hydrate/view/screen/home_screen.dart';
 import 'package:hydrate/view/registration1_view.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home: RegistrationData(),
+      home: InfoProduct(),
     );
   }
 }

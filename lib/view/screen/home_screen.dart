@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/controller/home_controller.dart';
+import 'package:hydrate/view/screen/navigation.dart';
 import 'package:hydrate/view/screen/water_indicator.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -10,7 +11,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   final PageController _pageController = PageController();
 
@@ -50,15 +52,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "HYDRATE",
-                  style: TextStyle(
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.blue,
-                    fontFamily: "Gluten"
-                  )
-                ),
+                Text("HYDRATE",
+                    style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.blue,
+                        fontFamily: "Gluten")),
                 Text(
                   "Hai, Hilmi Afifi",
                   style: TextStyle(
@@ -122,10 +121,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             Text(
                               "Hidrasi Selanjutnya",
                               style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white
-                              ),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white),
                               // style: GoogleFonts.poppins(
                               //   fontSize: 12,
                               //   fontWeight: FontWeight.w600,
@@ -147,7 +145,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 200,),
+                const SizedBox(
+                  height: 200,
+                ),
                 SizedBox(
                   height: 100,
                   child: CustomPaint(
@@ -182,15 +182,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     child: const Text(
                       "100 ml",
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: "Gluten"
-                      ),
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Gluten"),
                     ),
                   ),
                 ),
-                const SizedBox(height: 20,),
+                const SizedBox(
+                  height: 20,
+                ),
                 SmoothPageIndicator(
                   controller: _pageController,
                   count: 3,
@@ -206,6 +207,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           ),
         ],
       ),
+      bottomNavigationBar: const Navigasi(),
     );
   }
 }

@@ -37,6 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_fonts: ^6.2.1
   intl: ^0.20.2
+  salomon_bottom_bar: ^3.3.2
 
   smooth_page_indicator: ^1.2.1
 
