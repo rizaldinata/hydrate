@@ -21,7 +21,8 @@ class _RegistrationDataState extends State<RegistrationData> {
   bool _isFormValid() {
     return controllerName.text.isNotEmpty && 
            _gender != null && 
-           controllerWeight.text.isNotEmpty;
+           controllerWeight.text.isNotEmpty && 
+           double.tryParse(controllerWeight.text) != null; // Validasi angka untuk berat badan
   }
 
   // Fungsi untuk menampilkan modal peringatan
@@ -296,9 +297,10 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 const SizedBox(height: 10),
 
-                // Input Berat Badan
+                // Input Berat Badan (Only numbers)
                 TextField(
                   controller: controllerWeight,
+                  keyboardType: TextInputType.number, // Ensuring only numbers are allowed
                   cursorColor: const Color(0xFF00A6FB),
                   decoration: InputDecoration(
                     hintText: "Berat Badan",
