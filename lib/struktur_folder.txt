@@ -1,18 +1,31 @@
+<<<<<<< HEAD
 /lib                # Berisi definisi model data
+=======
+/lib
+>>>>>>> mobile
 │── /models
 │   ├── user_model.dart                # Model untuk data pengguna (jenis kelamin, berat badan, dll.)
 │   └── hydration_target_model.dart     # Model untuk target hidrasi
 │
+<<<<<<< HEAD
 │── /views           # Berisi file UI (tampilan aplikasi)
+=======
+│── /views
+>>>>>>> mobile
 │   ├── registration_view.dart          # Halaman registrasi non-akun
 │   ├── hydration_tracker_view.dart     # Halaman utama pelacak minum air
 │   └── history_view.dart               # Halaman riwayat minum air
 │
+<<<<<<< HEAD
 │── /controllers        # Berisi logika aplikasi dan pengelolaan data
+=======
+│── /controllers
+>>>>>>> mobile
 │   ├── hydration_controller.dart        # Logika untuk menghitung target hidrasi
 │   ├── water_intake_controller.dart     # Logika untuk CRUD penambahan minum air
 │   └── notification_controller.dart      # Logika untuk notifikasi pengingat
 │
+<<<<<<< HEAD
 │── /services       # Berisi database helper untuk SQLite
 │   ├── database_helper.dart             # Helper untuk SQLite
 │   └── notification_service.dart         # Service untuk mengelola notifikasi
@@ -22,6 +35,17 @@
 │   └── time_utils.dart                  # Fungsi tambahan untuk mengelola waktu (jam bangun, jam tidur)
 │
 │── /widgets    # Berisi widget yang bisa digunakan kembali
+=======
+│── /services
+│   ├── database_helper.dart             # Helper untuk SQLite
+│   └── notification_service.dart         # Service untuk mengelola notifikasi
+│
+│── /utils
+│   ├── hydration_calculator.dart        # Fungsi untuk menghitung target hidrasi
+│   └── time_utils.dart                  # Fungsi tambahan untuk mengelola waktu (jam bangun, jam tidur)
+│
+│── /widgets
+>>>>>>> mobile
 │   ├── water_slider.dart                # Slider untuk ukuran air yang diminum
 │   └── custom_notification_widget.dart   # Widget untuk notifikasi
 │

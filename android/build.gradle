@@ -1,3 +1,17 @@
+// Bagian buildscript untuk mendefinisikan repositori dan dependensi build
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Update versi Android Gradle Plugin (AGP) di sini
+        classpath 'com.android.tools.build:gradle:8.2.1' // Perbarui ke versi yang sesuai
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.22" // Sesuaikan versi Kotlin jika perlu
+    }
+}
+
+// Bagian allprojects untuk mendefinisikan repositori pada level proyek
 allprojects {
     repositories {
         google()
@@ -5,14 +19,14 @@ allprojects {
     }
 }
 
+// Mengatur direktori build untuk root dan subprojek
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(":app")
 }
 
+// Tugas untuk membersihkan build proyek
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
