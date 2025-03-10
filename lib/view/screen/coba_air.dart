@@ -17,7 +17,7 @@ class _CobaAirState extends State<CobaAir> {
   final triangleBottleRef = GlobalKey<TriangularBottleState>();
 
   final PageController _pageController = PageController();
-  double waterLevel = 0.5; // 50% dari total kapasitas
+  double waterLevel = 0.05; // 50% dari total kapasitas
   double maxCapacity = 1000.0; // Kapasitas total dalam mililiter (1 liter)
 
   // Fungsi untuk menambah air

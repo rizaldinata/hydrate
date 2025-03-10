@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home: InfoProduct(),
+      home: const HomeScreen(name: 'adit',),
     );
   }
 }

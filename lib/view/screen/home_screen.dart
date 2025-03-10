@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen>
   final List<String> glassImages = [
     "assets/images/gelas3.png",
     "assets/images/gelas1.png",
-    "assets/images/gelas2.png"
+    "assets/images/gelas4.png"
   ];
 
   @override
@@ -65,12 +65,14 @@ class _HomeScreenState extends State<HomeScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // judul dari aplikasi
                 const Text("HYDRATE",
                     style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Colors.blue,
                         fontFamily: "Gluten")),
+                // memanggil usename dari registrasi
                 Transform.translate(
                   offset: const Offset(0, -10),
                   child: Text(
@@ -83,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 const SizedBox(height: 4),
+                // entah deskripsi
                 Transform.translate(
                   offset: const Offset(0, -10),
                   child: const Text(
@@ -103,13 +106,13 @@ class _HomeScreenState extends State<HomeScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 200),
-                SizedBox(
-                  height: 100,
-                  child: CustomPaint(
-                    size: const Size(200, 100),
-                    painter: WaterIndicatorPainter(_controller.waterProgress),
-                  ),
-                ),
+                // SizedBox(
+                //   height: 100,
+                //   child: CustomPaint(
+                //     size: const Size(200, 100),
+                //     painter: WaterIndicatorPainter(_controller.waterProgress),
+                //   ),
+                // ),
                 SizedBox(
                   height: 300,
                   child: PageView.builder(
@@ -127,7 +130,6 @@ class _HomeScreenState extends State<HomeScreen>
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
-                      print("Minum ${glassSizes[_currentPage]} ml");
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[400],
