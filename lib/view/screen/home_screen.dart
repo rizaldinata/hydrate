@@ -3,7 +3,7 @@ import 'package:hydrate/controller/home_controller.dart';
 import 'package:hydrate/view/screen/navigation.dart';
 import 'package:hydrate/view/screen/water_indicator.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 class HomeScreen extends StatefulWidget {
   final String name;
   const HomeScreen({super.key, required this.name});
@@ -12,9 +12,19 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   final PageController _pageController = PageController();
+  int _currentPage = 0; // Indeks halaman saat ini
+
+  // Daftar jumlah ml sesuai gelas
+  final List<int> glassSizes = [100, 300, 500];
+  final List<String> glassImages = [
+    "assets/images/gelas3.png",
+    "assets/images/gelas1.png",
+    "assets/images/gelas2.png"
+  ];
 
   @override
   void initState() {
@@ -28,6 +38,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
     Future.delayed(const Duration(seconds: 5), () {
       _controller.startAnimation();
+    });
+
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!.round(); // Update halaman
+      });
     });
   }
 
@@ -49,128 +65,97 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Logo HYDRATE
-                      Text(
-                        "HYDRATE",
-                        style: GoogleFonts.gluten(
-                          fontSize: 52,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF00A6FB),
-                        ),
-                      ),
-                SizedBox(height: 8),
-                Text(
-                  "Hai, ${widget.name}",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,  // Teks hitam untuk keterbacaan
-                    fontFamily: "Roboto", // Font utama yang mudah dibaca
+                const Text("HYDRATE",
+                    style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.blue,
+                        fontFamily: "Gluten")),
+                Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: Text(
+                    "Hai, ${widget.name}",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  "Selesaikan pencapaianmu hari ini",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black54,  // Teks dengan kontras rendah untuk informasi sekunder
-                    fontFamily: "OpenSans",  // Font sekunder yang lebih elegan
+                const SizedBox(height: 4),
+                Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: const Text(
+                    "Selesaikan pencapaianmu hari ini",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          // Animasi tombol geser ke samping
-          Positioned(
-            top: 190,
-            right: 20,
-            child: AnimatedBuilder(
-              animation: _controller.animationController,
-              builder: (context, child) {
-                return SlideTransition(
-                  position: _controller.animation,
-                  child: SizedBox(
-                    width: 250,
-                    child: FloatingActionButton(
-                      onPressed: () {},
-                      backgroundColor: Colors.blueAccent,  // Warna utama yang cerah
-                      elevation: 6,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),  // Sudut lebih lembut
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.water_drop, color: Colors.white, size: 32),
-                            SizedBox(width: 8),
-                            Text(
-                              "Hidrasi Selanjutnya",
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          // Gelas air bisa digeser + indikator titik
+          
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 200),
+                const SizedBox(height: 200),
                 SizedBox(
                   height: 100,
                   child: CustomPaint(
-                    size: const Size(250, 100),  // Lebar yang lebih besar
+                    size: const Size(200, 100),
                     painter: WaterIndicatorPainter(_controller.waterProgress),
                   ),
                 ),
                 SizedBox(
                   height: 300,
-                  child: PageView(
+                  child: PageView.builder(
                     controller: _pageController,
-                    children: [
-                      Image.asset("assets/images/gelas3.png"),
-                      Image.asset("assets/images/gelas1.png"),
-                      Image.asset("assets/images/gelas2.png"),
-                    ],
+                    itemCount: glassImages.length,
+                    itemBuilder: (context, index) {
+                      return Image.asset(glassImages[index]);
+                    },
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
+                
                 SizedBox(
-                  width: 160,
-                  height: 55,
+                  width: 140,
+                  height: 50,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      print("Minum ${glassSizes[_currentPage]} ml");
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[400],  // Biru yang lebih lembut
-                      elevation: 6,
+                      backgroundColor: Colors.blue[400],
+                      elevation: 10,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: const Text(
-                      "100 ml",
-                      style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    child: Text(
+                      "${glassSizes[_currentPage]} ml",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: "Gluten"),
                     ),
                   ),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
+                
                 SmoothPageIndicator(
                   controller: _pageController,
-                  count: 3,
+                  count: glassImages.length,
                   effect: ExpandingDotsEffect(
-                    activeDotColor: Colors.blueAccent,  // Biru cerah untuk dot aktif
-                    dotColor: Colors.grey[300]! ,
-                    dotHeight: 12,  // Ukuran dot sedikit lebih besar
-                    dotWidth: 12,
+                    activeDotColor: Colors.blue,
+                    dotColor: Colors.grey[300]!,
+                    dotHeight: 10,
+                    dotWidth: 10,
                   ),
                 ),
               ],

@@ -64,11 +64,12 @@ class _RegistrationTimeState extends State<RegistrationTime> {
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Logo HYDRATE
+                const SizedBox(height: 20.0,),
                 Text(
                   "HYDRATE",
                   style: GoogleFonts.gluten(

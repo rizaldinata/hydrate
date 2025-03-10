@@ -10,7 +10,6 @@ class RegistrationData extends StatefulWidget {
 
 class _RegistrationDataState extends State<RegistrationData> {
   TextEditingController controllerName = TextEditingController();
-  TextEditingController controllerHeight = TextEditingController();
   TextEditingController controllerWeight = TextEditingController();
 
   String? _gender = "Female";
@@ -67,7 +66,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent, // Background color
+                        backgroundColor: Colors.blueAccent, // Background color
                         foregroundColor: Colors.white, // Text color
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -125,7 +124,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                     "Hidrasi Tepat, Hidup Sehat",
                     style: GoogleFonts.inter(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: const Color(0xFF2F2E41),
                     ),
                   ),
@@ -160,7 +159,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 40),
 
                 // Input Nama Lengkap
                 TextField(
@@ -173,14 +172,14 @@ class _RegistrationDataState extends State<RegistrationData> {
                     filled: true,
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color(0xFF00A6FB),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF00A6FB),
                           width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color(0xFF00A6FB),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF00A6FB),
                           width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
