@@ -1,27 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/data/repositories/pengguna_repository.dart'; // Ganti import ke repository
-import 'package:hydrate/home_page.dart';
-import 'package:hydrate/register_page.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Hydrate',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: SplashScreen(),
-        routes: {
-          '/home': (context) => HomePage(),
-          '/register': (context) => RegisterPage(),
-        });
-  }
-}
+import 'package:hydrate/data/repositories/pengguna_repository.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -29,8 +7,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  final PenggunaRepository _penggunaRepository =
-      PenggunaRepository();
+  final PenggunaRepository _penggunaRepository = PenggunaRepository();
 
   @override
   void initState() {
@@ -43,7 +20,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       bool isterdaftar = await _penggunaRepository.isPenggunaTerdaftar();
-      print("Status pengguna: $isterdaftar");
+      print("Status pengguna di database: $isterdaftar");
 
       Future.delayed(Duration(milliseconds: 500), () {
         if (mounted) {
@@ -60,8 +37,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.blue,
       body: Center(
-        child: CircularProgressIndicator(),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.fitness_center, size: 100, color: Colors.white),
+            SizedBox(height: 20),
+            Text(
+              "Aplikasi Kesehatan",
+              style: TextStyle(fontSize: 24, color: Colors.white),
+            ),
+            SizedBox(height: 20),
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ],
+        ),
       ),
     );
   }
