@@ -223,9 +223,9 @@ class _HomeScreenState extends State<HomeScreens>
               ],
             ),
           ),
+          const Navigasi(),
         ],
       ),
-      bottomNavigationBar: const Navigasi(),
     );
   }
 
@@ -255,8 +255,10 @@ class _HomeScreenState extends State<HomeScreens>
           icon: const Icon(Icons.local_drink, color: Colors.blue),
           onPressed: () => _addWater(amount),
         ),
-        Text(name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-        Text('${amount.toInt()} ml', style: const TextStyle(fontSize: 10, color: Colors.black54)),
+        Text(name,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+        Text('${amount.toInt()} ml',
+            style: const TextStyle(fontSize: 10, color: Colors.black54)),
       ],
     );
   }

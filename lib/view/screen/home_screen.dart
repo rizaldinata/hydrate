@@ -61,7 +61,8 @@ class _HomeScreenState extends State<HomeScreen>
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -100,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -124,13 +124,12 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 SizedBox(
                   width: 140,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                    },
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[400],
                       elevation: 10,
@@ -149,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 SmoothPageIndicator(
                   controller: _pageController,
                   count: glassImages.length,
@@ -165,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      bottomNavigationBar: const Navigasi(),
     );
   }
 }
