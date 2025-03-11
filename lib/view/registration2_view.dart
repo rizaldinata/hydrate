@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/view/screen/home_screen.dart';
+import 'package:hydrate/view/screen/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
   final String name;
@@ -174,7 +175,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => HomeScreen(name: widget.name,
+                          builder: (context) => HomeScreens(name: widget.name,
                             // name: widget.name,
                             // gender: widget.gender,
                             // weight: widget.weight,
