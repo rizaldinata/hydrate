@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/view/info_product_view.dart';
+import 'package:hydrate/view/screen/circular.dart';
+import 'package:hydrate/view/screen/coba_air.dart';
 // import 'package:hydrate/view/info_product_view.dart';
 import 'package:hydrate/view/screen/home_screen.dart';
-import 'package:hydrate/view/registration1_view.dart';
+import 'package:hydrate/view/screen/home_screen1.dart';
 void main(List<String> args) {
   runApp(const MyApp());
 }
@@ -18,7 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home: InfoProduct(),
+      home: const HomeScreens(name: 'Gumiwang',),
     );
   }
 }

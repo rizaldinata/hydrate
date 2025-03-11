@@ -16,6 +16,15 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   final PageController _pageController = PageController();
+  int _currentPage = 0; // Indeks halaman saat ini
+
+  // Daftar jumlah ml sesuai gelas
+  final List<int> glassSizes = [100, 300, 500];
+  final List<String> glassImages = [
+    "assets/images/gelas3.png",
+    "assets/images/gelas1.png",
+    "assets/images/gelas4.png"
+  ];
 
   @override
   void initState() {
@@ -29,6 +38,12 @@ class _HomeScreenState extends State<HomeScreen>
 
     Future.delayed(const Duration(seconds: 5), () {
       _controller.startAnimation();
+    });
+
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!.round(); // Update halaman
+      });
     });
   }
 
@@ -46,128 +61,70 @@ class _HomeScreenState extends State<HomeScreen>
       body: Stack(
         children: [
           Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: 25.0,
-              vertical: 60.0,
-            ),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("HYDRATE",
+                // judul dari aplikasi
+                const Text("HYDRATE",
                     style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Colors.blue,
                         fontFamily: "Gluten")),
-                Text(
-                  "Hai, ${widget.name}",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                // memanggil usename dari registrasi
+                Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: Text(
+                    "Hai, ${widget.name}",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
-                  // style: GoogleFonts.poppins(
-                  //   fontSize: 18,
-                  //   fontWeight: FontWeight.w600,
-                  //   color: Colors.black87,
-                  // ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  "Selesaikan pencapaianmu hari ini",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black54,
+                const SizedBox(height: 4),
+                // entah deskripsi
+                Transform.translate(
+                  offset: const Offset(0, -10),
+                  child: const Text(
+                    "Selesaikan pencapaianmu hari ini",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
                   ),
-                  // style: GoogleFonts.poppins(
-                  //   fontSize: 14,
-                  //   fontWeight: FontWeight.w500,
-                  //   color: Colors.black54,
-                  // ),
                 ),
               ],
             ),
           ),
-
-          // Animasi tombol geser ke samping
-          Positioned(
-            top: 190,
-            right: 1,
-            child: AnimatedBuilder(
-              animation: _controller.animationController,
-              builder: (context, child) {
-                return SlideTransition(
-                  position: _controller.animation,
-                  child: SizedBox(
-                    width: 200,
-                    child: FloatingActionButton(
-                      onPressed: () {},
-                      backgroundColor: Colors.blue,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.water_drop,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              "Hidrasi Selanjutnya",
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white),
-                              // style: GoogleFonts.poppins(
-                              //   fontSize: 12,
-                              //   fontWeight: FontWeight.w600,
-                              //   color: Colors.white,
-                              // ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          // Gelas air bisa digeser + indikator titik
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(
-                  height: 200,
-                ),
-                SizedBox(
-                  height: 100,
-                  child: CustomPaint(
-                    size: const Size(200, 100),
-                    painter: WaterIndicatorPainter(_controller.waterProgress),
-                  ),
-                ),
+                const SizedBox(height: 200),
+                // SizedBox(
+                //   height: 100,
+                //   child: CustomPaint(
+                //     size: const Size(200, 100),
+                //     painter: WaterIndicatorPainter(_controller.waterProgress),
+                //   ),
+                // ),
                 SizedBox(
                   height: 300,
-                  child: PageView(
+                  child: PageView.builder(
                     controller: _pageController,
-                    children: [
-                      Image.asset("assets/images/gelas3.png"),
-                      Image.asset("assets/images/gelas1.png"),
-                      Image.asset("assets/images/gelas2.png"),
-                    ],
+                    itemCount: glassImages.length,
+                    itemBuilder: (context, index) {
+                      return Image.asset(glassImages[index]);
+                    },
                   ),
                 ),
                 const SizedBox(height: 20),
+
                 SizedBox(
                   width: 140,
                   height: 50,
@@ -175,14 +132,14 @@ class _HomeScreenState extends State<HomeScreen>
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[400],
-                      elevation: 5,
+                      elevation: 10,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
                     ),
-                    child: const Text(
-                      "100 ml",
-                      style: TextStyle(
+                    child: Text(
+                      "${glassSizes[_currentPage]} ml",
+                      style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -190,12 +147,11 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
+
                 SmoothPageIndicator(
                   controller: _pageController,
-                  count: 3,
+                  count: glassImages.length,
                   effect: ExpandingDotsEffect(
                     activeDotColor: Colors.blue,
                     dotColor: Colors.grey[300]!,
@@ -208,7 +164,6 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      bottomNavigationBar: const Navigasi(),
     );
   }
 }
