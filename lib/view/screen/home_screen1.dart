@@ -1,3 +1,4 @@
+import 'package:bottom_picker/bottom_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:hydrate/controller/home_controller.dart';
 import 'package:hydrate/view/screen/navigation.dart';
@@ -13,26 +14,30 @@ class HomeScreens extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreens>
     with SingleTickerProviderStateMixin {
-  late final HomeController _controller;
+  // late final HomeController _controller;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final double target = 1500; // Target harian air
   double currentIntake = 0; // Nilai awal air dalam ml
-  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
+  final ValueNotifier<double> _valueNotifier =
+      ValueNotifier<double>(0); //nilai persen awal
+  // Inisialisasi scrollbar
+  int selectedWater = 150; // Default 150mL
+  int totalWater = 0; // Total konsumsi air
 
   @override
   void initState() {
-    super.initState();
-    _controller = HomeController();
-    _controller.initAnimation(this);
+    // super.initState();
+    // _controller = HomeController();
+    // _controller.initAnimation(this);
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      setState(() {});
-    });
+    // Future.delayed(const Duration(milliseconds: 600), () {
+    //   setState(() {});
+    // });
 
-    Future.delayed(const Duration(seconds: 5), () {
-      _controller.startAnimation();
-    });
+    // Future.delayed(const Duration(seconds: 5), () {
+    //   _controller.startAnimation();
+    // });
 
     _pageController.addListener(() {
       setState(() {
@@ -41,9 +46,10 @@ class _HomeScreenState extends State<HomeScreens>
     });
   }
 
+  // buat memberhentikan resource yang tidak digunakan
   @override
   void dispose() {
-    _controller.dispose();
+    // _controller.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -58,36 +64,60 @@ class _HomeScreenState extends State<HomeScreens>
       }
       _valueNotifier.value = (currentIntake / target) * 100;
     });
-
-    print("Air ditambahkan: $amount ml, Total: $currentIntake ml");
   }
 
-  // Menampilkan modal untuk memilih jumlah air
-  void _showAddWaterModal() {
-    print("Tombol + ditekan");
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        print("Modal muncul");
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Wrap(
-            spacing: 10,
-            children: [
-              _buildWaterButton(100),
-              _buildWaterButton(200),
-              _buildWaterButton(300),
-              _buildWaterButton(500),
-            ],
-          ),
+  void _showAddWaterModal(BuildContext context) {
+    BottomPicker(
+      items: List.generate(20, (index) {
+        int value = 50 + (index * 50); // 50, 100, 150, ..., 1000
+        return Stack(
+          alignment: Alignment.centerRight,
+          children: [
+            Center(
+              child: Text(
+                "$value",
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Positioned(
+              right: 50, // Menjaga jarak dari kanan
+              child: Text(
+                "mL",
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
+              ),
+            ),
+          ],
         );
+      }),
+      height: 350, // Tinggi modal
+      pickerTitle: const Text(
+        'Pilih Jumlah Air',
+        style: TextStyle(
+            fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+      ),
+      
+      onChange: (index) {
+        setState(() {
+          selectedWater = (50 + (index * 50)).toInt();
+        });
       },
-    );
+      onSubmit: (index) {
+        setState(() {
+          selectedWater = (50 + (index * 50)).toInt();
+          if (currentIntake + selectedWater <= target) {
+            currentIntake += selectedWater;
+          } else {
+            currentIntake =
+                target; // Jika melebihi target, tetap pada target maksimal
+          }
+          _valueNotifier.value = (currentIntake / target) * 100;
+        });
+      },
+    ).show(context);
   }
 
   @override
@@ -96,7 +126,6 @@ class _HomeScreenState extends State<HomeScreens>
       backgroundColor: Colors.blue[50],
       body: Stack(
         children: [
-
           // Bagian atas
           Padding(
             padding:
@@ -104,14 +133,15 @@ class _HomeScreenState extends State<HomeScreens>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Logo
+                // Judul aplikasi
                 const Text("HYDRATE",
                     style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Colors.blue,
                         fontFamily: "Gluten")),
-                // Nama user
+
+                // menampilkan username
                 Text(
                   "Hai, ${widget.name}",
                   style: const TextStyle(
@@ -134,6 +164,7 @@ class _HomeScreenState extends State<HomeScreens>
               ],
             ),
           ),
+          // buat setengah lingkarannya
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -147,12 +178,12 @@ class _HomeScreenState extends State<HomeScreens>
                       aspectRatio: 1,
                       valueNotifier: _valueNotifier,
                       progress: _valueNotifier.value,
-                      startAngle: 250,
-                      sweepAngle: 222,
+                      startAngle: 250, // start awal lingkaran
+                      sweepAngle: 222, // finie lingkaran
                       foregroundColor: Color(0xFF00A6FB),
                       backgroundColor: const Color(0xFFA1E3F9),
-                      foregroundStrokeWidth: 16,
-                      backgroundStrokeWidth: 12,
+                      foregroundStrokeWidth: 15, //ketebalan dalam lingkaran
+                      backgroundStrokeWidth: 15, //ketebalan dalam lingkaran
                       animation: true,
                       seekSize: 10,
                       seekColor: const Color(0xffeeeeee),
@@ -163,21 +194,37 @@ class _HomeScreenState extends State<HomeScreens>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${value.toInt()}%',
+                                '${value.toInt()}%', //persentage
                                 style: const TextStyle(
                                   color: const Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w300,
                                   fontSize: 60,
                                 ),
                               ),
-                              Text(
-                                '${currentIntake.toInt()} ml / ${target.toInt()} ml',
-                                style: const TextStyle(
-                                  color: const Color(0xFF2F2E41),
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 16,
-                                ),
-                              ),
+                              //Target harian
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${currentIntake.toInt()} ml', // capaian harian
+                                    style: TextStyle(
+                                      color: currentIntake >= target
+                                          ? Colors.blue
+                                          : Colors.red, // Warna berubah
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    ' / ${target.toInt()} ml', // target harian
+                                    style: TextStyle(
+                                      color: const Color(0xFF2F2E41), // Warna berubah
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              )
                             ],
                           ),
                         ),
@@ -185,6 +232,7 @@ class _HomeScreenState extends State<HomeScreens>
                     ),
                   ),
                 ),
+                // buat yang memilih gelas
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -199,32 +247,41 @@ class _HomeScreenState extends State<HomeScreens>
                         ),
                       ),
 
-                      // bagian tambah air default
+                      // bagian tambah air
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildDrinkOption(100),
-                          _buildDrinkOption(150),
-                          _buildDrinkOption(200),
-                          _buildDrinkOption(250),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      top: -30,
-                      left: 150,
-                      child: SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: FloatingActionButton(
-                          backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                          // Tambah air default
+                          _buildDrinkOption("Air", 100),
+                          _buildDrinkOption("Air", 150),
+                          _buildDrinkOption("Air", 200),
+
+                          // Tambah air custom
+                          GestureDetector(
+                            onTap: () => _showAddWaterModal(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              child: SizedBox(
+                                width: 40,
+                                height: 40,
+                                child: FloatingActionButton(
+                                  backgroundColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  elevation: 5,
+                                  // onTap: () => _showAddWaterModal(context),
+                                  onPressed: () {
+                                    _showAddWaterModal(context);
+                                  },
+                                  child: const Icon(Icons.add,
+                                      color: Colors.white),
+                                ),
+                              ),
+                            ),
                           ),
-                          elevation: 5,
-                          onPressed: _showAddWaterModal,
-                          child: const Icon(Icons.add, color: Colors.white),
-                        ),
+                        ],
                       ),
                     ),
                   ],
@@ -238,6 +295,7 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
+  // Membuat button untuk menambah jumlah air
   Widget _buildWaterButton(double amount) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -257,7 +315,8 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
-  Widget _buildDrinkOption(double amount) {
+  // memilih opsi gelas favorit
+  Widget _buildDrinkOption(String name, double amount) {
     return Column(
       children: [
         IconButton(
@@ -265,7 +324,10 @@ class _HomeScreenState extends State<HomeScreens>
           onPressed: () => _addWater(amount),
         ),
         Text('${amount.toInt()} ml',
-            style: const TextStyle(fontSize: 12, color: const Color(0xFF2F2E41), fontWeight: FontWeight.w600)),
+            style: const TextStyle(
+                fontSize: 12,
+                color:  Color(0xFF2F2E41),
+                fontWeight: FontWeight.w600)),
       ],
     );
   }

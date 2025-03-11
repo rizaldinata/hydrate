@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:hydrate/view/screen/home_screen.dart';
+import 'package:hydrate/view/screen/home_screen.dart';
 import 'package:hydrate/view/screen/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
@@ -23,9 +23,10 @@ class RegistrationTime extends StatefulWidget {
 class _RegistrationTimeState extends State<RegistrationTime> {
   TextEditingController controllerWakeUpTime = TextEditingController();
   TextEditingController controllerSleepTime = TextEditingController();
+  TextEditingController timeController = TextEditingController();
 
   Future<void> _selectTime(
-    BuildContext context, TextEditingController controller) async {
+      BuildContext context, TextEditingController controller) async {
     TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -39,15 +40,17 @@ class _RegistrationTimeState extends State<RegistrationTime> {
   }
 
   bool _isFormValid() {
-    return controllerWakeUpTime.text.isNotEmpty && 
-           controllerSleepTime.text.isNotEmpty ; // Validasi jam bangun dan jam tidur
+    return controllerWakeUpTime.text.isNotEmpty &&
+        controllerSleepTime
+            .text.isNotEmpty; // Validasi jam bangun dan jam tidur
   }
 
   // Alert dialog jika belum mengisi
-    Future<void> _showWarningDialog() async {
+  Future<void> _showWarningDialog() async {
     showDialog(
       context: context,
-      barrierDismissible: false, // Jangan bisa menutup modal dengan klik di luar
+      barrierDismissible:
+          false, // Jangan bisa menutup modal dengan klik di luar
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -85,12 +88,14 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0XFFFFB830), // Background color
+                        backgroundColor:
+                            const Color(0XFFFFB830), // Background color
                         foregroundColor: Colors.white, // Text color
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                       onPressed: () {
                         Navigator.of(context).pop(); // Menutup modal
@@ -118,14 +123,16 @@ class _RegistrationTimeState extends State<RegistrationTime> {
     return Scaffold(
       backgroundColor: const Color(0xFFE8F7FF),
       body: SafeArea(
-        child: Center(
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Logo HYDRATE
-                const SizedBox(height: 20.0,),
+                const SizedBox(
+                  height: 20.0,
+                ),
                 Text(
                   "HYDRATE",
                   style: GoogleFonts.gluten(
@@ -179,20 +186,23 @@ class _RegistrationTimeState extends State<RegistrationTime> {
 
                 const SizedBox(height: 20),
 
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TimePickerInput(
-                          label: "Jam Bangun",
-                          controller: controllerWakeUpTime),
-                      const SizedBox(height: 20),
-                      TimePickerInput(
-                          label: "Jam Tidur", controller: controllerSleepTime),
-                      Spacer(), // Jarak bawah otomatis menyesuaikan layar
-                    ],
+                TimePickerInput(
+                    label: "Jam Bangun", controller: controllerWakeUpTime),
+                const SizedBox(height: 20),
+                TimePickerInput(
+                    label: "Jam Tidur", controller: controllerSleepTime),
+
+                // Tambahan dan gk keliatan biar layoutnya rapi
+                Opacity(
+                  opacity: 0.0,
+                  child: IgnorePointer(
+                    child: TimePickerInput(
+                      label: "Jam Tidur",
+                      controller: timeController, 
+                    ),
                   ),
                 ),
+                const SizedBox(height: 50),
 
                 GestureDetector(
                   child: Container(
@@ -229,13 +239,16 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       onPressed: () {
                         if (_isFormValid()) {
                           Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => HomeScreens(
-                                name: widget.name,
-                              ),
-                            ),
-                          );
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => HomeScreens(
+                                  name: widget.name,
+                                  // gender: widget.gender,
+                                  // weight: widget.weight,
+                                  // wakeUpTime: controllerWakeUpTime.text,
+                                  // sleepTime: controllerSleepTime.text,
+                                ),
+                              ));
                         } else {
                           _showWarningDialog();
                         }
@@ -368,18 +381,21 @@ class _TimePickerInputState extends State<TimePickerInput> {
             textAlign: TextAlign.left,
             style:
                 const TextStyle(fontSize: 16, color: const Color(0xFF2F2E41)),
-            onTap: () => _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
+            onTap: () =>
+                _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
             decoration: InputDecoration(
               hintText: widget.label,
               hintStyle: const TextStyle(color: Colors.grey),
               filled: true,
               fillColor: Colors.white,
               enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               contentPadding:

@@ -133,7 +133,6 @@ class _RegistrationDataState extends State<RegistrationData> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
                 // Gambar
@@ -163,7 +162,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Input Nama Lengkap
                 TextField(
@@ -346,11 +345,12 @@ class _RegistrationDataState extends State<RegistrationData> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 50),
 
                 // Tombol Selanjutnya
                 GestureDetector(
                   child: Container(
+                    margin: const EdgeInsets.only(bottom: 50),
                     height: 55,
                     width: double.infinity,
                     decoration: BoxDecoration(
