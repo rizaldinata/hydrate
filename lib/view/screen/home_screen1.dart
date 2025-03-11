@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreens>
         style: TextStyle(
             fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
       ),
-      
+
       onChange: (index) {
         setState(() {
           selectedWater = (50 + (index * 50)).toInt();
@@ -218,7 +218,8 @@ class _HomeScreenState extends State<HomeScreens>
                                   Text(
                                     ' / ${target.toInt()} ml', // target harian
                                     style: TextStyle(
-                                      color: const Color(0xFF2F2E41), // Warna berubah
+                                      color: const Color(
+                                          0xFF2F2E41), // Warna berubah
                                       fontWeight: FontWeight.w500,
                                       fontSize: 16,
                                     ),
@@ -270,8 +271,6 @@ class _HomeScreenState extends State<HomeScreens>
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
-                                  elevation: 5,
-                                  // onTap: () => _showAddWaterModal(context),
                                   onPressed: () {
                                     _showAddWaterModal(context);
                                   },
@@ -322,12 +321,26 @@ class _HomeScreenState extends State<HomeScreens>
         IconButton(
           icon: const Icon(Icons.local_drink, color: Colors.blue),
           onPressed: () => _addWater(amount),
+          iconSize: 26, // Atur ukuran ikon agar lebih proporsional
+          visualDensity:
+              VisualDensity.compact, // Mengurangi ruang kosong di sekitar ikon
         ),
-        Text('${amount.toInt()} ml',
-            style: const TextStyle(
-                fontSize: 12,
-                color:  Color(0xFF2F2E41),
-                fontWeight: FontWeight.w600)),
+        Text(
+          name,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Color(0xFF2F2E41),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        Text(
+          '${amount.toInt()} ml',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.grey,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ],
     );
   }

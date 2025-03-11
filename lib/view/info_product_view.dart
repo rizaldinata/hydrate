@@ -20,7 +20,7 @@ class InfoProduct extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: screenHeight * 0.05), // ✅ Jarak atas
+                  SizedBox(height: screenHeight * 0.1), 
 
                   SvgPicture.asset(
                     'assets/images/registrasi1.svg',
@@ -45,23 +45,6 @@ class InfoProduct extends StatelessWidget {
                       fontSize: screenWidth * 0.04,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF2F2E41),
-                    ),
-                  ),
-
-                  // Tambahan dan gk keliatan biar layoutnya rapi
-                  AbsorbPointer(
-                    absorbing: true,
-                    child: Opacity(
-                      opacity: 0.0,
-                      child: TextField(
-                        enabled: false, 
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          
-                        ),
-                      ),
                     ),
                   ),
 
