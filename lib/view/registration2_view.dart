@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/view/screen/home_screen.dart';
 import 'package:hydrate/view/screen/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
   final String name;
   final String gender;
-  final String weight;
+  final double weight;
 
   const RegistrationTime({
     Key? key,
@@ -21,11 +22,12 @@ class RegistrationTime extends StatefulWidget {
 }
 
 class _RegistrationTimeState extends State<RegistrationTime> {
+  final PenggunaRepository _penggunaRepository = PenggunaRepository();
   TextEditingController controllerWakeUpTime = TextEditingController();
   TextEditingController controllerSleepTime = TextEditingController();
 
   Future<void> _selectTime(
-    BuildContext context, TextEditingController controller) async {
+      BuildContext context, TextEditingController controller) async {
     TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -44,7 +46,8 @@ class _RegistrationTimeState extends State<RegistrationTime> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Peringatan"),
-          content: const Text("Harap isi jam bangun dan jam tidur sebelum melanjutkan."),
+          content: const Text(
+              "Harap isi jam bangun dan jam tidur sebelum melanjutkan."),
           actions: [
             TextButton(
               onPressed: () {
@@ -70,7 +73,9 @@ class _RegistrationTimeState extends State<RegistrationTime> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Logo HYDRATE
-                const SizedBox(height: 20.0,),
+                const SizedBox(
+                  height: 20.0,
+                ),
                 Text(
                   "HYDRATE",
                   style: GoogleFonts.gluten(
@@ -139,7 +144,6 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                   ),
                 ),
 
-
                 // Tombol Lanjut
                 Container(
                   width: double.infinity,
@@ -168,19 +172,27 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
-                    onPressed: () {
-                      if (controllerWakeUpTime.text.isEmpty || controllerSleepTime.text.isEmpty){
+                    onPressed: () async {
+                      if (controllerWakeUpTime.text.isEmpty ||
+                          controllerSleepTime.text.isEmpty) {
                         showAlert(context);
                       } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomeScreens(name: widget.name,
-                            // name: widget.name,
-                            // gender: widget.gender,
-                            // weight: widget.weight,
-                            // wakeUpTime: controllerWakeUpTime.text,
-                            // sleepTime: controllerSleepTime.text,
+                        await _penggunaRepository.tambahPenggunaDanProfil(
+                          widget.name,
+                          widget.gender,
+                          widget.weight,
+                          controllerWakeUpTime.text,
+                          controllerSleepTime.text,
+                        );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => HomeScreens(
+                               name: widget.name,
+                              // gender: widget.gender,
+                              // weight: widget.weight,
+                              // wakeUpTime: controllerWakeUpTime.text,
+                              // sleepTime: controllerSleepTime.text,
                             ),
                           ),
                         );
@@ -217,11 +229,13 @@ class _RegistrationTimeState extends State<RegistrationTime> {
               filled: true,
               fillColor: Colors.white,
               enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               contentPadding:
@@ -310,18 +324,21 @@ class _TimePickerInputState extends State<TimePickerInput> {
             readOnly: true,
             textAlign: TextAlign.left,
             style: const TextStyle(fontSize: 16, color: Colors.black),
-            onTap: () => _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
+            onTap: () =>
+                _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
             decoration: InputDecoration(
               hintText: widget.label,
               hintStyle: const TextStyle(color: Colors.grey),
               filled: true,
               fillColor: Colors.white,
               enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               contentPadding:

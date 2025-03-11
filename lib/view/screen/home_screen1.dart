@@ -6,7 +6,7 @@ import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 
 class HomeScreens extends StatefulWidget {
   final String name;
-  const HomeScreens({super.key, required this.name});
+  const HomeScreens({super.key, required this.name, required String sleepTime});
 
   @override
   State<HomeScreens> createState() => _HomeScreenState();
@@ -19,7 +19,8 @@ class _HomeScreenState extends State<HomeScreens>
   int _currentPage = 0;
   final double target = 1500; // Target harian air
   double currentIntake = 0; // Nilai awal air dalam ml
-  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); // Persentase progress
+  final ValueNotifier<double> _valueNotifier =
+      ValueNotifier<double>(0); // Persentase progress
 
   // Fungsi untuk menambahkan jumlah air
   void _addWater(double amount) {
@@ -68,7 +69,8 @@ class _HomeScreenState extends State<HomeScreens>
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -104,7 +106,6 @@ class _HomeScreenState extends State<HomeScreens>
               ],
             ),
           ),
-          
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -198,7 +199,8 @@ class _HomeScreenState extends State<HomeScreens>
           textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         onPressed: () => _addWater(amount),
-        child: Text("+ ${amount.toInt()} ml", style: const TextStyle(color: Colors.white)),
+        child: Text("+ ${amount.toInt()} ml",
+            style: const TextStyle(color: Colors.white)),
       ),
     );
   }

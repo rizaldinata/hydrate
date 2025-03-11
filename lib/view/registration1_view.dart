@@ -18,17 +18,19 @@ class _RegistrationDataState extends State<RegistrationData> {
 
   // Validasi input
   bool _isFormValid() {
-    return controllerName.text.isNotEmpty && 
-           _gender != null && 
-           controllerWeight.text.isNotEmpty && 
-           double.tryParse(controllerWeight.text) != null; // Validasi angka untuk berat badan
+    return controllerName.text.isNotEmpty &&
+        _gender != null &&
+        controllerWeight.text.isNotEmpty &&
+        double.tryParse(controllerWeight.text) !=
+            null; // Validasi angka untuk berat badan
   }
 
   // Fungsi untuk menampilkan modal peringatan
   Future<void> _showWarningDialog() async {
     showDialog(
       context: context,
-      barrierDismissible: false, // Jangan bisa menutup modal dengan klik di luar
+      barrierDismissible:
+          false, // Jangan bisa menutup modal dengan klik di luar
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -71,7 +73,8 @@ class _RegistrationDataState extends State<RegistrationData> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                       onPressed: () {
                         Navigator.of(context).pop(); // Menutup modal
@@ -119,7 +122,7 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 // Slogan
                 Transform.translate(
-                  offset: const Offset(0, -16), 
+                  offset: const Offset(0, -16),
                   child: Text(
                     "Hidrasi Tepat, Hidup Sehat",
                     style: GoogleFonts.inter(
@@ -172,15 +175,13 @@ class _RegistrationDataState extends State<RegistrationData> {
                     filled: true,
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Color(0xFF00A6FB),
-                          width: 2),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF00A6FB), width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: const BorderSide(
-                          color: Color(0xFF00A6FB),
-                          width: 2),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF00A6FB), width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -195,7 +196,8 @@ class _RegistrationDataState extends State<RegistrationData> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(50),
-                    border: Border.all(color: const Color(0xFF00A6FB), width: 2),
+                    border:
+                        Border.all(color: const Color(0xFF00A6FB), width: 2),
                   ),
                   child: Row(
                     children: [
@@ -299,7 +301,8 @@ class _RegistrationDataState extends State<RegistrationData> {
                 // Input Berat Badan (Only numbers)
                 TextField(
                   controller: controllerWeight,
-                  keyboardType: TextInputType.number, // Ensuring only numbers are allowed
+                  keyboardType:
+                      TextInputType.number, // Ensuring only numbers are allowed
                   cursorColor: const Color(0xFF00A6FB),
                   decoration: InputDecoration(
                     hintText: "Berat Badan",
@@ -311,15 +314,13 @@ class _RegistrationDataState extends State<RegistrationData> {
                     filled: true,
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color(0xFF00A6FB),
-                          width: 2),
+                      borderSide:
+                          BorderSide(color: const Color(0xFF00A6FB), width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                          color: const Color(0xFF00A6FB),
-                          width: 2),
+                      borderSide:
+                          BorderSide(color: const Color(0xFF00A6FB), width: 2),
                       borderRadius: BorderRadius.circular(50),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
@@ -333,16 +334,20 @@ class _RegistrationDataState extends State<RegistrationData> {
                 GestureDetector(
                   onTap: () {
                     if (_isFormValid()) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RegistrationTime(
-                            name: controllerName.text,
-                            gender: _gender ?? "Belum dipilih",
-                            weight: controllerWeight.text,
+                      double? weight = double.tryParse(controllerWeight.text);
+
+                      if (weight != null) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RegistrationTime(
+                              name: controllerName.text,
+                              gender: _gender ?? "belum dipilih",
+                              weight: weight,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     } else {
                       _showWarningDialog();
                     }
@@ -379,16 +384,21 @@ class _RegistrationDataState extends State<RegistrationData> {
                       ),
                       onPressed: () {
                         if (_isFormValid()) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RegistrationTime(
-                                name: controllerName.text,
-                                gender: _gender ?? "Belum dipilih",
-                                weight: controllerWeight.text,
+                          double? weight =
+                              double.tryParse(controllerWeight.text);
+
+                          if (weight != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RegistrationTime(
+                                  name: controllerName.text,
+                                  gender: _gender ?? "belum dipilih",
+                                  weight: weight,
+                                ),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         } else {
                           _showWarningDialog();
                         }
