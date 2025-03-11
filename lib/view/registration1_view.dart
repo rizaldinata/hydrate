@@ -51,7 +51,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   children: [
                     Icon(
                       Icons.warning_amber_outlined,
-                      color: Colors.orangeAccent,
+                      color: Colors.red,
                       size: 60,
                     ),
                     const SizedBox(height: 20),
@@ -60,14 +60,14 @@ class _RegistrationDataState extends State<RegistrationData> {
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: const Color(0xFF2F2E41),
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orangeAccent, // Background color
+                        backgroundColor: const Color(0xFF00A6FB), // Background color
                         foregroundColor: Colors.white, // Text color
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),

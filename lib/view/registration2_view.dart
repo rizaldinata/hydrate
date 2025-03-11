@@ -117,7 +117,6 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                   ),
                 ),
 
-
                 // Tombol Lanjut
                 Container(
                   width: double.infinity,
@@ -150,7 +149,8 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => HomeScreen(name: widget.name,
+                          builder: (context) => HomeScreen(
+                            name: widget.name,
                             // name: widget.name,
                             // gender: widget.gender,
                             // weight: widget.weight,
@@ -191,11 +191,13 @@ class _RegistrationTimeState extends State<RegistrationTime> {
               filled: true,
               fillColor: Colors.white,
               enabledBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               focusedBorder: OutlineInputBorder(
-                borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                borderSide:
+                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(50),
               ),
               contentPadding:
@@ -245,7 +247,7 @@ class _TimePickerInputState extends State<TimePickerInput> {
             colorScheme: const ColorScheme.light(
               primary: Color(0xFF00A6FB), // Warna utama
               onPrimary: Colors.white, // Warna teks di atas warna utama
-              onSurface: Colors.black, // Warna teks utama
+              onSurface: const Color(0xFF2F2E41), // Warna teks utama
             ),
             timePickerTheme: TimePickerThemeData(
               backgroundColor: Colors.white,
@@ -256,7 +258,7 @@ class _TimePickerInputState extends State<TimePickerInput> {
               hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
                   states.contains(MaterialState.selected)
                       ? Colors.white
-                      : Colors.black),
+                      : const Color(0xFF2F2E41)),
               dialHandColor: const Color(0xFF00A6FB),
               dialBackgroundColor: const Color(0xFFE8F7FF),
               entryModeIconColor: const Color(0xFF00A6FB),
@@ -283,7 +285,8 @@ class _TimePickerInputState extends State<TimePickerInput> {
             controller: widget.controller,
             readOnly: true,
             textAlign: TextAlign.left,
-            style: const TextStyle(fontSize: 16, color: Colors.black),
+            style:
+                const TextStyle(fontSize: 16, color: const Color(0xFF2F2E41)),
             decoration: InputDecoration(
               hintText: widget.label,
               hintStyle: const TextStyle(color: Colors.grey),
