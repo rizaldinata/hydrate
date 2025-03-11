@@ -1,0 +1,2 @@
+D:/Mobile Apps/hydrate/android/app/.cxx/Debug/1c4c3q5q/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/Mobile Apps/hydrate/android/app/.cxx/Debug/1c4c3q5q/arm64-v8a/CMakeFiles/rebuild_cache.dir
