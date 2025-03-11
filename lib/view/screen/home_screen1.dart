@@ -11,28 +11,27 @@ class HomeScreens extends StatefulWidget {
   State<HomeScreens> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreens>
-    with SingleTickerProviderStateMixin {
-  late final HomeController _controller;
+class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderStateMixin {
+  // late final HomeController _controller;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final double target = 1500; // Target harian air
   double currentIntake = 0; // Nilai awal air dalam ml
-  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
+  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); //nilai persen awal
 
   @override
   void initState() {
-    super.initState();
-    _controller = HomeController();
-    _controller.initAnimation(this);
+    // super.initState();
+    // _controller = HomeController();
+    // _controller.initAnimation(this);
 
-    Future.delayed(const Duration(milliseconds: 600), () {
-      setState(() {});
-    });
+    // Future.delayed(const Duration(milliseconds: 600), () {
+    //   setState(() {});
+    // });
 
-    Future.delayed(const Duration(seconds: 5), () {
-      _controller.startAnimation();
-    });
+    // Future.delayed(const Duration(seconds: 5), () {
+    //   _controller.startAnimation();
+    // });
 
     _pageController.addListener(() {
       setState(() {
@@ -41,9 +40,10 @@ class _HomeScreenState extends State<HomeScreens>
     });
   }
 
+  // buat memberhentikan resource yang tidak digunakan
   @override
   void dispose() {
-    _controller.dispose();
+    // _controller.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -58,14 +58,10 @@ class _HomeScreenState extends State<HomeScreens>
       }
       _valueNotifier.value = (currentIntake / target) * 100;
     });
-
-    print("Air ditambahkan: $amount ml, Total: $currentIntake ml");
   }
 
-  // Menampilkan modal untuk memilih jumlah air
+  // Menampilkan modal untuk memilih jumlah air masih tak benerin lagi
   void _showAddWaterModal() {
-    print("Tombol + ditekan");
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -73,7 +69,6 @@ class _HomeScreenState extends State<HomeScreens>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        print("Modal muncul");
         return Padding(
           padding: const EdgeInsets.all(20),
           child: Wrap(
@@ -102,12 +97,14 @@ class _HomeScreenState extends State<HomeScreens>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Judul aplikasi
                 const Text("HYDRATE",
                     style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Colors.blue,
                         fontFamily: "Gluten")),
+                // menampilkan username
                 Text(
                   "Hai, ${widget.name}",
                   style: const TextStyle(
@@ -117,6 +114,7 @@ class _HomeScreenState extends State<HomeScreens>
                   ),
                 ),
                 const SizedBox(height: 4),
+                // desktipsi mbohh
                 const Text(
                   "Selesaikan pencapaianmu hari ini segera",
                   style: TextStyle(
@@ -128,6 +126,7 @@ class _HomeScreenState extends State<HomeScreens>
               ],
             ),
           ),
+          // buat setengah lingkarannya
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -140,12 +139,12 @@ class _HomeScreenState extends State<HomeScreens>
                       aspectRatio: 1,
                       valueNotifier: _valueNotifier,
                       progress: _valueNotifier.value,
-                      startAngle: 250,
-                      sweepAngle: 222,
+                      startAngle: 250, // start awal lingkaran
+                      sweepAngle: 222, // finie lingkaran
                       foregroundColor: Colors.blue,
                       backgroundColor: const Color(0xFFA1E3F9),
-                      foregroundStrokeWidth: 15,
-                      backgroundStrokeWidth: 15,
+                      foregroundStrokeWidth: 15, //ketebalan dalam lingkaran
+                      backgroundStrokeWidth: 15, //ketebalan dalam lingkaran
                       animation: true,
                       seekSize: 6,
                       seekColor: const Color(0xffeeeeee),
@@ -156,7 +155,7 @@ class _HomeScreenState extends State<HomeScreens>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${value.toInt()}%',
+                                '${value.toInt()}%', //persentage
                                 style: const TextStyle(
                                   color: Colors.black,
                                   fontWeight: FontWeight.w300,
@@ -164,7 +163,7 @@ class _HomeScreenState extends State<HomeScreens>
                                 ),
                               ),
                               Text(
-                                '${currentIntake.toInt()} ml / ${target.toInt()} ml',
+                                '${currentIntake.toInt()} ml / ${target.toInt()} ml', //target harian
                                 style: const TextStyle(
                                   color: Colors.black54,
                                   fontWeight: FontWeight.w400,
@@ -178,6 +177,7 @@ class _HomeScreenState extends State<HomeScreens>
                     ),
                   ),
                 ),
+                // buat yang memilih gelas 
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -194,10 +194,10 @@ class _HomeScreenState extends State<HomeScreens>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildDrinkOption("Soda", 100),
-                          _buildDrinkOption("Kopi", 150),
-                          _buildDrinkOption("Teh", 200),
-                          _buildDrinkOption("Espresso", 250),
+                          _buildDrinkOption("Air", 100),
+                          _buildDrinkOption("Air", 150),
+                          _buildDrinkOption("Air", 200),
+                          _buildDrinkOption("Air", 250),
                         ],
                       ),
                     ),
@@ -229,6 +229,7 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
+  // Membuat button untuk menambah jumlah air
   Widget _buildWaterButton(double amount) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -248,6 +249,7 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
+  // memilih opsi gelas favorit 
   Widget _buildDrinkOption(String name, double amount) {
     return Column(
       children: [
