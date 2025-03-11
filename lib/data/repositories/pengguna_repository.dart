@@ -16,19 +16,24 @@ class PenggunaRepository {
       double beratBadan, String jamBangun, String jamTidur) async {
     final db = await _dbHelper.database;
 
-    return await db.transaction((txn) async {
-      int idPengguna = await txn.insert('pengguna', {'nama_pengguna': nama});
+    try {
+      return await db.transaction((txn) async {
+        int idPengguna = await txn.insert('pengguna', {'nama_pengguna': nama});
+        await txn.insert('profil_pengguna', {
+          'fk_id_pengguna': idPengguna,
+          'jenis_kelamin': jenisKelamin,
+          'berat_badan': beratBadan,
+          'jam_bangun': jamBangun,
+          'jam_tidur': jamTidur,
+        });
 
-      await txn.insert('profil_pengguna', {
-        'fk_id_pengguna': idPengguna,
-        'jenis_kelamin': jenisKelamin,
-        'berat_badan': beratBadan,
-        'jam_bangun': jamBangun,
-        'jam_tidur': jamTidur,
+        print("Berhasil menambahkan pengguna dengan ID: $idPengguna");
+        return idPengguna;
       });
-
-      return idPengguna;
-    });
+    } catch (e) {
+      print("Gagal menambahkan pengguna: $e");
+      return -1;
+    }
   }
 
   // ambil dara semua pengguna (kek e nanti ngga kepake)
