@@ -5,8 +5,8 @@ import 'package:hydrate/view/screen/water_indicator.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
-  final String name;
-  const HomeScreen({super.key, required this.name});
+  // final String name;
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -61,7 +61,8 @@ class _HomeScreenState extends State<HomeScreen>
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -100,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -124,13 +124,12 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 SizedBox(
                   width: 140,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                    },
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[400],
                       elevation: 10,
@@ -149,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen>
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 SmoothPageIndicator(
                   controller: _pageController,
                   count: glassImages.length,
