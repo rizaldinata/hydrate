@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home: const HomeScreens(name: 'Gumiwang',),
+      home: InfoProduct(),
     );
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/view/screen/home_screen.dart';
+// import 'package:hydrate/view/screen/home_screen.dart';
+import 'package:hydrate/view/screen/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
   final String name;
@@ -37,21 +38,76 @@ class _RegistrationTimeState extends State<RegistrationTime> {
     }
   }
 
-  void showAlert(BuildContext context) {
+  bool _isFormValid() {
+    return controllerWakeUpTime.text.isNotEmpty && 
+           controllerSleepTime.text.isNotEmpty ; // Validasi jam bangun dan jam tidur
+  }
+
+  // Alert dialog jika belum mengisi
+    Future<void> _showWarningDialog() async {
     showDialog(
       context: context,
+      barrierDismissible: false, // Jangan bisa menutup modal dengan klik di luar
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Peringatan"),
-          content: const Text("Harap isi jam bangun dan jam tidur sebelum melanjutkan."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Menutup dialog
-              },
-              child: const Text("OK"),
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: AnimatedScale(
+            duration: Duration(milliseconds: 300),
+            scale: 1.0,
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              elevation: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_outlined,
+                      color: const Color(0XFFFFB830),
+                      size: 60,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Harap isi jam bangun dan jam tidur terlebih dahulu!",
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2F2E41),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0XFFFFB830), // Background color
+                        foregroundColor: Colors.white, // Text color
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Menutup modal
+                      },
+                      child: Text(
+                        "Kembali",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -138,59 +194,59 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                   ),
                 ),
 
-                // Tombol Lanjut
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 50),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF4ACCFF), Color(0xFF00A6FB)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(50),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00A6FB).withOpacity(0.25),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                GestureDetector(
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 50),
+                    height: 55,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF4ACCFF),
+                          Color(0xFF00A6FB),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      borderRadius: BorderRadius.circular(50),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0xFF00A6FB).withOpacity(0.25),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    onPressed: () {
-                      if (controllerWakeUpTime.text.isEmpty || controllerSleepTime.text.isEmpty){
-                        showAlert(context);
-                      } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomeScreen(
-                            name: widget.name,
-                            // name: widget.name,
-                            // gender: widget.gender,
-                            // weight: widget.weight,
-                            // wakeUpTime: controllerWakeUpTime.text,
-                            // sleepTime: controllerSleepTime.text,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                      ),
+                      onPressed: () {
+                        if (_isFormValid()) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomeScreens(
+                                name: widget.name,
+                              ),
                             ),
-                          ),
-                        );
-                      }
-                    },
-                    child: Text(
-                      "DAFTAR",
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                          );
+                        } else {
+                          _showWarningDialog();
+                        }
+                      },
+                      child: Text(
+                        "DAFTAR",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),

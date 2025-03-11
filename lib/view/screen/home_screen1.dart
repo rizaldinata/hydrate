@@ -96,18 +96,22 @@ class _HomeScreenState extends State<HomeScreens>
       backgroundColor: Colors.blue[50],
       body: Stack(
         children: [
+
+          // Bagian atas
           Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Logo
                 const Text("HYDRATE",
                     style: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.w900,
                         color: Colors.blue,
                         fontFamily: "Gluten")),
+                // Nama user
                 Text(
                   "Hai, ${widget.name}",
                   style: const TextStyle(
@@ -117,8 +121,10 @@ class _HomeScreenState extends State<HomeScreens>
                   ),
                 ),
                 const SizedBox(height: 4),
+
+                // Kata-kata pencapaian
                 const Text(
-                  "Selesaikan pencapaianmu hari ini segera",
+                  "Ayo selesaikan pencapaianmu hari ini!",
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -136,18 +142,19 @@ class _HomeScreenState extends State<HomeScreens>
                 Padding(
                   padding: const EdgeInsets.all(42.0),
                   child: Center(
+                    // Likaran progress
                     child: DashedCircularProgressBar.aspectRatio(
                       aspectRatio: 1,
                       valueNotifier: _valueNotifier,
                       progress: _valueNotifier.value,
                       startAngle: 250,
                       sweepAngle: 222,
-                      foregroundColor: Colors.blue,
+                      foregroundColor: Color(0xFF00A6FB),
                       backgroundColor: const Color(0xFFA1E3F9),
-                      foregroundStrokeWidth: 15,
-                      backgroundStrokeWidth: 15,
+                      foregroundStrokeWidth: 16,
+                      backgroundStrokeWidth: 12,
                       animation: true,
-                      seekSize: 6,
+                      seekSize: 10,
                       seekColor: const Color(0xffeeeeee),
                       child: Center(
                         child: ValueListenableBuilder(
@@ -158,7 +165,7 @@ class _HomeScreenState extends State<HomeScreens>
                               Text(
                                 '${value.toInt()}%',
                                 style: const TextStyle(
-                                  color: Colors.black,
+                                  color: const Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w300,
                                   fontSize: 60,
                                 ),
@@ -166,7 +173,7 @@ class _HomeScreenState extends State<HomeScreens>
                               Text(
                                 '${currentIntake.toInt()} ml / ${target.toInt()} ml',
                                 style: const TextStyle(
-                                  color: Colors.black54,
+                                  color: const Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,
                                 ),
@@ -191,13 +198,15 @@ class _HomeScreenState extends State<HomeScreens>
                           topRight: Radius.circular(10),
                         ),
                       ),
+
+                      // bagian tambah air default
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildDrinkOption("Soda", 100),
-                          _buildDrinkOption("Kopi", 150),
-                          _buildDrinkOption("Teh", 200),
-                          _buildDrinkOption("Espresso", 250),
+                          _buildDrinkOption(100),
+                          _buildDrinkOption(150),
+                          _buildDrinkOption(200),
+                          _buildDrinkOption(250),
                         ],
                       ),
                     ),
@@ -248,17 +257,15 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
-  Widget _buildDrinkOption(String name, double amount) {
+  Widget _buildDrinkOption(double amount) {
     return Column(
       children: [
         IconButton(
           icon: const Icon(Icons.local_drink, color: Colors.blue),
           onPressed: () => _addWater(amount),
         ),
-        Text(name,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
         Text('${amount.toInt()} ml',
-            style: const TextStyle(fontSize: 10, color: Colors.black54)),
+            style: const TextStyle(fontSize: 12, color: const Color(0xFF2F2E41), fontWeight: FontWeight.w600)),
       ],
     );
   }
