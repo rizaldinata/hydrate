@@ -112,13 +112,13 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
                                 milliseconds: 375,
                               ),
                               curve: Curves.easeOut,
-                              height: 105.0,
+                              height: 115.0,
                               width: (MediaQuery.of(context).size.width -
                                       (2 * horizontalMargin) -
                                       (2 * horizontalPadding)) /
                                   3,
                               padding:
-                                  const EdgeInsets.only(top: 34.0, left: 0),
+                                  const EdgeInsets.only(top: 34.0, bottom: 10),
                               alignment: selected == icons.indexOf(icon)
                                   ? Alignment.topCenter
                                   : Alignment.bottomCenter,
@@ -135,13 +135,10 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
                                           ? Image.asset(
                                               icon,
                                               width: 23.0,
-                                              color:
-                                                  colors[icons.indexOf(icon)],
-                                              key: ValueKey('yellow$icon'),
+                                              color: Colors.white,
                                             )
                                           : Image.asset(
                                               icon,
-                                              key: ValueKey('white$icon'),
                                               width: 23.0,
                                               color: Colors.white,
                                             )),
@@ -167,13 +164,17 @@ class AppBarPainter extends CustomPainter {
   AppBarPainter({required this.x});
 
   double height = 60.0;
-  double start = 73.0;
+  double start = 60.0;
   double end = 120.0;
 
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint()
-      ..color = Colors.blueAccent.withOpacity(0.5)
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    var paintCircle = Paint()
+      ..color = Colors.blue
       ..style = PaintingStyle.fill;
 
     var path = Path();
@@ -207,9 +208,9 @@ class AppBarPainter extends CustomPainter {
     path.quadraticBezierTo(0.0, start, 20.0, start);
     path.close();
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, paintCircle);
 
-    canvas.drawCircle(Offset(70 + x, 60.0), 28.0, paint);
+    canvas.drawCircle(Offset(70 + x, 55.0), 28.0, paintCircle);
   }
 
   @override
