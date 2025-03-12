@@ -1,5 +1,5 @@
-import 'package:hydrate/data/database_helper.dart';
-import 'package:hydrate/models/pengguna_model.dart';
+import 'package:hydrate/data/datasources/database_helper.dart';
+import 'package:hydrate/data/models/pengguna_model.dart';
 
 class PenggunaRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();

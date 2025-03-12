@@ -1,5 +1,5 @@
-import '../models/target_hidrasi_model.dart';
-import '../data/repositories/target_hidrasi_repository.dart';
+import '../../data/models/target_hidrasi_model.dart';
+import '../../data/repositories/target_hidrasi_repository.dart';
 
 class TargetHidrasiController {
   final TargetHidrasiRepository _repository = TargetHidrasiRepository();

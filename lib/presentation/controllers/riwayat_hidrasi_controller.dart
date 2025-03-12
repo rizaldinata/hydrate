@@ -1,5 +1,5 @@
-import '../models/riwayat_hidrasi_model.dart';
-import '../data/repositories/riwayat_hidrasi_repository.dart';
+import '../../data/models/riwayat_hidrasi_model.dart';
+import '../../data/repositories/riwayat_hidrasi_repository.dart';
 
 class RiwayatHidrasiController {
   final RiwayatHidrasiRepository _repository = RiwayatHidrasiRepository();

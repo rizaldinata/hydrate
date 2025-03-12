@@ -1,4 +1,4 @@
-import '../controllers/pengguna_controller.dart';
+import '../../presentation/controllers/pengguna_controller.dart';
 
 class HydrationCalculator {
   final PenggunaController _penggunaController = PenggunaController(); // Inisialisasi controller pengguna

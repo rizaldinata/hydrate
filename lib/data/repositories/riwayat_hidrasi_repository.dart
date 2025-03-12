@@ -1,5 +1,5 @@
-import 'package:hydrate/data/database_helper.dart';
-import 'package:hydrate/models/riwayat_hidrasi_model.dart';
+import 'package:hydrate/data/datasources/database_helper.dart';
+import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 
 class RiwayatHidrasiRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();

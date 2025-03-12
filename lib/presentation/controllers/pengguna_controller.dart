@@ -1,5 +1,5 @@
-import '../models/pengguna_model.dart';
-import '../data/repositories/pengguna_repository.dart';
+import '../../data/models/pengguna_model.dart';
+import '../../data/repositories/pengguna_repository.dart';
 
 class PenggunaController {
   final PenggunaRepository _repository = PenggunaRepository();

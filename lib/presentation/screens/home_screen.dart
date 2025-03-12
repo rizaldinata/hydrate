@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/controller/home_controller.dart';
-import 'package:hydrate/view/screen/navigation.dart';
-import 'package:hydrate/view/screen/water_indicator.dart';
+import 'package:hydrate/presentation/controllers/home_controller.dart';
+import 'package:hydrate/presentation/widgets/navigation.dart';
+import 'package:hydrate/presentation/widgets/water_indicator.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 class HomeScreen extends StatefulWidget {

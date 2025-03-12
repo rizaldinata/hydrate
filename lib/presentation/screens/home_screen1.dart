@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/controller/home_controller.dart';
-import 'package:hydrate/view/screen/navigation.dart';
+import 'package:hydrate/presentation/controllers/home_controller.dart';
+import 'package:hydrate/presentation/widgets/navigation.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
-import 'package:hydrate/utils/hydration_calculator.dart'; // Impor HydrationCalculator
+import 'package:hydrate/core/utils/hydration_calculator.dart'; // Impor HydrationCalculator
 
 class HomeScreens extends StatefulWidget {
   final String name;
