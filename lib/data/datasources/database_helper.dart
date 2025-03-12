@@ -239,23 +239,27 @@ class DatabaseHelper {
 
           await db.execute('''
             CREATE TABLE target_hidrasi (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              fk_id_pengguna INTEGER NOT NULL,
-              target_hidrasi REAL NOT NULL,
-              tanggal_hidrasi TEXT NOT NULL,
-              FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
-            )
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fk_id_pengguna INTEGER NOT NULL,
+  target_hidrasi REAL NOT NULL,
+  tanggal_hidrasi TEXT NOT NULL,  -- Bisa menggunakan tanggal untuk memisahkan target per hari
+  total_hidrasi_harian REAL NOT NULL,  -- Untuk memudahkan perbandingan konsumsi dengan target harian
+  FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
+);
+
           ''');
 
           await db.execute('''
             CREATE TABLE riwayat_hidrasi (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              fk_id_pengguna INTEGER NOT NULL,
-              jumlah_hidrasi REAL NOT NULL,
-              tanggal_hidrasi TEXT NOT NULL,
-              waktu_hidrasi TEXT NOT NULL,
-              FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
-            )
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fk_id_pengguna INTEGER NOT NULL,
+  jumlah_hidrasi REAL NOT NULL,
+  tanggal_hidrasi TEXT NOT NULL,
+  waktu_hidrasi TEXT NOT NULL,  -- Diganti menjadi timestamp atau tetap disesuaikan
+  timestamp INTEGER NOT NULL,   -- Kolom timestamp untuk waktu yang lebih spesifik
+  FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
+);
+
           ''');
 
           print("Database berhasil dibuat!");
