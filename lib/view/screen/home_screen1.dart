@@ -3,24 +3,26 @@ import 'package:hydrate/controller/home_controller.dart';
 import 'package:hydrate/view/screen/navigation.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
+import 'package:hydrate/utils/hydration_calculator.dart'; // Impor HydrationCalculator
 
 class HomeScreens extends StatefulWidget {
   final String name;
-  const HomeScreens({super.key, required this.name, required String sleepTime});
+  final int penggunaId; // Pastikan ID pengguna yang benar diberikan
+
+  const HomeScreens({super.key, required this.name, required this.penggunaId});
 
   @override
   State<HomeScreens> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreens>
-    with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final double target = 1500; // Target harian air
+  late HydrationCalculator _hydrationCalculator; // Tambahkan variabel untuk HydrationCalculator
+  double target = 0; // Target hidrasi yang dinamis (diberikan nilai awal 0)
   double currentIntake = 0; // Nilai awal air dalam ml
-  final ValueNotifier<double> _valueNotifier =
-      ValueNotifier<double>(0); // Persentase progress
+  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); // Persentase progress
 
   // Fungsi untuk menambahkan jumlah air
   void _addWater(double amount) {
@@ -40,6 +42,14 @@ class _HomeScreenState extends State<HomeScreens>
     _controller = HomeController();
     _controller.initAnimation(this);
 
+    // Pastikan ID pengguna yang benar diproses
+    print("ID Pengguna yang dikirim ke constructor: ${widget.penggunaId}");
+    
+    _hydrationCalculator = HydrationCalculator(penggunaId: widget.penggunaId); // Inisialisasi dengan ID yang benar
+    
+    // Memastikan target dihitung setelah data pengguna siap
+    _initializeTarget(); 
+
     Future.delayed(const Duration(milliseconds: 600), () {
       setState(() {});
     });
@@ -52,6 +62,20 @@ class _HomeScreenState extends State<HomeScreens>
       setState(() {
         _currentPage = _pageController.page!.round();
       });
+    });
+  }
+
+  // Fungsi untuk menginisialisasi target hidrasi berdasarkan data pengguna
+  Future<void> _initializeTarget() async {
+    // Tunggu sampai data terinisialisasi
+    await _hydrationCalculator.initializeData(widget.penggunaId);
+    
+    // Debugging: Memeriksa nilai target
+    print("Target hidrasi setelah inisialisasi: ${_hydrationCalculator.calculateDailyWaterIntake()}");
+
+    setState(() {
+      target = _hydrationCalculator.calculateDailyWaterIntake() * 1000; // Menghitung target dalam ml
+      print("Target dalam ml setelah dihitung: $target");
     });
   }
 
@@ -69,8 +93,7 @@ class _HomeScreenState extends State<HomeScreens>
       body: Stack(
         children: [
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -110,7 +133,6 @@ class _HomeScreenState extends State<HomeScreens>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // const SizedBox(height: 200),
                 Padding(
                   padding: const EdgeInsets.all(42.0),
                   child: Center(
@@ -121,7 +143,7 @@ class _HomeScreenState extends State<HomeScreens>
                       startAngle: 250,
                       sweepAngle: 225,
                       foregroundColor: Colors.blue,
-                      backgroundColor: Color(0xFFA1E3F9),
+                      backgroundColor: const Color(0xFFA1E3F9),
                       foregroundStrokeWidth: 15,
                       backgroundStrokeWidth: 15,
                       animation: true,
@@ -162,23 +184,10 @@ class _HomeScreenState extends State<HomeScreens>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildWaterButton(100), // Tombol untuk menambah 100ml
-                    // _buildWaterButton(300), // Tombol untuk menambah 300ml
-                    // _buildWaterButton(500), // Tombol untuk menambah 500ml
                   ],
                 ),
 
                 const SizedBox(height: 20),
-
-                // SmoothPageIndicator(
-                //   controller: _pageController,
-                //   count: 3,
-                //   effect: ExpandingDotsEffect(
-                //     activeDotColor: Colors.blue,
-                //     dotColor: Colors.grey[300]!,
-                //     dotHeight: 10,
-                //     dotWidth: 10,
-                //   ),
-                // ),
               ],
             ),
           ),

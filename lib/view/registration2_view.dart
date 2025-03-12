@@ -25,6 +25,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
   final PenggunaRepository _penggunaRepository = PenggunaRepository();
   TextEditingController controllerWakeUpTime = TextEditingController();
   TextEditingController controllerSleepTime = TextEditingController();
+  Map<String, dynamic> penggunaData = {};
 
   Future<void> _selectTime(
       BuildContext context, TextEditingController controller) async {
@@ -173,26 +174,31 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                     onPressed: () async {
+                      
                       if (controllerWakeUpTime.text.isEmpty ||
                           controllerSleepTime.text.isEmpty) {
                         showAlert(context);
                       } else {
-                        await _penggunaRepository.tambahPenggunaDanProfil(
+                        await _penggunaRepository
+                            .tambahPenggunaDanProfil(
                           widget.name,
                           widget.gender,
                           widget.weight,
                           controllerWakeUpTime.text,
                           controllerSleepTime.text,
-                        );
+                        )
+                            .then((_) async {
+                          penggunaData = await _penggunaRepository
+                              .getPenggunaBynama(widget.name);
+                        });
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) => HomeScreens(
-                               name: widget.name,
-                              // gender: widget.gender,
-                              // weight: widget.weight,
-                              // wakeUpTime: controllerWakeUpTime.text,
-                              // sleepTime: controllerSleepTime.text,
+                              name: widget.name,
+                              penggunaId: penggunaData[
+                                  'id'], // Ganti dengan ID pengguna yang sesuai dari backend
                             ),
                           ),
                         );

@@ -4,20 +4,25 @@ import '../data/repositories/pengguna_repository.dart';
 class PenggunaController {
   final PenggunaRepository _repository = PenggunaRepository();
 
-  // cek sudah pernag mendaftar atau belum
+  // Mengecek apakah pengguna sudah terdaftar
   Future<bool> cekPenggunaTerdaftar() async {
     return await _repository.isPenggunaTerdaftar();
   }
 
-  // tambah pengguna dan profil pengguna pada halaman registrasi
+  // Menambah pengguna dan profil pengguna pada halaman registrasi
   Future<int> tambahPenggunaDanProfil(String nama, String jenisKelamin,
       double beratBadan, String jamBangun, String jamTidur) async {
     return await _repository.tambahPenggunaDanProfil(
         nama, jenisKelamin, beratBadan, jamBangun, jamTidur);
   }
 
-  // ambil semua data pengguna (kek e nanti ngga kepake)
-  Future<List<Pengguna>> getPengguna() async {
-    return await _repository.getPengguna();
+  // Mengambil data pengguna berdasarkan ID
+  Future<Map<String, dynamic>> getPenggunaById(int id) async {
+    try {
+      return await _repository.getPenggunaById(id);
+    } catch (e) {
+      print("Error saat mengambil data pengguna: $e");
+      return {};  // Mengembalikan map kosong jika terjadi error
+    }
   }
 }

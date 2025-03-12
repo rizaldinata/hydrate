@@ -37,12 +37,35 @@ class PenggunaRepository {
   }
 
   // ambil dara semua pengguna (kek e nanti ngga kepake)
-  Future<List<Pengguna>> getPengguna() async {
-    final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('pengguna');
-
-    return List.generate(maps.length, (i) {
-      return Pengguna.fromMap(maps[i]);
-    });
+ Future<Map<String, dynamic>> getPenggunaById(int id) async {
+  final db = await _dbHelper.database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'profil_pengguna',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+  
+  if (maps.isNotEmpty) {
+    return maps.first; // Mengambil data pengguna pertama
+  } else {
+    throw Exception("Pengguna tidak ditemukan");
   }
+}
+
+Future<Map<String, dynamic>> getPenggunaBynama(String nama) async {
+  final db = await _dbHelper.database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'pengguna',
+    where: 'nama_pengguna = ?',
+    whereArgs: [nama],
+  );
+  
+  if (maps.isNotEmpty) {
+     
+    return maps.first; // Mengambil data pengguna pertama
+  } else {
+    throw Exception("Pengguna tidak ditemukan");
+  }
+}
+
 }
