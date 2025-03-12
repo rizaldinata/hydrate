@@ -9,7 +9,8 @@ class RegistrationData extends StatefulWidget {
 }
 
 class _RegistrationDataState extends State<RegistrationData> {
-  TextEditingController controllerName = TextEditingController();
+  final TextEditingController controllerName = TextEditingController();
+  TextEditingController controllerHeight = TextEditingController();
   TextEditingController controllerWeight = TextEditingController();
 
   String? _gender = "Female";

@@ -14,7 +14,6 @@ class HomeScreens extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreens>
     with SingleTickerProviderStateMixin {
-  // late final HomeController _controller;
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final double target = 1500; // Target harian air
@@ -27,18 +26,6 @@ class _HomeScreenState extends State<HomeScreens>
 
   @override
   void initState() {
-    // super.initState();
-    // _controller = HomeController();
-    // _controller.initAnimation(this);
-
-    // Future.delayed(const Duration(milliseconds: 600), () {
-    //   setState(() {});
-    // });
-
-    // Future.delayed(const Duration(seconds: 5), () {
-    //   _controller.startAnimation();
-    // });
-
     _pageController.addListener(() {
       setState(() {
         _currentPage = _pageController.page!.round();
@@ -66,6 +53,7 @@ class _HomeScreenState extends State<HomeScreens>
     });
   }
 
+  // fungsi untuk custom ml sendiri
   void _showAddWaterModal(BuildContext context) {
     BottomPicker(
       items: List.generate(20, (index) {
@@ -93,9 +81,11 @@ class _HomeScreenState extends State<HomeScreens>
           ],
         );
       }),
+      
       height: 350, // Tinggi modal
       pickerTitle: const Text(
         'Pilih Jumlah Air',
+        
         style: TextStyle(
             fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
       ),
@@ -120,8 +110,10 @@ class _HomeScreenState extends State<HomeScreens>
     ).show(context);
   }
 
+
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.blue[50],
       body: Stack(
@@ -142,12 +134,15 @@ class _HomeScreenState extends State<HomeScreens>
                         fontFamily: "Gluten")),
 
                 // menampilkan username
-                Text(
-                  "Hai, ${widget.name}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                Transform.translate(
+                  offset: const Offset(0, -5),
+                  child: Text(
+                    "Hai, ${widget.name}",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -169,7 +164,7 @@ class _HomeScreenState extends State<HomeScreens>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 100),
+                const SizedBox(height: 50),
                 Padding(
                   padding: const EdgeInsets.all(42.0),
                   child: Center(
@@ -178,9 +173,9 @@ class _HomeScreenState extends State<HomeScreens>
                       aspectRatio: 1,
                       valueNotifier: _valueNotifier,
                       progress: _valueNotifier.value,
-                      startAngle: 250, // start awal lingkaran
-                      sweepAngle: 222, // finie lingkaran
-                      foregroundColor: Color(0xFF00A6FB),
+                      startAngle: 230, // start awal lingkaran
+                      sweepAngle: 260, // finie lingkaran
+                      foregroundColor: const Color(0xFF00A6FB),
                       backgroundColor: const Color(0xFFA1E3F9),
                       foregroundStrokeWidth: 15, //ketebalan dalam lingkaran
                       backgroundStrokeWidth: 15, //ketebalan dalam lingkaran
@@ -196,9 +191,9 @@ class _HomeScreenState extends State<HomeScreens>
                               Text(
                                 '${value.toInt()}%', //persentage
                                 style: const TextStyle(
-                                  color: const Color(0xFF2F2E41),
+                                  color: Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w300,
-                                  fontSize: 60,
+                                  fontSize: 40,
                                 ),
                               ),
                               //Target harian
@@ -217,8 +212,8 @@ class _HomeScreenState extends State<HomeScreens>
                                   ),
                                   Text(
                                     ' / ${target.toInt()} ml', // target harian
-                                    style: TextStyle(
-                                      color: const Color(
+                                    style: const TextStyle(
+                                      color: Color(
                                           0xFF2F2E41), // Warna berubah
                                       fontWeight: FontWeight.w500,
                                       fontSize: 16,
@@ -234,56 +229,54 @@ class _HomeScreenState extends State<HomeScreens>
                   ),
                 ),
                 // buat yang memilih gelas
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 350,
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(10),
-                          topRight: Radius.circular(10),
-                        ),
+                Transform.translate(
+                  offset: const Offset(0, -20),
+                  child: Container(
+                    width: screenWidth * (0.8 + 0.04),
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10),
                       ),
-
-                      // bagian tambah air
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          // Tambah air default
-                          _buildDrinkOption("Air", 100),
-                          _buildDrinkOption("Air", 150),
-                          _buildDrinkOption("Air", 200),
-
-                          // Tambah air custom
-                          GestureDetector(
-                            onTap: () => _showAddWaterModal(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                              child: SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: FloatingActionButton(
-                                  backgroundColor: Colors.blue,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(30),
-                                  ),
-                                  onPressed: () {
-                                    _showAddWaterModal(context);
-                                  },
-                                  child: const Icon(Icons.add,
-                                      color: Colors.white),
+                    ),
+                  
+                    // bagian tambah air
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        // Tambah air default
+                        _buildDrinkOption(100),
+                        _buildDrinkOption(150),
+                        _buildDrinkOption(200),
+                  
+                        // Tambah air custom
+                        GestureDetector(
+                          onTap: () => _showAddWaterModal(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 10),
+                            child: SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: FloatingActionButton(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
+                                onPressed: () {
+                                  _showAddWaterModal(context);
+                                },
+                                child: const Icon(Icons.add,
+                                    color: Colors.white),
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 )
               ],
             ),
@@ -294,51 +287,20 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
-  // Membuat button untuk menambah jumlah air
-  Widget _buildWaterButton(double amount) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        onPressed: () {
-          _addWater(amount);
-          Navigator.pop(context); // Tutup modal setelah memilih
-        },
-        child: Text("+ ${amount.toInt()} ml",
-            style: const TextStyle(color: Colors.white)),
-      ),
-    );
-  }
-
   // memilih opsi gelas favorit
-  Widget _buildDrinkOption(String name, double amount) {
+  Widget _buildDrinkOption(double amount) {
     return Column(
       children: [
-        IconButton(
-          icon: const Icon(Icons.local_drink, color: Colors.blue),
-          onPressed: () => _addWater(amount),
-          iconSize: 26, // Atur ukuran ikon agar lebih proporsional
-          visualDensity:
-              VisualDensity.compact, // Mengurangi ruang kosong di sekitar ikon
-        ),
-        Text(
-          name,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF2F2E41),
-            fontWeight: FontWeight.w600,
-          ),
+        GestureDetector(
+          onTap: () => _addWater(amount),
+          child: Image.asset("assets/images/glass.png", fit: BoxFit.contain, width: 30, height: 30,),
         ),
         Text(
           '${amount.toInt()} ml',
           style: const TextStyle(
             fontSize: 12,
-            color: Colors.grey,
-            fontWeight: FontWeight.w600,
+            color: Colors.black,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],
