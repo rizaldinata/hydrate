@@ -1,5 +1,6 @@
 import 'package:bottom_picker/bottom_picker.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:hydrate/controller/home_controller.dart';
 import 'package:hydrate/view/screen/navigation.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
@@ -23,12 +24,14 @@ class _HomeScreenState extends State<HomeScreens>
   // Inisialisasi scrollbar
   int selectedWater = 150; // Default 150mL
   int totalWater = 0; // Total konsumsi air
+  Timer? _coutdownTimer;
+  int _remainingSeconds = 0; // inisiasi awal dari timer
 
   @override
   void initState() {
     _pageController.addListener(() {
       setState(() {
-        _currentPage = _pageController.page!.round();
+        _currentPage = _pageController.page!.round() ?? 0;
       });
     });
   }
@@ -38,7 +41,32 @@ class _HomeScreenState extends State<HomeScreens>
   void dispose() {
     // _controller.dispose();
     _pageController.dispose();
+    _coutdownTimer?.cancel();
     super.dispose();
+  }
+
+  // fungsi untuk start timer
+  void _startCoutdown() {
+    _coutdownTimer?.cancel();
+    setState(() {
+      _remainingSeconds = 3600;
+    });
+    _coutdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_remainingSeconds > 0) {
+        setState(() {
+          _remainingSeconds--;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  // fungsi mengubah format waktu
+    String _formatTime(int seconds) {
+    int minutes = seconds ~/ 60;
+    int secs = seconds % 60;
+    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
   }
 
   // Fungsi untuk menambah jumlah air
@@ -51,6 +79,7 @@ class _HomeScreenState extends State<HomeScreens>
       }
       _valueNotifier.value = (currentIntake / target) * 100;
     });
+    _startCoutdown();
   }
 
   // fungsi untuk custom ml sendiri
@@ -105,6 +134,7 @@ class _HomeScreenState extends State<HomeScreens>
           }
           _valueNotifier.value = (currentIntake / target) * 100;
         });
+        _startCoutdown();
       },
     ).show(context);
   }
@@ -236,10 +266,10 @@ class _HomeScreenState extends State<HomeScreens>
                     ),
                     alignment: Alignment
                         .center, // Agar teks di tengah vertikal dan horizontal
-                    child: const Text(
-                      "NEXT DRINK IN 30:30",
+                    child: Text(
+                      _remainingSeconds > 0 ? "NEXT DRINK IN ${_formatTime(_remainingSeconds)}" : "TAP TO DRINK!",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
