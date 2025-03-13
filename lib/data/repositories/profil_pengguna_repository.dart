@@ -9,4 +9,15 @@ class ProfilPenggunaRepository {
     final db = await _dbHelper.database;
     return await db.insert('profil_pengguna', profil.toMap());
   }
+
+  // edit profil pengguna
+   Future<int> editProfilPengguna(ProfilPengguna profil) async {
+    final db = await _dbHelper.database;
+    return await db.update(
+      'profil_pengguna',
+      profil.toMap(),
+      where: 'id = ?',
+      whereArgs: [profil.id],
+    );
+  }
 }
