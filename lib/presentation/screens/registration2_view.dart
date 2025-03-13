@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/screens/home_screen.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
@@ -10,12 +11,14 @@ class RegistrationTime extends StatefulWidget {
   final String gender;
   final double weight;
 
-  const RegistrationTime({
+  RegistrationTime({
     Key? key,
     required this.name,
     required this.gender,
     required this.weight,
   }) : super(key: key);
+
+final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   _RegistrationTimeState createState() => _RegistrationTimeState();
@@ -129,7 +132,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                 ),
 
                 const SizedBox(height: 20),
-
+            
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
