@@ -81,11 +81,10 @@ class _HomeScreenState extends State<HomeScreens>
           ],
         );
       }),
-      
+
       height: 350, // Tinggi modal
       pickerTitle: const Text(
         'Pilih Jumlah Air',
-        
         style: TextStyle(
             fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
       ),
@@ -109,7 +108,6 @@ class _HomeScreenState extends State<HomeScreens>
       },
     ).show(context);
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +143,6 @@ class _HomeScreenState extends State<HomeScreens>
                     ),
                   ),
                 ),
-                const SizedBox(height: 4),
 
                 // Kata-kata pencapaian
                 const Text(
@@ -164,7 +161,6 @@ class _HomeScreenState extends State<HomeScreens>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 50),
                 Padding(
                   padding: const EdgeInsets.all(42.0),
                   child: Center(
@@ -213,8 +209,7 @@ class _HomeScreenState extends State<HomeScreens>
                                   Text(
                                     ' / ${target.toInt()} ml', // target harian
                                     style: const TextStyle(
-                                      color: Color(
-                                          0xFF2F2E41), // Warna berubah
+                                      color: Color(0xFF2F2E41), // Warna berubah
                                       fontWeight: FontWeight.w500,
                                       fontSize: 16,
                                     ),
@@ -228,54 +223,76 @@ class _HomeScreenState extends State<HomeScreens>
                     ),
                   ),
                 ),
-                // buat yang memilih gelas
+                // next hidrasi
                 Transform.translate(
-                  offset: const Offset(0, -20),
+                  offset: const Offset(0, -40),
                   child: Container(
-                    width: screenWidth * (0.8 + 0.04),
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
+                    width: screenWidth * 0.6,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: Colors.deepOrange,
+                      borderRadius:
+                          BorderRadius.circular(20),
+                    ),
+                    alignment: Alignment
+                        .center, // Agar teks di tengah vertikal dan horizontal
+                    child: const Text(
+                      "NEXT DRINK IN 30:30",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                  
-                    // bagian tambah air
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // Tambah air default
-                        _buildDrinkOption(100),
-                        _buildDrinkOption(150),
-                        _buildDrinkOption(200),
-                  
-                        // Tambah air custom
-                        GestureDetector(
-                          onTap: () => _showAddWaterModal(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 10),
-                            child: SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: FloatingActionButton(
-                                backgroundColor: Colors.blue,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                onPressed: () {
-                                  _showAddWaterModal(context);
-                                },
-                                child: const Icon(Icons.add,
-                                    color: Colors.white),
+                  ),
+                ),
+
+                // buat yang memilih gelas
+                Container(
+                  width: screenWidth * (0.8 + 0.04),
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(10),
+                      topRight: Radius.circular(10),
+                    ),
+                  ),
+                
+                  // bagian tambah air
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      // Tambah air default
+                      _buildDrinkOption(100),
+                      _buildDrinkOption(150),
+                      _buildDrinkOption(200),
+                
+                      // Tambah air custom
+                      GestureDetector(
+                        onTap: () => _showAddWaterModal(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: FloatingActionButton(
+                              backgroundColor: Colors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
                               ),
+                              onPressed: () {
+                                _showAddWaterModal(context);
+                              },
+                              child: const Icon(Icons.add,
+                                  color: Colors.white),
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 )
               ],
@@ -293,7 +310,12 @@ class _HomeScreenState extends State<HomeScreens>
       children: [
         GestureDetector(
           onTap: () => _addWater(amount),
-          child: Image.asset("assets/images/glass.png", fit: BoxFit.contain, width: 30, height: 30,),
+          child: Image.asset(
+            "assets/images/glass.png",
+            fit: BoxFit.contain,
+            width: 30,
+            height: 30,
+          ),
         ),
         Text(
           '${amount.toInt()} ml',
