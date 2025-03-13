@@ -194,7 +194,6 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                           penggunaData = await _penggunaRepository
                               .getPenggunaBynama(widget.name);
                         });
-
                         Navigator.push(
                           context,
                           MaterialPageRoute(
