@@ -20,23 +20,6 @@ lib/
 │       ├── riwayat_hidrasi_repository.dart
 │       └── target_hidrasi_repository.dart
 │
-├── domain/                         # Lapisan ini berisi Use Cases atau Interactors yang menangani logika bisnis
-│   ├── entities/                   # Berisi entitas atau model domain
-│   │   ├── pengguna.dart
-│   │   ├── profil_pengguna.dart
-│   │   ├── riwayat_hidrasi.dart
-│   │   └── target_hidrasi.dart
-│   ├── repositories/               # Berisi antarmuka untuk repository yang akan digunakan di lapisan data
-│   │   ├── pengguna_repository.dart
-│   │   ├── profil_pengguna_repository.dart
-│   │   ├── riwayat_hidrasi_repository.dart
-│   │   └── target_hidrasi_repository.dart
-│   └── use_cases/                  # Berisi Use Case untuk memisahkan dan menjalankan logika bisnis
-│       ├── get_pengguna.dart
-│       ├── get_profil_pengguna.dart
-│       ├── get_riwayat_hidrasi.dart
-│       └── get_target_hidrasi.dart
-│
 ├── presentation/                   # Layer presentasi untuk menangani UI dan interaksi dengan pengguna
 │   ├── controllers/                # Berisi file controller yang menangani alur dan interaksi antar komponen
 │   │   ├── home_controller.dart

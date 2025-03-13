@@ -1,9 +1,9 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import '../models/pengguna_model.dart';
-import '../models/profil_pengguna_model.dart';
-import '../models/target_hidrasi_model.dart';
-import '../models/riwayat_hidrasi_model.dart';
+// import '../models/pengguna_model.dart';
+// import '../models/profil_pengguna_model.dart';
+// import '../models/target_hidrasi_model.dart';
+// import '../models/riwayat_hidrasi_model.dart';
 
 // class DatabaseHelper {
 //   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -199,6 +199,7 @@ class DatabaseHelper {
 
   DatabaseHelper._internal();
 
+ // menampilkan database dari sqlite
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
@@ -239,27 +240,25 @@ class DatabaseHelper {
 
           await db.execute('''
             CREATE TABLE target_hidrasi (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  fk_id_pengguna INTEGER NOT NULL,
-  target_hidrasi REAL NOT NULL,
-  tanggal_hidrasi TEXT NOT NULL,  -- Bisa menggunakan tanggal untuk memisahkan target per hari
-  total_hidrasi_harian REAL NOT NULL,  -- Untuk memudahkan perbandingan konsumsi dengan target harian
-  FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
-);
-
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fk_id_pengguna INTEGER NOT NULL,
+            target_hidrasi REAL NOT NULL,
+            tanggal_hidrasi TEXT NOT NULL,
+            total_hidrasi_harian REAL NOT NULL, 
+            FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
+          );
           ''');
 
           await db.execute('''
             CREATE TABLE riwayat_hidrasi (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  fk_id_pengguna INTEGER NOT NULL,
-  jumlah_hidrasi REAL NOT NULL,
-  tanggal_hidrasi TEXT NOT NULL,
-  waktu_hidrasi TEXT NOT NULL,  -- Diganti menjadi timestamp atau tetap disesuaikan
-  timestamp INTEGER NOT NULL,   -- Kolom timestamp untuk waktu yang lebih spesifik
-  FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
-);
-
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fk_id_pengguna INTEGER NOT NULL,
+            jumlah_hidrasi REAL NOT NULL,
+            tanggal_hidrasi TEXT NOT NULL,
+            waktu_hidrasi TEXT NOT NULL,  
+            timestamp INTEGER NOT NULL, 
+            FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
+          );
           ''');
 
           print("Database berhasil dibuat!");
