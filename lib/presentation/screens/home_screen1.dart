@@ -1,8 +1,8 @@
 import 'package:bottom_picker/bottom_picker.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:hydrate/controller/home_controller.dart';
-import 'package:hydrate/view/screen/navigation.dart';
+import 'package:hydrate/presentation/controllers/home_controller.dart';
+import 'package:hydrate/presentation/widgets/navigation.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 
 class HomeScreens extends StatefulWidget {
@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreens>
     super.dispose();
   }
 
-  // fungsi untuk start timer
+  // fungsi untuk start timer 
   void _startCoutdown() {
     _coutdownTimer?.cancel();
     setState(() {

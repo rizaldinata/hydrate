@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/view/registration1_view.dart';
+import 'package:hydrate/presentation/screens/registration1_view.dart';
 
 class InfoProduct extends StatelessWidget {
   @override
