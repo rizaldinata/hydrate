@@ -19,7 +19,8 @@ class _HomeScreenState extends State<HomeScreens>
   int _currentPage = 0;
   final double target = 1500; // Target harian air
   double currentIntake = 0; // Nilai awal air dalam ml
-  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); //nilai persen awal
+  final ValueNotifier<double> _valueNotifier =
+      ValueNotifier<double>(0); //nilai persen awal
 
   // Inisialisasi scrollbar
   int selectedWater = 150; // Default 150mL
@@ -48,7 +49,7 @@ class _HomeScreenState extends State<HomeScreens>
     super.dispose();
   }
 
-  // fungsi untuk start timer 
+  // fungsi untuk start timer
   void _startCoutdown() {
     _coutdownTimer?.cancel();
     setState(() {
@@ -66,7 +67,7 @@ class _HomeScreenState extends State<HomeScreens>
   }
 
   // fungsi mengubah format waktu
-    String _formatTime(int seconds) {
+  String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int secs = seconds % 60;
     return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
@@ -168,7 +169,8 @@ class _HomeScreenState extends State<HomeScreens>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Icon(Icons.water_drop, size: 24, color: Color(0xFF4ACCFF)),
+                          Icon(Icons.water_drop,
+                              size: 24, color: Color(0xFF4ACCFF)),
                           Text(
                             "mL",
                             style: TextStyle(
@@ -191,15 +193,15 @@ class _HomeScreenState extends State<HomeScreens>
                       onPressed: () {
                         setState(() {
                           selectedWater = tempSelectedWater;
-                           if (currentIntake + selectedWater <= target) {
-                              currentIntake += selectedWater;
-                            } else {
-                              currentIntake =
-                                  target; // Jika melebihi target, tetap pada target maksimal
-                            }
-                             _valueNotifier.value = (currentIntake / target) * 100;
+                          if (currentIntake + selectedWater <= target) {
+                            currentIntake += selectedWater;
+                          } else {
+                            currentIntake =
+                                target; // Jika melebihi target, tetap pada target maksimal
+                          }
+                          _valueNotifier.value = (currentIntake / target) * 100;
                         });
-                         _startCoutdown();
+                        _startCoutdown();
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
@@ -304,7 +306,7 @@ class _HomeScreenState extends State<HomeScreens>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${value.toInt()}%', //persentage
+                                '${value.ceil()}%', //persentage
                                 style: const TextStyle(
                                   color: Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w300,
@@ -352,12 +354,14 @@ class _HomeScreenState extends State<HomeScreens>
                     height: 30,
                     decoration: BoxDecoration(
                       color: Colors.deepOrange,
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    alignment: Alignment.center, // Agar teks di tengah vertikal dan horizontal
+                    alignment: Alignment
+                        .center, // Agar teks di tengah vertikal dan horizontal
                     child: Text(
-                      _remainingSeconds > 0 ? "NEXT DRINK IN ${_formatTime(_remainingSeconds)}" : "TAP TO DRINK!",
+                      _remainingSeconds > 0
+                          ? "NEXT DRINK IN ${_formatTime(_remainingSeconds)}"
+                          : "TAP TO DRINK!",
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 18,
@@ -379,7 +383,7 @@ class _HomeScreenState extends State<HomeScreens>
                       topRight: Radius.circular(10),
                     ),
                   ),
-                
+
                   // bagian tambah air
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -388,7 +392,7 @@ class _HomeScreenState extends State<HomeScreens>
                       _buildDrinkOption(100),
                       _buildDrinkOption(150),
                       _buildDrinkOption(200),
-                
+
                       // Tambah air custom
                       GestureDetector(
                         onTap: () => _showAddWaterModal(context),
@@ -406,8 +410,7 @@ class _HomeScreenState extends State<HomeScreens>
                               onPressed: () {
                                 _showAddWaterModal(context);
                               },
-                              child: const Icon(Icons.add,
-                                  color: Colors.white),
+                              child: const Icon(Icons.add, color: Colors.white),
                             ),
                           ),
                         ),
