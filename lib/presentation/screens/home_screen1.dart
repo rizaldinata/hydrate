@@ -18,7 +18,7 @@ class _HomeScreenState extends State<HomeScreens>
   final PageController _pageController = PageController();
   int _currentPage = 0;
   final double target = 1500; // Target harian air
-  double currentIntake = 0; // Nilai awal air dalam ml
+  double currentIntake = 0; // Nilai awal air dalam mL
   final ValueNotifier<double> _valueNotifier =
       ValueNotifier<double>(0); //nilai persen awal
 
@@ -73,7 +73,7 @@ class _HomeScreenState extends State<HomeScreens>
     return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
   }
 
-  // Fungsi untuk menambah jumlah air
+  // Fungsi untuk menambah jumLah air
   void _addWater(double amount) {
     setState(() {
       if (currentIntake + amount <= target) {
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreens>
     _startCoutdown();
   }
 
-  // fungsi untuk custom ml sendiri
+  // fungsi untuk custom mL sendiri
   void _showAddWaterModal(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -319,7 +319,7 @@ class _HomeScreenState extends State<HomeScreens>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    '${currentIntake.toInt()} ml', // capaian harian
+                                    '${currentIntake.toInt()} mL', // capaian harian
                                     style: TextStyle(
                                       color: currentIntake >= target
                                           ? Colors.blue
@@ -329,7 +329,7 @@ class _HomeScreenState extends State<HomeScreens>
                                     ),
                                   ),
                                   Text(
-                                    ' / ${target.toInt()} ml', // target harian
+                                    ' / ${target.toInt()} mL', // target harian
                                     style: const TextStyle(
                                       color: Color(0xFF2F2E41),
                                       fontWeight: FontWeight.w500,
@@ -441,7 +441,7 @@ class _HomeScreenState extends State<HomeScreens>
           ),
         ),
         Text(
-          '${amount.toInt()} ml',
+          '${amount.toInt()} mL',
           style: const TextStyle(
             fontSize: 12,
             color: Colors.black,
