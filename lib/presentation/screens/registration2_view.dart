@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/view/screen/home_screen.dart';
-import 'package:hydrate/view/screen/home_screen1.dart';
+import 'package:hydrate/presentation/screens/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
   final String name;

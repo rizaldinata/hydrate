@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/view/registration2_view.dart';
+import 'package:hydrate/presentation/screens/registration2_view.dart';
 
 class RegistrationData extends StatefulWidget {
   @override
