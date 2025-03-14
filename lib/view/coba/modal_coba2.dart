@@ -9,6 +9,8 @@ class ButtonPicker extends StatefulWidget {
 
 class _ButtonPickerState extends State<ButtonPicker> {
   int selectedWater = 50; // Default ukuran air
+  int currentWater = 0; // Target air yang telah diminum
+  final int targetWater = 1500; // Target total
 
   void _showWaterPicker() {
     showModalBottomSheet(
@@ -18,11 +20,12 @@ class _ButtonPickerState extends State<ButtonPicker> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        int tempSelectedWater = selectedWater; // Variabel sementara
+        int tempSelectedWater = selectedWater;
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              height: MediaQuery.of(context).size.height * 0.5,
+              height: 420,
               padding: EdgeInsets.all(16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -31,64 +34,119 @@ class _ButtonPickerState extends State<ButtonPicker> {
                     "Pilih Ukuran Air",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
+                  Divider(
+                    color: Colors.blue,
+                    thickness: 1,
+                    height: 20,
+                  ),
                   SizedBox(height: 20),
 
-                  // Stack agar teks di tengah tetap diam
+                  // Stack agar angka yang dipilih berada di tengah
                   Stack(
                     alignment: Alignment.center,
                     children: [
-                      
-
-                      // Highlight tetap di tengah
-                      Container(
-                        height: 50,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2), // Highlight
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.edit, size: 24, color: Colors.blueGrey),
-                            SizedBox(width: 20),
-                            Padding(
-                              padding: EdgeInsets.only(left: 50.0, right: 40.0),
-                              child: Text(
-                                "$tempSelectedWater",
-                                style: TextStyle(
+                      // ListWheelScrollView untuk memilih ukuran air
+                      SizedBox(
+                        height: 200,
+                        child: ListWheelScrollView.useDelegate(
+                          itemExtent: 50,
+                          perspective: 0.005,
+                          diameterRatio: 1.5,
+                          physics: FixedExtentScrollPhysics(),
+                          controller: FixedExtentScrollController(
+                            initialItem: initialItemIndex(),
+                          ),
+                          onSelectedItemChanged: (index) {
+                            setModalState(() {
+                              tempSelectedWater = (index + 1) * 50;
+                            });
+                          },
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 20,
+                            builder: (context, index) {
+                              int waterValue = (index + 1) * 50;
+                              return Center(
+                                child: Text(
+                                  "$waterValue",
+                                  style: TextStyle(
                                     fontSize: 40,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blue),
-                              ),
-                            ),
-                            SizedBox(width: 20),
-                            Text(
-                              "mL",
-                              style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
-                            ),
-                          ],
+                                    color: tempSelectedWater == waterValue
+                                        ? const Color(0xFF00A6FB)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
+                      ),
+
+                      // Highlight transparan agar ukuran di tengah lebih terlihat
+                      Container(
+                        height: 50,
+                        width: MediaQuery.of(context).size.width - 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00A6FB).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Icon(Icons.water_drop, size: 24, color: Color(0xFF4ACCFF)),
+                          Text(
+                            "mL",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2F2E41),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
 
-                  SizedBox(height: 20),
+                  SizedBox(height: 40),
 
-                  // Tombol "Pilih" untuk konfirmasi ukuran air
-                  ElevatedButton(
-                    onPressed: () {
-                      if (mounted) {
+                  // Informasi target air yang telah diminum
+                  Text(
+                    "Target: $currentWater/$targetWater mL",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black54),
+                  ),
+                  SizedBox(height: 10),
+
+                  // Tombol Pilih
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width - 100,
+                    child: ElevatedButton(
+                      onPressed: () {
                         setState(() {
                           selectedWater = tempSelectedWater;
+                          currentWater += tempSelectedWater; // Tambahkan air ke target
+                          if (currentWater > targetWater) {
+                            currentWater = targetWater; // Batas maksimum
+                          }
                         });
-                      }
-                      Navigator.pop(context);
-                    },
-                    child: Text("Pilih"),
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        "Pilih",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -97,6 +155,10 @@ class _ButtonPickerState extends State<ButtonPicker> {
         );
       },
     );
+  }
+
+  int initialItemIndex() {
+    return (selectedWater ~/ 50) - 1;
   }
 
   @override
@@ -110,6 +172,11 @@ class _ButtonPickerState extends State<ButtonPicker> {
               "Ukuran Air: $selectedWater mL",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
+            SizedBox(height: 10),
+            Text(
+              "Target Air: $currentWater/$targetWater mL",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue),
+            ),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: _showWaterPicker,
@@ -117,24 +184,6 @@ class _ButtonPickerState extends State<ButtonPicker> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// Widget untuk menampilkan ukuran air
-class WaterSized extends StatelessWidget {
-  final int water;
-
-  WaterSized({required this.water});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        "$water",
-        style: TextStyle(
-            fontSize: 40, fontWeight: FontWeight.bold, color: Colors.grey),
       ),
     );
   }

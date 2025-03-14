@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/view/info_product_view.dart';
-import 'package:hydrate/view/screen/circular.dart';
-import 'package:hydrate/view/screen/coba_air.dart';
 import 'package:hydrate/view/screen/home_screen.dart';
 import 'package:hydrate/view/screen/home_screen1.dart';
 import 'package:hydrate/view/coba/modal_coba2.dart';
 import 'package:hydrate/view/screen/modal_coba.dart';
-
+import 'package:hydrate/view/screen/profile_screen.dart';
 void main(List<String> args) {
   runApp(const MyApp());
 }
@@ -20,8 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      // home: InfoProduct(),
-      home: ButtonPicker(),
+      home: InfoProduct(),
     );
   }
 }
