@@ -1,0 +1,2 @@
+C:/pdbl/hydrate/android/app/.cxx/Debug/3i51j483/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/pdbl/hydrate/android/app/.cxx/Debug/3i51j483/armeabi-v7a/CMakeFiles/rebuild_cache.dir
