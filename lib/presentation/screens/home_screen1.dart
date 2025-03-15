@@ -15,13 +15,16 @@ class HomeScreens extends StatefulWidget {
   State<HomeScreens> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreens>
+    with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   final PageController _pageController = PageController();
-  late HydrationCalculator _hydrationCalculator; // Ensure HydrationCalculator is defined
+  late HydrationCalculator
+      _hydrationCalculator; // Ensure HydrationCalculator is defined
   double target = 0; // Target hydration dynamically calculated
   double currentIntake = 0; // Initial water intake in mL
-  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); // Progress percentage
+  final ValueNotifier<double> _valueNotifier =
+      ValueNotifier<double>(0); // Progress percentage
   int selectedWater = 150; // Default water selection is 150mL
 
   Timer? _coutdownTimer;
@@ -44,9 +47,11 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
 
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    await _hydrationCalculator.initializeData(widget.penggunaId); // Ensure this method works
+    await _hydrationCalculator
+        .initializeData(widget.penggunaId); // Ensure this method works
     setState(() {
-      target = _hydrationCalculator.calculateDailyWaterIntake() * 1000; // Calculate target in mL
+      target = _hydrationCalculator.calculateDailyWaterIntake() *
+          1000; // Calculate target in mL
     });
   }
 
@@ -58,7 +63,8 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
       } else {
         currentIntake = target; // Max limit
       }
-      _valueNotifier.value = (currentIntake / target) * 100; // Calculate progress
+      _valueNotifier.value =
+          (currentIntake / target) * 100; // Calculate progress
     });
     _startCoutdown();
   }
@@ -165,7 +171,8 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Icon(Icons.water_drop, size: 24, color: Color(0xFF4ACCFF)),
+                          Icon(Icons.water_drop,
+                              size: 24, color: Color(0xFF4ACCFF)),
                           Text(
                             "mL",
                             style: TextStyle(
@@ -188,7 +195,8 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
                           if (currentIntake + selectedWater <= target) {
                             currentIntake += selectedWater;
                           } else {
-                            currentIntake = target; // If exceeds target, set to max target
+                            currentIntake =
+                                target; // If exceeds target, set to max target
                           }
                           _valueNotifier.value = (currentIntake / target) * 100;
                         });
@@ -229,7 +237,8 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
       body: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -367,7 +376,8 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
                       GestureDetector(
                         onTap: () => _showAddWaterModal(context),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
                           child: SizedBox(
                             width: 40,
                             height: 40,
@@ -390,9 +400,10 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
               ],
             ),
           ),
+          //Positioning the navbar at the bottom
+          const Navigasi(),
         ],
       ),
-      bottomNavigationBar: const Navigasi(),  // Positioning the navbar at the bottom
     );
   }
 
