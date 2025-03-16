@@ -14,7 +14,7 @@ class _RegistrationDataState extends State<RegistrationData> {
 
   String? _gender = "Female";
   String selectedGender = "Perempuan"; // Default gender
-  bool _showWarning = false;
+  // bool _showWarning = false;
 
   // Validasi input
   bool _isFormValid() {
@@ -52,23 +52,24 @@ class _RegistrationDataState extends State<RegistrationData> {
                   children: [
                     Icon(
                       Icons.warning_amber_outlined,
-                      color: Colors.orangeAccent,
+                      color: const Color(0XFFFFB830),
                       size: 60,
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      "Tolong lengkapi semua data terlebih dahulu!",
+                      "Harap lengkapi semua data terlebih dahulu!",
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: const Color(0xFF2F2E41),
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent, // Background color
+                        backgroundColor:
+                            const Color(0XFFFFB830), // Background color
                         foregroundColor: Colors.white, // Text color
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -80,7 +81,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                         Navigator.of(context).pop(); // Menutup modal
                       },
                       child: Text(
-                        "OK",
+                        "Kembali",
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -162,7 +163,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   ),
                 ),
 
-                const SizedBox(height: 40),
+                const SizedBox(height: 20),
 
                 // Input Nama Lengkap
                 TextField(
@@ -199,98 +200,115 @@ class _RegistrationDataState extends State<RegistrationData> {
                     border:
                         Border.all(color: const Color(0xFF00A6FB), width: 2),
                   ),
-                  child: Row(
+                  child: Stack(
                     children: [
-                      // Tombol Perempuan
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedGender = "Female";
-                              _gender = "Female";
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _gender == "Female"
-                                  ? const Color(0xFF00A6FB)
-                                  : Colors.white.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.woman,
-                                  color: _gender == "Female"
-                                      ? Colors.white
-                                      : const Color(0xFF2F2E41)
-                                          .withOpacity(0.5),
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  "Perempuan",
-                                  style: TextStyle(
-                                    color: _gender == "Female"
-                                        ? Colors.white
-                                        : const Color(0xFF2F2E41)
-                                            .withOpacity(0.5),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      // Background animasi bergerak
+                      AnimatedAlign(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                        alignment: _gender == "Female"
+                            ? Alignment.centerLeft
+                            : Alignment.centerRight,
+                        child: Container(
+                          width: MediaQuery.of(context).size.width / 2 -
+                              20, // Lebar setengah dari container
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00A6FB),
+                            borderRadius: BorderRadius.circular(50),
                           ),
                         ),
                       ),
-
-                      // Tombol Laki-laki
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedGender = "Male";
-                              _gender = "Male";
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: _gender == "Male"
-                                  ? const Color(0xFF00A6FB)
-                                  : Colors.white.withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.man,
-                                  color: _gender == "Male"
-                                      ? Colors.white
-                                      : const Color(0xFF2F2E41)
-                                          .withOpacity(0.5),
-                                  size: 24,
+                      Row(
+                        children: [
+                          // Tombol Perempuan
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _gender = "Female";
+                                });
+                              },
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.horizontal(
+                                      left: Radius.circular(50)),
                                 ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  "Laki - Laki",
-                                  style: TextStyle(
-                                    color: _gender == "Male"
-                                        ? Colors.white
-                                        : const Color(0xFF2F2E41)
-                                            .withOpacity(0.5),
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.woman,
+                                      color: _gender == "Female"
+                                          ? Colors.white
+                                          : const Color(0xFF2F2E41)
+                                              .withOpacity(0.5),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      "Perempuan",
+                                      style: TextStyle(
+                                        color: _gender == "Female"
+                                            ? Colors.white
+                                            : const Color(0xFF2F2E41)
+                                                .withOpacity(0.5),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
-                        ),
+
+                          // Tombol Laki-laki
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _gender = "Male";
+                                });
+                              },
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.horizontal(
+                                      right: Radius.circular(50)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.man,
+                                      color: _gender == "Male"
+                                          ? Colors.white
+                                          : const Color(0xFF2F2E41)
+                                              .withOpacity(0.5),
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      "Laki - Laki",
+                                      style: TextStyle(
+                                        color: _gender == "Male"
+                                            ? Colors.white
+                                            : const Color(0xFF2F2E41)
+                                                .withOpacity(0.5),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -332,27 +350,8 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 // Tombol Selanjutnya
                 GestureDetector(
-                  onTap: () {
-                    if (_isFormValid()) {
-                      double? weight = double.tryParse(controllerWeight.text);
-
-                      if (weight != null) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => RegistrationTime(
-                              name: controllerName.text,
-                              gender: _gender ?? "belum dipilih",
-                              weight: weight,
-                            ),
-                          ),
-                        );
-                      }
-                    } else {
-                      _showWarningDialog();
-                    }
-                  },
                   child: Container(
+                    margin: const EdgeInsets.only(bottom: 50),
                     height: 55,
                     width: double.infinity,
                     decoration: BoxDecoration(
