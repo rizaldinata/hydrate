@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/presentation/screens/home_screen1.dart';
 
 class Navigasi extends StatefulWidget {
   const Navigasi({super.key});
@@ -106,6 +108,14 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
                                 animateDrop(icons.indexOf(icon));
                                 selected = icons.indexOf(icon);
                               });
+                              
+                              // Pindah Halaman Profile
+                              if (icons.indexOf(icon) == 2){
+                                Navigator.push(
+                                  context, 
+                                  MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                              }
+
                             },
                             child: AnimatedContainer(
                               duration: const Duration(
