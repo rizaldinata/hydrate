@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
@@ -58,13 +60,10 @@ class _HomeScreenState extends State<HomeScreens>
   // Function to add water intake
   void _addWater(double amount) {
     setState(() {
-      if (currentIntake + amount <= target) {
-        currentIntake += amount;
-      } else {
-        currentIntake = target; // Max limit
-      }
-      _valueNotifier.value =
-          (currentIntake / target) * 100; // Calculate progress
+      currentIntake += amount; // Tetap menambah intake tanpa batas
+
+      // Batasi progress agar tidak lebih dari 100%
+      _valueNotifier.value = min(100, (currentIntake / target) * 100);
     });
     _startCoutdown();
     _showAddedWaterPopup(amount);
@@ -94,7 +93,7 @@ class _HomeScreenState extends State<HomeScreens>
     return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
   }
 
-    void _showAddedWaterPopup(double amount) {
+  void _showAddedWaterPopup(double amount) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("Berhasil menambahkan ${amount.toInt()} mL air!"),
@@ -202,14 +201,14 @@ class _HomeScreenState extends State<HomeScreens>
                       onPressed: () {
                         setState(() {
                           selectedWater = tempSelectedWater;
-                          if (currentIntake + selectedWater <= target) {
-                            currentIntake += selectedWater;
-                          } else {
-                            currentIntake =
-                                target; // If exceeds target, set to max target
-                          }
-                          _valueNotifier.value = (currentIntake / target) * 100;
+                          currentIntake +=
+                              selectedWater; // Selalu menambah intake
+
+                          // Pastikan progress tidak lebih dari 100%
+                          _valueNotifier.value =
+                              min(100, (currentIntake / target) * 100);
                         });
+
                         _startCoutdown();
                         Navigator.pop(context);
                       },
@@ -287,62 +286,62 @@ class _HomeScreenState extends State<HomeScreens>
                 Padding(
                   padding: const EdgeInsets.all(42.0),
                   child: Center(
-                    child: DashedCircularProgressBar.aspectRatio(
-                      aspectRatio: 1,
-                      valueNotifier: _valueNotifier,
-                      progress: _valueNotifier.value,
-                      startAngle: 230,
-                      sweepAngle: 260,
-                      foregroundColor: const Color(0xFF00A6FB),
-                      backgroundColor: const Color(0xFFA1E3F9),
-                      foregroundStrokeWidth: 15,
-                      backgroundStrokeWidth: 15,
-                      animation: true,
-                      seekSize: 10,
-                      seekColor: const Color(0xffeeeeee),
-                      child: Center(
-                        child: ValueListenableBuilder(
-                          valueListenable: _valueNotifier,
-                          builder: (_, double value, __) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${value.ceil()}%',
-                                style: const TextStyle(
-                                  color: Color(0xFF2F2E41),
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 40,
+                      child: DashedCircularProgressBar.aspectRatio(
+                    aspectRatio: 1,
+                    valueNotifier: _valueNotifier,
+                    progress:
+                        _valueNotifier.value, // Pastikan progress max 100%
+                    startAngle: 230,
+                    sweepAngle: 260,
+                    foregroundColor: const Color(0xFF00A6FB),
+                    backgroundColor: const Color(0xFFA1E3F9),
+                    foregroundStrokeWidth: 15,
+                    backgroundStrokeWidth: 15,
+                    animation: true,
+                    seekSize: 10,
+                    seekColor: const Color(0xffeeeeee),
+                    child: Center(
+                      child: ValueListenableBuilder(
+                        valueListenable: _valueNotifier,
+                        builder: (_, double value, __) => Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${value.ceil()}%', // Tetap menampilkan maksimal 100%
+                              style: const TextStyle(
+                                color: Color(0xFF2F2E41),
+                                fontWeight: FontWeight.w300,
+                                fontSize: 40,
+                              ),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  '${currentIntake.toInt()} mL', // Tetap menampilkan jumlah air yang dikonsumsi sebenarnya
+                                  style: TextStyle(
+                                    color: currentIntake >= target
+                                        ? Colors.blue
+                                        : Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
                                 ),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '${currentIntake.toInt()} mL',
-                                    style: TextStyle(
-                                      color: currentIntake >= target
-                                          ? Colors.blue
-                                          : Colors.red,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
+                                Text(
+                                  ' / ${target.toInt()} mL',
+                                  style: const TextStyle(
+                                    color: Color(0xFF2F2E41),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 16,
                                   ),
-                                  Text(
-                                    ' / ${target.toInt()} mL',
-                                    style: const TextStyle(
-                                      color: Color(0xFF2F2E41),
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
+                  )),
                 ),
                 Transform.translate(
                   offset: const Offset(0, -40),
@@ -350,14 +349,14 @@ class _HomeScreenState extends State<HomeScreens>
                     width: screenWidth * 0.6,
                     height: 30,
                     decoration: BoxDecoration(
-                      color: Colors.deepOrange,
+                      color: const Color(0XFFFFB831),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       _remainingSeconds > 0
-                          ? "NEXT DRINK IN ${_formatTime(_remainingSeconds)}"
-                          : "TAP TO DRINK!",
+                          ? "Hydrasi selanjutnya ${_formatTime(_remainingSeconds)}"
+                          : "SAATNYA MINUM!",
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 18,
