@@ -273,4 +273,24 @@ class DatabaseHelper {
       rethrow;
     }
   }
+  // Fungsi untuk menyimpan ID pengguna yang sudah terdaftar
+  Future<void> saveUserId(int userId) async {
+    final db = await database;
+    await db.insert(
+      'pengguna',
+      {'id': userId},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    print("User ID berhasil disimpan: $userId");
+  }
+
+  // Fungsi untuk mengambil ID pengguna yang sudah terdaftar
+  Future<int?> getUserId() async {
+    final db = await database;
+    final List<Map<String, dynamic>> result = await db.query('pengguna');
+    if (result.isNotEmpty) {
+      return result.first['id'];
+    }
+    return null;
+  }
 }

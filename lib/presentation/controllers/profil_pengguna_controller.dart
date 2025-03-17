@@ -8,6 +8,6 @@ class ProfilPenggunaController {
   Future<int> tambahProfilPengguna(ProfilPengguna profil) async {
     return await _repository.tambahProfilPengguna(profil);
   }
-
+  
   // ini nanti buat edit profil pengguna
 }
