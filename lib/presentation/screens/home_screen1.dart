@@ -67,6 +67,7 @@ class _HomeScreenState extends State<HomeScreens>
           (currentIntake / target) * 100; // Calculate progress
     });
     _startCoutdown();
+    _showAddedWaterPopup(amount);
   }
 
   // Start countdown timer
@@ -91,6 +92,15 @@ class _HomeScreenState extends State<HomeScreens>
     int minutes = seconds ~/ 60;
     int secs = seconds % 60;
     return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+  }
+
+    void _showAddedWaterPopup(double amount) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Berhasil menambahkan ${amount.toInt()} mL air!"),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   // Show the modal bottom sheet for custom water intake selection
