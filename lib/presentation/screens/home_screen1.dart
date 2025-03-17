@@ -241,24 +241,25 @@ class _HomeScreenState extends State<HomeScreens>
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.blue[50],
       body: Stack(
         children: [
           Padding(
             padding:
-                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+                EdgeInsets.symmetric(horizontal: screenWidth * 0.05 , vertical: screenHeight * 0.07),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("HYDRATE",
                     style: TextStyle(
-                        fontSize: 40,
+                        fontSize: 36,
                         fontWeight: FontWeight.w900,
                         color: Colors.blue,
                         fontFamily: "Gluten")),
                 Transform.translate(
-                  offset: const Offset(0, -5),
+                  offset: Offset(0, screenHeight * -0.008),
                   child: Text(
                     "Hai, ${widget.name}",
                     style: const TextStyle(
@@ -284,7 +285,7 @@ class _HomeScreenState extends State<HomeScreens>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(42.0),
+                  padding: EdgeInsets.all(screenWidth * 0.1),
                   child: Center(
                       child: DashedCircularProgressBar.aspectRatio(
                     aspectRatio: 1,
@@ -344,7 +345,7 @@ class _HomeScreenState extends State<HomeScreens>
                   )),
                 ),
                 Transform.translate(
-                  offset: const Offset(0, -40),
+                  offset: Offset(0, screenHeight * -0.05),
                   child: Container(
                     width: screenWidth * 0.6,
                     height: 30,
