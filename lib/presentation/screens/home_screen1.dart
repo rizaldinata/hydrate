@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
@@ -244,176 +243,180 @@ class _HomeScreenState extends State<HomeScreens>
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.blue[50],
-      body: Stack(
-        children: [
-          Padding(
-            padding:
-                EdgeInsets.symmetric(horizontal: screenWidth * 0.05 , vertical: screenHeight * 0.07),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("HYDRATE",
-                    style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.blue,
-                        fontFamily: "Gluten")),
-                Transform.translate(
-                  offset: Offset(0, screenHeight * -0.008),
-                  child: Text(
-                    "Hai, ${widget.name}",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-                const Text(
-                  "Ayo selesaikan pencapaianmu hari ini!",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsets.all(screenWidth * 0.1),
-                  child: Center(
-                      child: DashedCircularProgressBar.aspectRatio(
-                    aspectRatio: 1,
-                    valueNotifier: _valueNotifier,
-                    progress:
-                        _valueNotifier.value, // Pastikan progress max 100%
-                    startAngle: 230,
-                    sweepAngle: 260,
-                    foregroundColor: const Color(0xFF00A6FB),
-                    backgroundColor: const Color(0xFFA1E3F9),
-                    foregroundStrokeWidth: 15,
-                    backgroundStrokeWidth: 15,
-                    animation: true,
-                    seekSize: 10,
-                    seekColor: const Color(0xffeeeeee),
-                    child: Center(
-                      child: ValueListenableBuilder(
-                        valueListenable: _valueNotifier,
-                        builder: (_, double value, __) => Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '${value.ceil()}%', // Tetap menampilkan maksimal 100%
-                              style: const TextStyle(
-                                color: Color(0xFF2F2E41),
-                                fontWeight: FontWeight.w300,
-                                fontSize: 40,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  '${currentIntake.toInt()} mL', // Tetap menampilkan jumlah air yang dikonsumsi sebenarnya
-                                  style: TextStyle(
-                                    color: currentIntake >= target
-                                        ? Colors.blue
-                                        : Colors.red,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                Text(
-                                  ' / ${target.toInt()} mL',
-                                  style: const TextStyle(
-                                    color: Color(0xFF2F2E41),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  )),
-                ),
-                Transform.translate(
-                  offset: Offset(0, screenHeight * -0.05),
-                  child: Container(
-                    width: screenWidth * 0.6,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: const Color(0XFFFFB831),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Padding(
+              padding:
+                  EdgeInsets.symmetric(horizontal: screenWidth * 0.05 , vertical: screenHeight * 0.07),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("HYDRATE",
+                      style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.blue,
+                          fontFamily: "Gluten")),
+                  Transform.translate(
+                    offset: Offset(0, screenHeight * -0.008),
                     child: Text(
-                      _remainingSeconds > 0
-                          ? "Hydrasi selanjutnya ${_formatTime(_remainingSeconds)}"
-                          : "SAATNYA MINUM!",
-                      textAlign: TextAlign.center,
+                      "Hai, ${widget.name}",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
-                ),
-                Container(
-                  width: screenWidth * (0.8 + 0.04),
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10),
+                  const Text(
+                    "Ayo selesaikan pencapaianmu hari ini!",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
                     ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildDrinkOption(100),
-                      _buildDrinkOption(150),
-                      _buildDrinkOption(200),
-                      GestureDetector(
-                        onTap: () => _showAddWaterModal(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: FloatingActionButton(
-                              backgroundColor: Colors.blue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                ],
+              ),
+            ),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(height: screenHeight * 0.2,),
+                  Padding(
+                    padding: EdgeInsets.all(screenWidth * 0.1),
+                    child: Center(
+                        child: DashedCircularProgressBar.aspectRatio(
+                      aspectRatio: 1,
+                      valueNotifier: _valueNotifier,
+                      progress:
+                          _valueNotifier.value, // Pastikan progress max 100%
+                      startAngle: 230,
+                      sweepAngle: 260,
+                      foregroundColor: const Color(0xFF00A6FB),
+                      backgroundColor: const Color(0xFFA1E3F9),
+                      foregroundStrokeWidth: 15,
+                      backgroundStrokeWidth: 15,
+                      animation: true,
+                      seekSize: 10,
+                      seekColor: const Color(0xffeeeeee),
+                      child: Center(
+                        child: ValueListenableBuilder(
+                          valueListenable: _valueNotifier,
+                          builder: (_, double value, __) => Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '${value.ceil()}%', // Tetap menampilkan maksimal 100%
+                                style: const TextStyle(
+                                  color: Color(0xFF2F2E41),
+                                  fontWeight: FontWeight.w300,
+                                  fontSize: 40,
+                                ),
                               ),
-                              onPressed: () {
-                                _showAddWaterModal(context);
-                              },
-                              child: const Icon(Icons.add, color: Colors.white),
-                            ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${currentIntake.toInt()} mL', // Tetap menampilkan jumlah air yang dikonsumsi sebenarnya
+                                    style: TextStyle(
+                                      color: currentIntake >= target
+                                          ? Colors.blue
+                                          : Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  Text(
+                                    ' / ${target.toInt()} mL',
+                                    style: const TextStyle(
+                                      color: Color(0xFF2F2E41),
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
-                    ],
+                    )),
                   ),
-                ),
-              ],
+                  Transform.translate(
+                    offset: Offset(0, screenHeight * -0.05),
+                    child: Container(
+                      width: screenWidth * 0.7,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: const Color(0XFFFFB831),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _remainingSeconds > 0
+                            ? "Hydrasi selanjutnya ${_formatTime(_remainingSeconds)}"
+                            : "SAATNYA MINUM!",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: screenWidth * (0.8 + 0.04),
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(10),
+                        topRight: Radius.circular(10),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildDrinkOption(100),
+                        _buildDrinkOption(150),
+                        _buildDrinkOption(200),
+                        GestureDetector(
+                          onTap: () => _showAddWaterModal(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 10),
+                            child: SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: FloatingActionButton(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                onPressed: () {
+                                  _showAddWaterModal(context);
+                                },
+                                child: const Icon(Icons.add, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          //Positioning the navbar at the bottom
-          const Navigasi(),
-        ],
+            //Positioning the navbar at the bottom
+            // const Navigasi(),
+          ],
+        ),
       ),
+      // bottomNavigationBar: Navigasi(),
     );
   }
 
