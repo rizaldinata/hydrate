@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/presentation/screens/info_product_view.dart';
+import 'package:hydrate/presentation/screens/statistic_screen.dart';
 // import 'package:hydrate/presentation/widgets/circular.dart';
 // import 'package:hydrate/presentation/screens/coba_air.dart';
 // // import 'package:hydrate/view/info_product_view.dart';
@@ -19,7 +20,8 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home:  InfoProduct(),
+      // home:  InfoProduct(),
+      home:  StatisticScreen(),
     );
   }
 }
