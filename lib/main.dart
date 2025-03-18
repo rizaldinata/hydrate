@@ -20,8 +20,8 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      // home:  InfoProduct(),
-      home:  StatisticScreen(),
+      home:  InfoProduct(),
+      // home:  StatisticScreen(),
     );
   }
 }
