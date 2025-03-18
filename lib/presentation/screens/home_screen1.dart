@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreens>
       _valueNotifier.value = min(100, (currentIntake / target) * 100);
     });
     _startCoutdown();
-    _showAddedWaterPopup(amount);
+    _showAddedWaterPopup(context, amount);
   }
 
   // Start countdown timer
@@ -92,14 +92,96 @@ class _HomeScreenState extends State<HomeScreens>
     return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
   }
 
-  void _showAddedWaterPopup(double amount) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Berhasil menambahkan ${amount.toInt()} mL air!"),
-        duration: Duration(seconds: 2),
-      ),
-    );
-  }
+  // Show snack bar to indicate added water
+  void _showAddedWaterPopup(BuildContext context, double amount) {
+  OverlayEntry overlayEntry;
+  final overlay = Overlay.of(context);
+  final animationController = AnimationController(
+    vsync: Navigator.of(context),
+    duration: Duration(milliseconds: 500),
+  );
+
+  overlayEntry = OverlayEntry(
+    builder: (context) {
+      return Positioned(
+        top: 50, // Posisi awal di bagian atas
+        left: 0,
+        right: 0, // Pastikan berada di tengah horizontal
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: Offset(0, -0.5), // Muncul dari atas
+            end: Offset(0, 0), // Turun ke bawah
+          ).animate(CurvedAnimation(
+            parent: animationController,
+            curve: Curves.easeOut,
+          )),
+          child: AnimatedOpacity(
+            opacity: 1.0,
+            duration: Duration(milliseconds: 300),
+            child: Material(
+              color: Colors.transparent,
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 64, 186, 137),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
+              ),
+                  child: Text(
+                "Berhasil menambahkan ${amount.toInt()}  mL air!",
+                style: TextStyle(color: Colors.white, fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+
+  // Masukkan overlay ke layar
+  overlay.insert(overlayEntry);
+  animationController.forward(); // Mulai animasi
+
+  // Hapus overlay setelah 2 detik dengan animasi naik ke atas
+  Future.delayed(Duration(seconds: 2), () {
+    animationController.reverse().then((_) {
+      overlayEntry.remove();
+    });
+  });
+}
+
+//   void _showAddedWaterPopup(BuildContext context, double amount) {
+//   OverlayEntry overlayEntry;
+//   overlayEntry = OverlayEntry(
+//     builder: (context) {
+//       return Positioned(
+//         top: 50, // Posisi awal di atas
+//         left: 0,
+//         right: 0,
+//         width: MediaQuery.of(context).size.width * 0.8,
+//         child: AnimatedContainer(
+//           duration: Duration(milliseconds: 500),
+//           curve: Curves.easeOut,
+//           transform: Matrix4.translationValues(0, 10, 0), // Efek turun ke bawah
+          
+//         ),
+//       );
+//     },
+//   );
+
+//   // Masukkan overlay ke layar
+//   Overlay.of(context).insert(overlayEntry);
+
+//   // Hapus overlay setelah 2 detik dengan animasi naik ke atas
+//   Future.delayed(Duration(seconds: 2), () {
+//     overlayEntry.remove();
+//   });
+// }
+
 
   // Show the modal bottom sheet for custom water intake selection
   void _showAddWaterModal(BuildContext context) {
@@ -209,6 +291,7 @@ class _HomeScreenState extends State<HomeScreens>
                         });
 
                         _startCoutdown();
+                        _showAddedWaterPopup(context, selectedWater.toDouble());
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
