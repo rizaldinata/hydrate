@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
@@ -94,65 +95,67 @@ class _HomeScreenState extends State<HomeScreens>
 
   // Show snack bar to indicate added water
   void _showAddedWaterPopup(BuildContext context, double amount) {
-  OverlayEntry overlayEntry;
-  final overlay = Overlay.of(context);
-  final animationController = AnimationController(
-    vsync: Navigator.of(context),
-    duration: Duration(milliseconds: 500),
-  );
+    OverlayEntry overlayEntry;
+    final overlay = Overlay.of(context);
+    final animationController = AnimationController(
+      vsync: Navigator.of(context),
+      duration: Duration(milliseconds: 500),
+    );
 
-  overlayEntry = OverlayEntry(
-    builder: (context) {
-      return Positioned(
-        top: 50, // Posisi awal di bagian atas
-        left: 0,
-        right: 0, // Pastikan berada di tengah horizontal
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: Offset(0, -0.5), // Muncul dari atas
-            end: Offset(0, 0), // Turun ke bawah
-          ).animate(CurvedAnimation(
-            parent: animationController,
-            curve: Curves.easeOut,
-          )),
-          child: AnimatedOpacity(
-            opacity: 1.0,
-            duration: Duration(milliseconds: 300),
-            child: Material(
-              color: Colors.transparent,
-              child: Center(
-                child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 64, 186, 137),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 5)],
-              ),
-                  child: Text(
-                "Berhasil menambahkan ${amount.toInt()}  mL air!",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 50, // Posisi awal di bagian atas
+          left: 0,
+          right: 0, // Pastikan berada di tengah horizontal
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, -0.5), // Muncul dari atas
+              end: Offset(0, 0), // Turun ke bawah
+            ).animate(CurvedAnimation(
+              parent: animationController,
+              curve: Curves.easeOut,
+            )),
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: Duration(milliseconds: 300),
+              child: Material(
+                color: Colors.transparent,
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 64, 186, 137),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 5)
+                      ],
+                    ),
+                    child: Text(
+                      "Berhasil menambahkan ${amount.toInt()}  mL air!",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  // Masukkan overlay ke layar
-  overlay.insert(overlayEntry);
-  animationController.forward(); // Mulai animasi
+    // Masukkan overlay ke layar
+    overlay.insert(overlayEntry);
+    animationController.forward(); // Mulai animasi
 
-  // Hapus overlay setelah 2 detik dengan animasi naik ke atas
-  Future.delayed(Duration(seconds: 2), () {
-    animationController.reverse().then((_) {
-      overlayEntry.remove();
+    // Hapus overlay setelah 2 detik dengan animasi naik ke atas
+    Future.delayed(Duration(seconds: 2), () {
+      animationController.reverse().then((_) {
+        overlayEntry.remove();
+      });
     });
-  });
-}
+  }
 
 //   void _showAddedWaterPopup(BuildContext context, double amount) {
 //   OverlayEntry overlayEntry;
@@ -167,7 +170,7 @@ class _HomeScreenState extends State<HomeScreens>
 //           duration: Duration(milliseconds: 500),
 //           curve: Curves.easeOut,
 //           transform: Matrix4.translationValues(0, 10, 0), // Efek turun ke bawah
-          
+
 //         ),
 //       );
 //     },
@@ -181,7 +184,6 @@ class _HomeScreenState extends State<HomeScreens>
 //     overlayEntry.remove();
 //   });
 // }
-
 
   // Show the modal bottom sheet for custom water intake selection
   void _showAddWaterModal(BuildContext context) {
@@ -330,8 +332,9 @@ class _HomeScreenState extends State<HomeScreens>
         child: Stack(
           children: [
             Padding(
-              padding:
-                  EdgeInsets.symmetric(horizontal: screenWidth * 0.05 , vertical: screenHeight * 0.07),
+              padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: screenHeight * 0.07),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -367,7 +370,9 @@ class _HomeScreenState extends State<HomeScreens>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(height: screenHeight * 0.2,),
+                  SizedBox(
+                    height: screenHeight * 0.2,
+                  ),
                   Padding(
                     padding: EdgeInsets.all(screenWidth * 0.1),
                     child: Center(
@@ -483,7 +488,8 @@ class _HomeScreenState extends State<HomeScreens>
                                 onPressed: () {
                                   _showAddWaterModal(context);
                                 },
-                                child: const Icon(Icons.add, color: Colors.white),
+                                child:
+                                    const Icon(Icons.add, color: Colors.white),
                               ),
                             ),
                           ),
@@ -508,8 +514,8 @@ class _HomeScreenState extends State<HomeScreens>
       children: [
         GestureDetector(
           onTap: () => _addWater(amount),
-          child: Image.asset(
-            "assets/images/glass.png",
+          child: SvgPicture.asset(
+            'assets/images/water-glass.svg',
             fit: BoxFit.contain,
             width: 30,
             height: 30,

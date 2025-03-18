@@ -12,7 +12,8 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
       body: Stack(
@@ -23,7 +24,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Kontainer Profil
                 Container(
                   width: double.infinity,
-                  height: 500,
+                  height: screenHeight * 0.58,
                   decoration: const BoxDecoration(
                     color: Colors.blue,
                     borderRadius: BorderRadius.only(
@@ -32,16 +33,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.only(
-                        top: 60,
-                        left: 16,
-                        right: 16), // Top 60px untuk status bar
+                    padding:  EdgeInsets.only(
+                        top: screenHeight * 0.05,
+                        left: screenWidth * 0.04,
+                        right: screenWidth * 0.04), // Top 60px untuk status bar
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Foto Profil
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20.0),
+                          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
                           child: Center(
                             child: Container(
                               clipBehavior: Clip.hardEdge,
@@ -68,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        SizedBox(height: screenHeight * 0.02),
 
                         // Informasi Profil
                         _profileInfo(
@@ -90,12 +91,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(25),
                                   ),
-                                  minimumSize: const Size(400, 40)),
+                                  minimumSize: Size(screenWidth * 0.9, screenHeight * 0.05)),
                               child: const Text(
                                 "Edit Profile",
                                 style: TextStyle(
                                     color: Colors.black,
-                                    fontWeight: FontWeight.w500,
+                                    fontWeight: FontWeight.w600,
                                     fontSize: 18),
                               )),
                         ),
@@ -114,8 +115,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Widget untuk informasi profil
   Widget _profileInfo(IconData icon, String title, String value) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.015),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
