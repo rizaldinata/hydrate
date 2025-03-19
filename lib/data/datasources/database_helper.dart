@@ -167,7 +167,7 @@ import 'package:path/path.dart';
 
 //       if (!userExists) {
 //         print("User dengan ID ${riwayatHidrasi.fkIdPengguna} tidak ditemukan.");
-//         return -1; 
+//         return -1;
 //       }
 
 //       int result = await db.insert('riwayat_hidrasi', riwayatHidrasi.toMap());
@@ -199,7 +199,7 @@ class DatabaseHelper {
 
   DatabaseHelper._internal();
 
- // menampilkan database dari sqlite
+  // menampilkan database dari sqlite
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
@@ -273,6 +273,7 @@ class DatabaseHelper {
       rethrow;
     }
   }
+
   // Fungsi untuk menyimpan ID pengguna yang sudah terdaftar
   Future<void> saveUserId(int userId) async {
     final db = await database;
