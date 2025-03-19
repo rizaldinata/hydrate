@@ -25,7 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Kontainer Profil
                 Container(
                   width: double.infinity,
-                  height: screenHeight * 0.58,
+                  height: screenHeight * 0.50,
                   decoration: const BoxDecoration(
                     color: Colors.blue,
                     borderRadius: BorderRadius.only(
@@ -45,33 +45,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Padding(
                           padding: EdgeInsets.symmetric(
                               vertical: screenHeight * 0.02),
+                          child: const Center(
+                            child: CircleAvatar(
+                              radius:
+                                  25, 
+                              backgroundColor: Colors
+                                  .blueAccent, 
+                              backgroundImage: AssetImage(
+                                  "assets/images/navigasi/user.png"),
+                            ),
+                          ),
+                        ),
+
+                        // Padding(
+                        //   padding: EdgeInsets.symmetric(
+                        //       vertical: screenHeight * 0.02),
+                        //   child: Center(
+                        //     child: ClipRRect(
+                        //       // Memotong child agar sesuai dengan borderRadius
+                        //       borderRadius: BorderRadius.circular(1000),
+                        //       child: Container(
+                        //         height: 60,
+                        //         width: 60,
+                        //         decoration: BoxDecoration(
+                        //           color: Colors.blueGrey,
+                        //           borderRadius: BorderRadius.circular(1000),
+                        //         ),
+                        //         child: Icon(Icons.person,
+                        //             color: Colors.white,
+                        //             size: 40), // Sesuaikan ukuran icon
+                        //       ),
+                        //     ),
+                        //   ),
+                        // ),
+
+                        Transform.translate(
+                          offset: Offset(0, screenHeight * -0.005),
                           child: Center(
-                            child: Container(
-                              clipBehavior: Clip.hardEdge,
-                              height: 60,
-                              width: 60,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(1000)),
-                              child: Image.asset(
-                                "assets/images/navigasi/user.png",
-                                fit: BoxFit.cover,
-                                width: 100,
-                                height: 100,
+                            child: Text(
+                              "Hilmi Afifi",
+                              style: GoogleFonts.inter(
+                                fontSize: 18,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
                         ),
-                        Center(
-                          child: Text(
-                            "Hilmi Afifi",
-                            style: GoogleFonts.inter(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.02),
+                        // SizedBox(height: screenHeight * 0.02),
 
                         // Informasi Profil
                         _profileInfo(
@@ -82,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             Icons.nightlight_round, "Jam Tidur", "22:00 WIB"),
                         _profileInfo(Icons.wb_sunny, "Jam Bangun", "05:00 WIB"),
 
-                        const SizedBox(height: 30),
+                        SizedBox(height: screenHeight * 0.01,),
 
                         // Tombol Edit Profile
                         Padding(
@@ -94,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderRadius: BorderRadius.circular(25),
                                   ),
                                   minimumSize: Size(
-                                      screenWidth * 0.9, screenHeight * 0.05)),
+                                      screenWidth * 0.9, screenHeight * 0.04)),
                               child: const Text(
                                 "Edit Profile",
                                 style: TextStyle(
