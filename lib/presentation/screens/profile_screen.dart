@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -10,6 +11,70 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  String? _namaPengguna;
+  final ProfilPenggunaController _controller = ProfilPenggunaController();
+
+  // Edit Profile Backend
+  @override
+  void initState() { 
+    super.initState();
+    _loadNamaPengguna();
+  }
+
+  void _loadNamaPengguna() async {
+    final userId = await _controller.getUserId();
+    if (userId != null) {
+      final nama = await _controller.fetchNamaPengguna(userId);
+      setState(() { // <-- PASTIKAN PAKAI SETSTATE DI DALAM STATE CLASS
+        _namaPengguna = nama;
+      });
+    }
+  }
+
+  // FrontEnd untuk edit profile
+  void _showEditNamaDialog(BuildContext context) {
+    final textController = TextEditingController(text: _namaPengguna);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Edit Nama"),
+        content: TextField(
+          controller: textController,
+          decoration: const InputDecoration(
+            labelText: "Nama Baru",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Batal"),
+          ),
+          TextButton(
+            onPressed: () async {
+              final userId = await _controller.getUserId();
+              if (userId == null) return;
+
+              final success = await _controller.editNamaPengguna(
+                userId, 
+                textController.text
+              );
+
+              if (success) {
+                _loadNamaPengguna(); // Refresh data
+              }
+              
+              Navigator.pop(context);
+            },
+            child: const Text("Simpan"),
+          ),
+        ],
+      ),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -60,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         Center(
                           child: Text(
-                            "Hilmi Afifi",
+                             _namaPengguna ?? "Loading...",
                             style: GoogleFonts.inter(
                               fontSize: 20,
                               color: Colors.white,
@@ -85,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () => _showEditNamaDialog(context),
                               style: ElevatedButton.styleFrom(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(25),

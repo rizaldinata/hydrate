@@ -71,4 +71,16 @@ class PenggunaRepository {
       throw Exception("Pengguna tidak ditemukan");
     }
   }
+  
+  Future<bool> editNamaPengguna(int idPengguna, String namaBaru) async {
+    final db = await _dbHelper.database;
+    int updatedRows = await db.update(
+      'pengguna',
+      {'nama_pengguna': namaBaru},
+      where: 'id = ?',
+      whereArgs: [idPengguna],
+    );
+
+    return updatedRows > 0;
+  }
 }

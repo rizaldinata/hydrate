@@ -11,13 +11,31 @@ class ProfilPenggunaRepository {
   }
 
   // edit profil pengguna
-   Future<int> editProfilPengguna(ProfilPengguna profil) async {
+  
+  Future<int> editProfilPengguna(ProfilPengguna profil) async {
     final db = await _dbHelper.database;
     return await db.update(
       'profil_pengguna',
-      profil.toMap(),
+      {
+        'jenis_kelamin': profil.jenisKelamin,
+        'berat_badan': profil.beratBadan,
+        'jam_bangun': profil.jamBangun,
+        'jam_tidur': profil.jamTidur,
+      },
       where: 'id = ?',
       whereArgs: [profil.id],
     );
   }
+
+  Future<Map<String, dynamic>> getProfilByUserId(int userId) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'profil_pengguna',
+      where: 'fk_id_pengguna = ?',
+      whereArgs: [userId],
+    );
+    if (result.isNotEmpty) return result.first;
+    throw Exception("Profil tidak ditemukan");
+  }
+
 }
