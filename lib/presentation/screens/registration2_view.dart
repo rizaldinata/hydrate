@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
@@ -47,7 +48,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
   //           .text.isNotEmpty; // Validasi jam bangun dan jam tidur
   // }
 
-   // Alert dialog jika belum mengisi
+  // Alert dialog jika belum mengisi
   Future<void> _showWarningDialog() async {
     showDialog(
       context: context,
@@ -198,7 +199,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                   child: IgnorePointer(
                     child: TimePickerInput(
                       label: "Gk Keliatan",
-                      controller: timeController, 
+                      controller: timeController,
                     ),
                   ),
                 ),
@@ -235,7 +236,6 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                         padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: () async {
-                        
                         if (controllerWakeUpTime.text.isEmpty ||
                             controllerSleepTime.text.isEmpty) {
                           _showWarningDialog();
@@ -252,15 +252,15 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                             penggunaData = await _penggunaRepository
                                 .getPenggunaBynama(widget.name);
                           });
-                  
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => HomeScreens(
-                                name: widget.name,
-                                penggunaId: penggunaData[
-                                    'id'], // Ganti dengan ID pengguna yang sesuai dari backend
-                              ),
+                              builder: (context) => MainScreen(
+                                  name: widget.name,
+                                  penggunaId: penggunaData[
+                                      'id'], // Ganti dengan ID pengguna yang sesuai dari backend
+                                  ),
                             ),
                           );
                         }
@@ -391,7 +391,8 @@ class _TimePickerInputState extends State<TimePickerInput> {
             controller: widget.controller,
             readOnly: true,
             textAlign: TextAlign.left,
-            style: const TextStyle(fontSize: 16, color: const Color(0xFF2F2E41)),
+            style:
+                const TextStyle(fontSize: 16, color: const Color(0xFF2F2E41)),
             onTap: () =>
                 _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
             decoration: InputDecoration(

@@ -16,6 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 227, 242, 253),
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -33,7 +34,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   child: Padding(
-                    padding:  EdgeInsets.only(
+                    padding: EdgeInsets.only(
                         top: screenHeight * 0.05,
                         left: screenWidth * 0.04,
                         right: screenWidth * 0.04), // Top 60px untuk status bar
@@ -42,7 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         // Foto Profil
                         Padding(
-                          padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                          padding: EdgeInsets.symmetric(
+                              vertical: screenHeight * 0.02),
                           child: Center(
                             child: Container(
                               clipBehavior: Clip.hardEdge,
@@ -91,7 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(25),
                                   ),
-                                  minimumSize: Size(screenWidth * 0.9, screenHeight * 0.05)),
+                                  minimumSize: Size(
+                                      screenWidth * 0.9, screenHeight * 0.05)),
                               child: const Text(
                                 "Edit Profile",
                                 style: TextStyle(
@@ -107,7 +110,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-          const Navigasi()
         ],
       ),
     );
@@ -119,7 +121,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.015),
+      padding: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.02, vertical: screenHeight * 0.015),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

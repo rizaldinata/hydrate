@@ -23,6 +23,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 227, 242, 253),
       appBar: AppBar(
         title: Text("Riwayat Minum Air", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.blue,
@@ -43,12 +44,15 @@ class _StatisticScreenState extends State<StatisticScreen> {
                       return ListTile(
                         trailing: Text(
                           "${waterHistory[index]['amount']} mL",
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        leading: Icon(waterHistory[index]['icon'], color: Colors.blue),
+                        leading: Icon(waterHistory[index]['icon'],
+                            color: Colors.blue),
                         title: Text(
                           "${waterHistory[index]['time']}",
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       );
                     },
