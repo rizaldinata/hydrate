@@ -16,21 +16,25 @@ class _HydrationTrackerState extends State<HydrationTracker> {
   void _showBottomPicker(BuildContext context) {
     BottomPicker(
       items: List.generate(20, (index) {
-        int value = 50 + (index * 50); // 50, 100, 150, ..., 1000
+        int value = 50 + (index * 50);
         return Stack(
           alignment: Alignment.centerRight,
           children: [
             Center(
               child: Text(
                 "$value",
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ),
             const Positioned(
               right: 30, // Menjaga jarak dari kanan
               child: Text(
                 "mL",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
+                style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue),
               ),
             ),
           ],
@@ -39,7 +43,8 @@ class _HydrationTrackerState extends State<HydrationTracker> {
       height: 300, // Tinggi modal
       pickerTitle: const Text(
         'Pilih Jumlah Air',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+        style: TextStyle(
+            fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
       ),
       onChange: (index) {
         setState(() {
@@ -71,14 +76,18 @@ class _HydrationTrackerState extends State<HydrationTracker> {
               GestureDetector(
                 onTap: () => _showBottomPicker(context),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                   decoration: BoxDecoration(
                     color: Colors.grey.shade200,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     "Pilih Jumlah Air",
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+                    style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
                   ),
                 ),
               ),
@@ -90,7 +99,8 @@ class _HydrationTrackerState extends State<HydrationTracker> {
           // Menampilkan total air minum
           Text(
             "Total Air Minum: $totalWater mL",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+            style: const TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ],
       ),

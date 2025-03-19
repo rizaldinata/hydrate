@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hydrate/core/utils/session_manager.dart';
+import 'package:hydrate/data/datasources/database_helper.dart';
+import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'dart:async';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
@@ -6,10 +9,14 @@ import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
 
 class HomeScreens extends StatefulWidget {
-  final String name;
-  final int penggunaId;
+  // final String name;
+  // final int penggunaId;
 
-  const HomeScreens({super.key, required this.name, required this.penggunaId});
+  // const HomeScreens({super.key, required this.name, required this.penggunaId});
+
+  const HomeScreens({
+    super.key,
+  });
 
   @override
   State<HomeScreens> createState() => _HomeScreenState();
@@ -29,42 +36,81 @@ class _HomeScreenState extends State<HomeScreens>
 
   Timer? _coutdownTimer;
   int _remainingSeconds = 0; // Initial countdown timer value
+  int? idPengguna;
+  String? namaPengguna;
 
   @override
   void initState() {
     super.initState();
     _controller = HomeController();
+    _loadSession().then((_) {
+      if (idPengguna != null) {
+        _hydrationCalculator = HydrationCalculator(penggunaId: idPengguna!);
+        _initializeTarget();
+      }
+    });
     _controller.initAnimation(this);
-
-    // Initialize HydrationCalculator with correct user ID
-    _hydrationCalculator = HydrationCalculator(penggunaId: widget.penggunaId);
-    _initializeTarget(); // Initialize the hydration target dynamically based on user data
-
     _pageController.addListener(() {
       setState(() {});
     });
   }
 
+  Future<void> _loadSession() async {
+    int? id = await SessionManager.getSession();
+
+    if (id != null) {
+      setState(() {
+        idPengguna = id;
+      });
+      _loadPenggunaById(id);
+    } else {
+      print("Session data is null");
+    }
+  }
+
+  Future<void> _loadPenggunaById(int id) async {
+    try {
+      var penggunaData = await PenggunaRepository().getPenggunaById(id);
+      print("Data Pengguna: $penggunaData"); // Debugging
+
+      if (penggunaData != null) {
+        setState(() {
+          idPengguna = penggunaData['id'];
+          namaPengguna = penggunaData['nama_pengguna'] ?? 'Nama Tidak Tersedia';
+        });
+      } else {
+        print("Pengguna data is null");
+      }
+    } catch (e) {
+      print("Error saat mengambil data pengguna: $e");
+    }
+  }
+
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    await _hydrationCalculator
-        .initializeData(widget.penggunaId); // Ensure this method works
+    await _hydrationCalculator.initializeData(idPengguna!);
     setState(() {
-      target = _hydrationCalculator.calculateDailyWaterIntake() *
-          1000; // Calculate target in mL
+      target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+      if (target <= 0) {
+        target = 2000; // Default value if target is 0 or negative
+      }
     });
   }
 
   // Function to add water intake
   void _addWater(double amount) {
+    if (target <= 0) {
+      print("Target is not set or invalid");
+      return;
+    }
+
     setState(() {
       if (currentIntake + amount <= target) {
         currentIntake += amount;
       } else {
         currentIntake = target; // Max limit
       }
-      _valueNotifier.value =
-          (currentIntake / target) * 100; // Calculate progress
+      _valueNotifier.value = (currentIntake / target) * 100;
     });
     _startCoutdown();
   }
@@ -251,7 +297,9 @@ class _HomeScreenState extends State<HomeScreens>
                 Transform.translate(
                   offset: const Offset(0, -5),
                   child: Text(
-                    "Hai, ${widget.name}",
+                    namaPengguna != null
+                        ? "Hai, $namaPengguna"
+                        : "Hai, Pengguna!",
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

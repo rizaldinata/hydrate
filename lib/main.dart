@@ -1,25 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/presentation/screens/info_product_view.dart';
-// import 'package:hydrate/presentation/widgets/circular.dart';
-// import 'package:hydrate/presentation/screens/coba_air.dart';
-// // import 'package:hydrate/view/info_product_view.dart';
-// import 'package:hydrate/presentation/screens/home_screen.dart';
-// import 'package:hydrate/presentation/screens/home_screen1.dart';
+import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/presentation/screens/home_screen1.dart';
+import 'package:hydrate/presentation/screens/registration1_view.dart';
+import 'package:hydrate/register_page.dart';
 
-void main(List<String> args) {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'HYDRATE',
-      theme: ThemeData(),
-      debugShowCheckedModeBanner: false,
-      home: InfoProduct(),
+        debugShowCheckedModeBanner: false,
+        title: 'Hydrate',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: SplashScreen(),
+        routes: {
+          '/home': (context) => HomeScreens(),
+          '/register': (context) => RegistrationData(),
+        });
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  final PenggunaRepository _penggunaRepository = PenggunaRepository();
+
+  @override
+  void initState() {
+    super.initState();
+    checkPenggunaStatus();
+  }
+
+  void checkPenggunaStatus() async {
+    print("Memeriksa status pengguna...");
+
+    try {
+      bool isterdaftar = await _penggunaRepository.isPenggunaTerdaftar();
+      print("Status pengguna: $isterdaftar");
+
+      Future.delayed(Duration(milliseconds: 500), () {
+        if (mounted) {
+          print("Navigasi ke halaman: ${isterdaftar ? '/home' : '/register'}");
+          Navigator.pushReplacementNamed(
+              context, isterdaftar ? '/home' : '/register');
+        }
+      });
+    } catch (e) {
+      print("Error saat memeriksa status pengguna: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }

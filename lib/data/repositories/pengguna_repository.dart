@@ -36,36 +36,39 @@ class PenggunaRepository {
     }
   }
 
-  // ambil dara semua pengguna (kek e nanti ngga kepake)
- Future<Map<String, dynamic>> getPenggunaById(int id) async {
-  final db = await _dbHelper.database;
-  final List<Map<String, dynamic>> maps = await db.query(
-    'profil_pengguna',
-    where: 'id = ?',
-    whereArgs: [id],
-  );
-  
-  if (maps.isNotEmpty) {
-    return maps.first; // Mengambil data pengguna pertama
-  } else {
-    throw Exception("Pengguna tidak ditemukan");
-  }
-}
+  // ambil data pengguna (kek e nanti ngga kepake)
+  Future<Map<String, dynamic>> getPenggunaById(int id) async {
+    final db = await _dbHelper.database;
+    final result = await db.query(
+      'pengguna',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
 
-Future<Map<String, dynamic>> getPenggunaBynama(String nama) async {
-  final db = await _dbHelper.database;
-  final List<Map<String, dynamic>> maps = await db.query(
-    'pengguna',
-    where: 'nama_pengguna = ?',
-    whereArgs: [nama],
-  );
-  
-  if (maps.isNotEmpty) {
-     
-    return maps.first; // Mengambil data pengguna pertama
-  } else {
-    throw Exception("Pengguna tidak ditemukan");
+    if (result.isNotEmpty) {
+      return {
+        'id': result.first['id'],
+        'nama_pengguna': result.first['nama_pengguna'] ?? 'Nama Tidak Tersedia',
+        'email': result.first['email'] ?? 'Email Tidak Tersedia',
+        // Tambahkan field lain dengan nilai default jika diperlukan
+      };
+    } else {
+      throw Exception("Pengguna tidak ditemukan");
+    }
   }
-}
 
+  Future<Map<String, dynamic>> getPenggunaBynama(String nama) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'pengguna',
+      where: 'nama_pengguna = ?',
+      whereArgs: [nama],
+    );
+
+    if (maps.isNotEmpty) {
+      return maps.first; // Mengambil data pengguna pertama
+    } else {
+      throw Exception("Pengguna tidak ditemukan");
+    }
+  }
 }

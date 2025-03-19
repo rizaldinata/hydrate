@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/screens/home_screen.dart';
@@ -18,7 +19,7 @@ class RegistrationTime extends StatefulWidget {
     required this.weight,
   }) : super(key: key);
 
-final DatabaseHelper _databaseHelper = DatabaseHelper();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   _RegistrationTimeState createState() => _RegistrationTimeState();
@@ -132,7 +133,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                 ),
 
                 const SizedBox(height: 20),
-            
+
                 Expanded(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -177,31 +178,31 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                     onPressed: () async {
-                      
                       if (controllerWakeUpTime.text.isEmpty ||
                           controllerSleepTime.text.isEmpty) {
                         showAlert(context);
                       } else {
-                        await _penggunaRepository
-                            .tambahPenggunaDanProfil(
+                        await _penggunaRepository.tambahPenggunaDanProfil(
                           widget.name,
                           widget.gender,
                           widget.weight,
                           controllerWakeUpTime.text,
                           controllerSleepTime.text,
-                        )
-                            .then((_) async {
-                          penggunaData = await _penggunaRepository
-                              .getPenggunaBynama(widget.name);
-                        });
+                        );
+                        //     .then((_) async {
+                        //   penggunaData = await _penggunaRepository
+                        //       .getPenggunaBynama(widget.name);
+                        // });
+                        var penggunaData = await _penggunaRepository
+                            .getPenggunaBynama(widget.name);
+
+                        print(penggunaData['id']);
+
+                        await SessionManager.saveSession(penggunaData['id']);
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => HomeScreens(
-                              name: widget.name,
-                              penggunaId: penggunaData[
-                                  'id'], // Ganti dengan ID pengguna yang sesuai dari backend
-                            ),
+                            builder: (context) => HomeScreens(),
                           ),
                         );
                       }
