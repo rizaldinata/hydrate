@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/presentation/screens/edit_profile.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -10,6 +11,12 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+
+  // function editprofile
+  Future<void> _showEditProfile(BuildContext context) async {
+    await showDialog(context: context, builder: (context) => const EditProfile(),);
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -57,28 +64,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                         ),
 
-                        // Padding(
-                        //   padding: EdgeInsets.symmetric(
-                        //       vertical: screenHeight * 0.02),
-                        //   child: Center(
-                        //     child: ClipRRect(
-                        //       // Memotong child agar sesuai dengan borderRadius
-                        //       borderRadius: BorderRadius.circular(1000),
-                        //       child: Container(
-                        //         height: 60,
-                        //         width: 60,
-                        //         decoration: BoxDecoration(
-                        //           color: Colors.blueGrey,
-                        //           borderRadius: BorderRadius.circular(1000),
-                        //         ),
-                        //         child: Icon(Icons.person,
-                        //             color: Colors.white,
-                        //             size: 40), // Sesuaikan ukuran icon
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
-
                         Transform.translate(
                           offset: Offset(0, screenHeight * -0.005),
                           child: Center(
@@ -109,7 +94,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () => _showEditProfile(context),
                               style: ElevatedButton.styleFrom(
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(25),
