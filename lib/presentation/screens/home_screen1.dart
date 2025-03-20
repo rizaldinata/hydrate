@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
@@ -20,6 +21,7 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreens>
     with SingleTickerProviderStateMixin {
   late final HomeController _controller;
+    List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
   late HydrationCalculator
       _hydrationCalculator; // Ensure HydrationCalculator is defined

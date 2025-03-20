@@ -71,7 +71,7 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/wat.svg
+    # - assets/images/wat.svg
     - assets/images/navigasi/
 
   # To add assets to your application, add an assets section, like this:
