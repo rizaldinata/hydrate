@@ -516,7 +516,7 @@ class _HomeScreenState extends State<HomeScreens>
         GestureDetector(
           onTap: () => _addWater(amount),
           child: SvgPicture.asset(
-            'assets/images/water-glass.svg',
+            'assets/images/glass.svg',
             fit: BoxFit.contain,
             width: 30,
             height: 30,
