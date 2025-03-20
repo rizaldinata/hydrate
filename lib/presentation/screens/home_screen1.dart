@@ -21,7 +21,7 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreens>
     with SingleTickerProviderStateMixin {
   late final HomeController _controller;
-    List<Map<String, dynamic>> waterHistory = [];
+  List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
   late HydrationCalculator
       _hydrationCalculator; // Ensure HydrationCalculator is defined
@@ -33,6 +33,8 @@ class _HomeScreenState extends State<HomeScreens>
 
   Timer? _coutdownTimer;
   int _remainingSeconds = 0; // Initial countdown timer value
+
+  Map<double, double> _glassOffsets = {}; // Posisi awal
 
   @override
   void initState() {
@@ -57,6 +59,21 @@ class _HomeScreenState extends State<HomeScreens>
       target = _hydrationCalculator.calculateDailyWaterIntake() *
           1000; // Calculate target in mL
     });
+  }
+
+  // Animasi Gerakan Buatan Gelas
+  void _animateGlass(double amount) {
+    setState(() {
+      _glassOffsets[amount] = -40; // posisi gerakan Naik
+    });
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      setState(() {
+        _glassOffsets[amount] = 0; // Kembali ke posisi awal
+      });
+    });
+
+    _addWater(amount);
   }
 
   // Function to add water intake
@@ -158,34 +175,6 @@ class _HomeScreenState extends State<HomeScreens>
       });
     });
   }
-
-//   void _showAddedWaterPopup(BuildContext context, double amount) {
-//   OverlayEntry overlayEntry;
-//   overlayEntry = OverlayEntry(
-//     builder: (context) {
-//       return Positioned(
-//         top: 50, // Posisi awal di atas
-//         left: 0,
-//         right: 0,
-//         width: MediaQuery.of(context).size.width * 0.8,
-//         child: AnimatedContainer(
-//           duration: Duration(milliseconds: 500),
-//           curve: Curves.easeOut,
-//           transform: Matrix4.translationValues(0, 10, 0), // Efek turun ke bawah
-
-//         ),
-//       );
-//     },
-//   );
-
-//   // Masukkan overlay ke layar
-//   Overlay.of(context).insert(overlayEntry);
-
-//   // Hapus overlay setelah 2 detik dengan animasi naik ke atas
-//   Future.delayed(Duration(seconds: 2), () {
-//     overlayEntry.remove();
-//   });
-// }
 
   // Show the modal bottom sheet for custom water intake selection
   void _showAddWaterModal(BuildContext context) {
@@ -441,7 +430,10 @@ class _HomeScreenState extends State<HomeScreens>
                       width: screenWidth * 0.7,
                       height: 30,
                       decoration: BoxDecoration(
-                        color: const Color(0XFFFFB831),
+                        color: _remainingSeconds > 0
+                            ? const Color(0XFFFFB831)
+                            : const Color(
+                                0XFFEF9651), // Ubah warna berdasarkan kondisi
                         borderRadius: BorderRadius.circular(20),
                       ),
                       alignment: Alignment.center,
@@ -463,9 +455,7 @@ class _HomeScreenState extends State<HomeScreens>
                     padding: const EdgeInsets.all(16),
                     decoration: const BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(10)
-                      ),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -514,12 +504,17 @@ class _HomeScreenState extends State<HomeScreens>
     return Column(
       children: [
         GestureDetector(
-          onTap: () => _addWater(amount),
-          child: SvgPicture.asset(
-            'assets/images/glass.svg',
-            fit: BoxFit.contain,
-            width: 30,
-            height: 30,
+          onTap: () => _animateGlass(amount),
+          child: AnimatedContainer(
+            duration: const Duration(seconds: 1),
+            transform: Matrix4.translationValues(0, _glassOffsets[amount] ?? 0,
+                0), // Hanya gelas yang diklik bergerak
+            child: SvgPicture.asset(
+              'assets/images/glass.svg',
+              fit: BoxFit.contain,
+              width: 30,
+              height: 30,
+            ),
           ),
         ),
         Text(
