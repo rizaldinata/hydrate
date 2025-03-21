@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/home_screen.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
@@ -278,7 +279,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const HomeScreens(),
+                                builder: (context) => MainScreen(),
                               ),
                             );
                           } else {

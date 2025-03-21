@@ -33,10 +33,6 @@ class MyApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  final String name;
-  final int penggunaId;
-  const MainScreen({super.key, required this.name, required this.penggunaId});
-
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
