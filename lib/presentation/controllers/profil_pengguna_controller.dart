@@ -4,10 +4,7 @@ import '../../data/repositories/profil_pengguna_repository.dart';
 class ProfilPenggunaController {
   final ProfilPenggunaRepository _repository = ProfilPenggunaRepository();
 
-  // tambah profil pengguna (kek e nanti ngga kepake)
-  Future<int> tambahProfilPengguna(ProfilPengguna profil) async {
-    return await _repository.tambahProfilPengguna(profil);
+  Future<ProfilPengguna?> getProfilPengguna(int userId) async {
+    return await _repository.getProfilPenggunaByUserId(userId);
   }
-  
-  // ini nanti buat edit profil pengguna
 }

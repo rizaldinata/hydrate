@@ -1,7 +1,13 @@
+import 'package:hydrate/data/models/pengguna_model.dart';
+import 'package:hydrate/data/models/profil_pengguna_model.dart';
+import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
+
 import '../../presentation/controllers/pengguna_controller.dart';
 
 class HydrationCalculator {
-  final PenggunaController _penggunaController = PenggunaController(); // Inisialisasi controller pengguna
+  final PenggunaController _penggunaController = PenggunaController();
+  final ProfilPenggunaController _profilPenggunaController =
+      ProfilPenggunaController();
 
   late String gender;
   late double weight;
@@ -12,25 +18,33 @@ class HydrationCalculator {
   HydrationCalculator({
     required int penggunaId,
   }) {
-    initializeData(penggunaId); // Memanggil metode publik untuk inisialisasi data pengguna
+    initializeData(
+        penggunaId); // Memanggil metode publik untuk inisialisasi data pengguna
   }
 
   // Mengubah _initializeData menjadi metode publik
   Future<void> initializeData(int penggunaId) async {
     try {
-      // Ambil data pengguna berdasarkan ID
-      Map<String, dynamic> penggunaData = await _penggunaController.getPenggunaById(penggunaId);
+      Pengguna? penggunaData =
+          await _penggunaController.getPenggunaById(penggunaId);
 
-      // Debugging: Periksa data pengguna yang terambil
-      print("Data Pengguna: $penggunaData");
+      ProfilPengguna? profilPenggunaData =
+          await _profilPenggunaController.getProfilPengguna(penggunaId);
+
+      // Periksa apakah penggunaData null
+      if (penggunaData == null) {
+        throw Exception("Pengguna tidak ditemukan");
+      }
 
       // Setel nilai properti berdasarkan data pengguna
-      gender = penggunaData['jenis_kelamin'];
-      weight = penggunaData['berat_badan'];
-      wakeUpTime = penggunaData['wakeUpTime'] ?? 6; // Default jam bangun: 06:00
-      sleepTime = penggunaData['sleepTime'] ?? 22; // Default jam tidur: 22:00
+      // Pastikan profilPenggunaData tidak null sebelum mengakses propertinya
+      gender = profilPenggunaData?.jenisKelamin ?? 'unknown';
+      weight = profilPenggunaData?.beratBadan ?? 70.0; // Default 70 kg
+      wakeUpTime = int.tryParse(profilPenggunaData?.jamBangun ?? '') ?? 6;
+      sleepTime = int.tryParse(profilPenggunaData?.jamTidur ?? '') ?? 22;
+      // Konversi string ke int, default 22
 
-      // Debugging: Memeriksa apakah data sudah terisi dengan benar
+      // Debugging
       print("Gender: $gender, Weight: $weight");
 
       // Jika weight masih 0, beri peringatan
@@ -38,11 +52,10 @@ class HydrationCalculator {
         print("Warning: Weight is not valid. Using default value.");
         weight = 70.0; // Set default weight if invalid
       }
-
     } catch (e) {
       print("Error saat mengambil data pengguna: $e");
       gender = 'unknown';
-      weight = 70.0; // Set default weight if error occurs
+      weight = 70.0; // Default weight jika error
       wakeUpTime = 6;
       sleepTime = 22;
     }

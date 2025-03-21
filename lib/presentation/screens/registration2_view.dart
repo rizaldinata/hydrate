@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
-import 'package:hydrate/presentation/screens/home_screen.dart';
+import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
 
 class RegistrationTime extends StatefulWidget {
@@ -26,6 +25,7 @@ class RegistrationTime extends StatefulWidget {
 }
 
 class _RegistrationTimeState extends State<RegistrationTime> {
+  final PenggunaController _penggunaController = PenggunaController();
   final PenggunaRepository _penggunaRepository = PenggunaRepository();
   TextEditingController controllerWakeUpTime = TextEditingController();
   TextEditingController controllerSleepTime = TextEditingController();
@@ -178,33 +178,49 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                       padding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                     onPressed: () async {
-                      if (controllerWakeUpTime.text.isEmpty ||
-                          controllerSleepTime.text.isEmpty) {
-                        showAlert(context);
-                      } else {
-                        await _penggunaRepository.tambahPenggunaDanProfil(
-                          widget.name,
-                          widget.gender,
-                          widget.weight,
-                          controllerWakeUpTime.text,
-                          controllerSleepTime.text,
-                        );
-                        //     .then((_) async {
-                        //   penggunaData = await _penggunaRepository
-                        //       .getPenggunaBynama(widget.name);
-                        // });
-                        var penggunaData = await _penggunaRepository
-                            .getPenggunaBynama(widget.name);
+                      // Ambil data dari TextField
+                      String nama = widget.name;
+                      String jenisKelamin = widget.gender;
+                      double beratBadan = widget.weight;
+                      String jamBangun = controllerWakeUpTime.text;
+                      String jamTidur = controllerSleepTime.text;
 
-                        print(penggunaData['id']);
+                      // Validasi input
+                      if (nama.isEmpty ||
+                          jenisKelamin.isEmpty ||
+                          beratBadan <= 0 ||
+                          jamBangun.isEmpty ||
+                          jamTidur.isEmpty) {
+                        print("Harap isi semua field!");
+                        return;
+                      }
 
-                        await SessionManager.saveSession(penggunaData['id']);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => HomeScreens(),
-                          ),
+                      try {
+                        // Tambah pengguna ke database
+                        int userId = await _penggunaController.tambahPengguna(
+                          nama,
+                          jenisKelamin,
+                          beratBadan,
+                          jamBangun,
+                          jamTidur,
                         );
+
+                        if (userId > 0) {
+                          print(
+                              "Pengguna berhasil ditambahkan dengan ID: $userId");
+
+                          // Pindah ke halaman HomeScreens setelah berhasil daftar
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => HomeScreens(),
+                            ),
+                          );
+                        } else {
+                          print("Gagal menambahkan pengguna.");
+                        }
+                      } catch (e) {
+                        print("Error saat menambahkan pengguna: $e");
                       }
                     },
                     child: Text(

@@ -3,16 +3,16 @@ class ProfilPengguna {
   int fkIdPengguna;
   String jenisKelamin;
   double beratBadan;
-  String? jamBangun;
-  String? jamTidur;
+  String jamBangun;
+  String jamTidur;
 
   ProfilPengguna(
       {required this.id,
       required this.fkIdPengguna,
       required this.jenisKelamin,
       required this.beratBadan,
-      this.jamBangun,
-      this.jamTidur});
+      required this.jamBangun,
+      required this.jamTidur});
 
   factory ProfilPengguna.fromMap(Map<String, dynamic> map) => ProfilPengguna(
         id: map['id'],

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
-import 'package:hydrate/data/datasources/database_helper.dart';
-import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/data/models/pengguna_model.dart';
 import 'dart:async';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
+import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
@@ -32,69 +32,63 @@ class _HomeScreenState extends State<HomeScreens>
   double currentIntake = 0; // Initial water intake in mL
   final ValueNotifier<double> _valueNotifier =
       ValueNotifier<double>(0); // Progress percentage
-  int selectedWater = 150; // Default water selection is 150mL
+  int selectedWater = 150;
+  late final PenggunaController
+      _penggunaController; // Default water selection is 150mL
+  int? idPengguna;
+  String? namaPengguna;
 
   Timer? _coutdownTimer;
   int _remainingSeconds = 0; // Initial countdown timer value
-  int? idPengguna;
-  String? namaPengguna;
 
   @override
   void initState() {
     super.initState();
     _controller = HomeController();
-    _loadSession().then((_) {
-      if (idPengguna != null) {
-        _hydrationCalculator = HydrationCalculator(penggunaId: idPengguna!);
-        _initializeTarget();
-      }
-    });
+    _penggunaController = PenggunaController();
     _controller.initAnimation(this);
-    _pageController.addListener(() {
-      setState(() {});
-    });
+    _pageController.addListener(() => setState(() {}));
+    _loadUserData(); // Panggil method untuk load data
   }
 
-  Future<void> _loadSession() async {
-    int? id = await SessionManager.getSession();
-
-    if (id != null) {
-      setState(() {
-        idPengguna = id;
-      });
-      _loadPenggunaById(id);
-    } else {
-      print("Session data is null");
-    }
-  }
-
-  Future<void> _loadPenggunaById(int id) async {
+  Future<void> _loadUserData() async {
     try {
-      var penggunaData = await PenggunaRepository().getPenggunaById(id);
-      print("Data Pengguna: $penggunaData"); // Debugging
+      final session = SessionManager();
+      final userId = await session.getUserId();
 
-      if (penggunaData != null) {
-        setState(() {
-          idPengguna = penggunaData['id'];
-          namaPengguna = penggunaData['nama_pengguna'] ?? 'Nama Tidak Tersedia';
-        });
-      } else {
-        print("Pengguna data is null");
+      if (userId != null) {
+        final pengguna = await _penggunaController.getPenggunaById(userId);
+
+        if (pengguna != null) {
+          // Inisialisasi hydration calculator setelah mendapatkan ID
+          _hydrationCalculator = HydrationCalculator(penggunaId: userId);
+
+          setState(() {
+            idPengguna = userId;
+            namaPengguna = pengguna.nama;
+          });
+
+          await _initializeTarget();
+        }
       }
     } catch (e) {
-      print("Error saat mengambil data pengguna: $e");
+      print("Error loading user data: $e");
     }
   }
 
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    await _hydrationCalculator.initializeData(idPengguna!);
-    setState(() {
-      target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-      if (target <= 0) {
-        target = 2000; // Default value if target is 0 or negative
-      }
-    });
+    if (idPengguna == null) return;
+
+    try {
+      await _hydrationCalculator.initializeData(idPengguna!);
+      setState(() {
+        target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+        target = target > 0 ? target : 2000;
+      });
+    } catch (e) {
+      print("Error initializing target: $e");
+    }
   }
 
   // Function to add water intake
@@ -277,6 +271,14 @@ class _HomeScreenState extends State<HomeScreens>
 
   @override
   Widget build(BuildContext context) {
+    if (namaPengguna == null) {
+      return Scaffold(
+        backgroundColor: Colors.blue[50],
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     double screenWidth = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.blue[50],
