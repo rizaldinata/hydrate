@@ -43,6 +43,8 @@ dependencies:
   water_bottle: ^0.0.7
   dashed_circular_progress_bar: ^0.0.6
   bottom_picker: ^2.11.2
+  awesome_notifications: ^0.10.1
+  palette_generator: ^0.3.3+6
 
 dev_dependencies:
   flutter_test:
