@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/home_screen.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
 
@@ -26,9 +26,11 @@ class RegistrationTime extends StatefulWidget {
 }
 
 class _RegistrationTimeState extends State<RegistrationTime> {
+  final PenggunaController _penggunaController = PenggunaController();
   final PenggunaRepository _penggunaRepository = PenggunaRepository();
   TextEditingController controllerWakeUpTime = TextEditingController();
   TextEditingController controllerSleepTime = TextEditingController();
+  TextEditingController timeController = TextEditingController();
   Map<String, dynamic> penggunaData = {};
 
   Future<void> _selectTime(
@@ -45,22 +47,80 @@ class _RegistrationTimeState extends State<RegistrationTime> {
     }
   }
 
-  void showAlert(BuildContext context) {
+  // bool _isFormValid() {
+  //   return controllerWakeUpTime.text.isNotEmpty &&
+  //       controllerSleepTime
+  //           .text.isNotEmpty; // Validasi jam bangun dan jam tidur
+  // }
+
+  // Alert dialog jika belum mengisi
+  Future<void> _showWarningDialog() async {
     showDialog(
       context: context,
+      barrierDismissible:
+          false, // Jangan bisa menutup modal dengan klik di luar
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Peringatan"),
-          content: const Text(
-              "Harap isi jam bangun dan jam tidur sebelum melanjutkan."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Menutup dialog
-              },
-              child: const Text("OK"),
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: AnimatedScale(
+            duration: Duration(milliseconds: 300),
+            scale: 1.0,
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              elevation: 10,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_outlined,
+                      color: const Color(0XFFFFB830),
+                      size: 60,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      "Harap isi jam bangun dan jam tidur terlebih dahulu!",
+                      style: GoogleFonts.inter(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2F2E41),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color(0XFFFFB830), // Background color
+                        foregroundColor: Colors.white, // Text color
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Menutup modal
+                      },
+                      child: Text(
+                        "Kembali",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
+          ),
         );
       },
     );
@@ -71,16 +131,14 @@ class _RegistrationTimeState extends State<RegistrationTime> {
     return Scaffold(
       backgroundColor: const Color(0xFFE8F7FF),
       body: SafeArea(
-        child: Center(
+        child: SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Logo HYDRATE
-                const SizedBox(
-                  height: 20.0,
-                ),
+                const SizedBox(height: 20),
                 Text(
                   "HYDRATE",
                   style: GoogleFonts.gluten(
@@ -134,20 +192,23 @@ class _RegistrationTimeState extends State<RegistrationTime> {
 
                 const SizedBox(height: 20),
 
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      TimePickerInput(
-                          label: "Jam Bangun",
-                          controller: controllerWakeUpTime),
-                      const SizedBox(height: 20),
-                      TimePickerInput(
-                          label: "Jam Tidur", controller: controllerSleepTime),
-                      Spacer(), // Jarak bawah otomatis menyesuaikan layar
-                    ],
+                TimePickerInput(
+                    label: "Jam Bangun", controller: controllerWakeUpTime),
+                const SizedBox(height: 20),
+                TimePickerInput(
+                    label: "Jam Tidur", controller: controllerSleepTime),
+
+                // Tambahan dan gk keliatan biar layoutnya rapi
+                Opacity(
+                  opacity: 0.0,
+                  child: IgnorePointer(
+                    child: TimePickerInput(
+                      label: "Gk Keliatan",
+                      controller: timeController,
+                    ),
                   ),
                 ),
+                const SizedBox(height: 50),
 
                 // Tombol Lanjut
                 Container(
@@ -180,31 +241,52 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                     onPressed: () async {
                       if (controllerWakeUpTime.text.isEmpty ||
                           controllerSleepTime.text.isEmpty) {
-                        showAlert(context);
+                        _showWarningDialog();
                       } else {
-                        await _penggunaRepository.tambahPenggunaDanProfil(
-                          widget.name,
-                          widget.gender,
-                          widget.weight,
-                          controllerWakeUpTime.text,
-                          controllerSleepTime.text,
-                        );
-                        //     .then((_) async {
-                        //   penggunaData = await _penggunaRepository
-                        //       .getPenggunaBynama(widget.name);
-                        // });
-                        var penggunaData = await _penggunaRepository
-                            .getPenggunaBynama(widget.name);
+                        // Ambil data dari TextField
+                        String nama = widget.name;
+                        String jenisKelamin = widget.gender;
+                        double beratBadan = widget.weight;
+                        String jamBangun = controllerWakeUpTime.text;
+                        String jamTidur = controllerSleepTime.text;
 
-                        print(penggunaData['id']);
+                        // Validasi input
+                        if (nama.isEmpty ||
+                            jenisKelamin.isEmpty ||
+                            beratBadan <= 0 ||
+                            jamBangun.isEmpty ||
+                            jamTidur.isEmpty) {
+                          print("Harap isi semua field!");
+                          return;
+                        }
 
-                        await SessionManager.saveSession(penggunaData['id']);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => HomeScreens(),
-                          ),
-                        );
+                        try {
+                          // Tambah pengguna ke database
+                          int userId = await _penggunaController.tambahPengguna(
+                            nama,
+                            jenisKelamin,
+                            beratBadan,
+                            jamBangun,
+                            jamTidur,
+                          );
+
+                          if (userId > 0) {
+                            print(
+                                "Pengguna berhasil ditambahkan dengan ID: $userId");
+
+                            // Pindah ke halaman HomeScreens setelah berhasil daftar
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const HomeScreens(),
+                              ),
+                            );
+                          } else {
+                            print("Gagal menambahkan pengguna.");
+                          }
+                        } catch (e) {
+                          print("Error saat menambahkan pengguna: $e");
+                        }
                       }
                     },
                     child: Text(
@@ -261,7 +343,10 @@ class _RegistrationTimeState extends State<RegistrationTime> {
               color: Color(0xFF00A6FB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+            child: SvgPicture.asset(
+              'assets/images/clock.svg',
+              height: 24,
+            ),
           ),
         ),
       ],
@@ -294,7 +379,7 @@ class _TimePickerInputState extends State<TimePickerInput> {
             colorScheme: const ColorScheme.light(
               primary: Color(0xFF00A6FB), // Warna utama
               onPrimary: Colors.white, // Warna teks di atas warna utama
-              onSurface: Colors.black, // Warna teks utama
+              onSurface: const Color(0xFF2F2E41), // Warna teks utama
             ),
             timePickerTheme: TimePickerThemeData(
               backgroundColor: Colors.white,
@@ -305,7 +390,7 @@ class _TimePickerInputState extends State<TimePickerInput> {
               hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
                   states.contains(MaterialState.selected)
                       ? Colors.white
-                      : Colors.black),
+                      : const Color(0xFF2F2E41)),
               dialHandColor: const Color(0xFF00A6FB),
               dialBackgroundColor: const Color(0xFFE8F7FF),
               entryModeIconColor: const Color(0xFF00A6FB),
@@ -332,7 +417,8 @@ class _TimePickerInputState extends State<TimePickerInput> {
             controller: widget.controller,
             readOnly: true,
             textAlign: TextAlign.left,
-            style: const TextStyle(fontSize: 16, color: Colors.black),
+            style:
+                const TextStyle(fontSize: 16, color: const Color(0xFF2F2E41)),
             onTap: () =>
                 _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
             decoration: InputDecoration(
@@ -365,7 +451,10 @@ class _TimePickerInputState extends State<TimePickerInput> {
               color: Color(0xFF00A6FB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+            child: SvgPicture.asset(
+              'assets/images/clock.svg',
+              height: 24,
+            ),
           ),
         ),
       ],

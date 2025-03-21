@@ -1,67 +1,166 @@
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:flutter/services.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
-import 'package:hydrate/presentation/screens/registration1_view.dart';
-import 'package:hydrate/register_page.dart';
+import 'package:hydrate/presentation/screens/info_product_view.dart';
+import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/presentation/screens/statistic_screen.dart';
+// import 'package:hydrate/presentation/widgets/circular.dart';
+// import 'package:hydrate/presentation/screens/coba_air.dart';
+// // import 'package:hydrate/view/info_product_view.dart';
+// import 'package:hydrate/presentation/screens/home_screen.dart';
+// import 'package:hydrate/presentation/screens/home_screen1.dart';
 
-void main() async {
+void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Hydrate',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        home: SplashScreen(),
-        routes: {
-          '/home': (context) => HomeScreens(),
-          '/register': (context) => RegistrationData(),
-        });
+      title: 'HYDRATE',
+      theme: ThemeData(),
+      debugShowCheckedModeBanner: false,
+      home: InfoProduct(),
+      // home:  StatisticScreen(),
+    );
   }
 }
 
-class SplashScreen extends StatefulWidget {
+class MainScreen extends StatefulWidget {
+  final String name;
+  final int penggunaId;
+  const MainScreen({super.key, required this.name, required this.penggunaId});
+
   @override
-  _SplashScreenState createState() => _SplashScreenState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  final PenggunaRepository _penggunaRepository = PenggunaRepository();
+class _MainScreenState extends State<MainScreen> {
+  int _selectedIndex = 1; // Default halaman utama (Home)
 
-  @override
-  void initState() {
-    super.initState();
-    checkPenggunaStatus();
-  }
+  // Data yang harus diteruskan ke HomeScreens
+  // final String _userName = ;
+  // final int _penggunaId = ;
 
-  void checkPenggunaStatus() async {
-    print("Memeriksa status pengguna...");
-
-    try {
-      bool isterdaftar = await _penggunaRepository.isPenggunaTerdaftar();
-      print("Status pengguna: $isterdaftar");
-
-      Future.delayed(Duration(milliseconds: 500), () {
-        if (mounted) {
-          print("Navigasi ke halaman: ${isterdaftar ? '/home' : '/register'}");
-          Navigator.pushReplacementNamed(
-              context, isterdaftar ? '/home' : '/register');
-        }
+  Future<bool> _onWillPop() async {
+    // Menampilkan konfirmasi keluar hanya di homescreen
+    if (_selectedIndex != 1) {
+      setState(() {
+        _selectedIndex = 1; // Kembali ke HomeScreen jika bukan di halaman Home
       });
-    } catch (e) {
-      print("Error saat memeriksa status pengguna: $e");
+      return false; // Mencegah keluar dari aplikasi
+    } else {
+      return await _showExitConfirmation(); // Menampilkan konfirmasi keluar saat di halaman Home
     }
+  }
+
+  // Future<bool> _onWillPop() async {
+  //   // Menampilkan konfirmasi keluar di setiap halaman
+  //   return await _showExitConfirmation();
+  // }
+
+  Future<bool> _showExitConfirmation() async {
+    //Styling konfirmasi keluar di sini
+    return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            backgroundColor: Colors.white,
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Keluar Aplikasi',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            content: const Text(
+              'Apakah Anda yakin ingin keluar dari aplikasi?',
+              style: TextStyle(fontSize: 16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlueAccent,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () => SystemNavigator.pop(), // Keluar dari aplikasi
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                      Colors.white), // Warna latar default
+                  shadowColor: MaterialStateProperty.all(Colors
+                      .transparent), // Menghilangkan shadow// Border agar hover terlihat
+                  overlayColor: MaterialStateProperty.all(Colors.red
+                      .withOpacity(0.2)), // Warna hover biru transparan
+                ),
+                child: const Text(
+                  'Keluar',
+                  style: TextStyle(color: Colors.red), // Warna teks tetap merah
+                ),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+        bottomNavigationBar: CurvedNavigationBar(
+          index: _selectedIndex,
+          animationCurve: Curves.easeInOut,
+          animationDuration: const Duration(milliseconds: 300),
+          backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+          color: Colors.blue,
+          onTap: (index) {
+            setState(() {
+              _selectedIndex = index;
+            });
+          },
+          items: const [
+            Image(
+              image: AssetImage('assets/images/navigasi/stats.png'),
+              width: 25,
+              height: 25,
+              color: Colors.white,
+            ),
+            Image(
+                image: AssetImage('assets/images/navigasi/home.png'),
+                width: 25,
+                height: 25,
+                color: Colors.white),
+            Image(
+                image: AssetImage('assets/images/navigasi/user.png'),
+                width: 25,
+                height: 25,
+                color: Colors.white),
+          ],
+        ),
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            StatisticScreen(),
+            const HomeScreens(),
+            const ProfileScreen(),
+          ],
+        ),
       ),
     );
   }

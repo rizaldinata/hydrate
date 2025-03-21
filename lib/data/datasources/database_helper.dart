@@ -232,8 +232,8 @@ class DatabaseHelper {
               fk_id_pengguna INTEGER NOT NULL,
               jenis_kelamin TEXT NOT NULL,
               berat_badan REAL NOT NULL,
-              jam_bangun TEXT,
-              jam_tidur TEXT,
+              jam_bangun TEXT NOT NULL,
+              jam_tidur TEXT NOT NULL,
               FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
             )
           ''');
@@ -272,26 +272,5 @@ class DatabaseHelper {
       print("Error saat membuka database: $e");
       rethrow;
     }
-  }
-
-  // Fungsi untuk menyimpan ID pengguna yang sudah terdaftar
-  Future<void> saveUserId(int userId) async {
-    final db = await database;
-    await db.insert(
-      'pengguna',
-      {'id': userId},
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    print("User ID berhasil disimpan: $userId");
-  }
-
-  // Fungsi untuk mengambil ID pengguna yang sudah terdaftar
-  Future<int?> getUserId() async {
-    final db = await database;
-    final List<Map<String, dynamic>> result = await db.query('pengguna');
-    if (result.isNotEmpty) {
-      return result.first['id'];
-    }
-    return null;
   }
 }

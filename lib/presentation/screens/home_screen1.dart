@@ -1,19 +1,15 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
-import 'package:hydrate/data/datasources/database_helper.dart';
-import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/data/models/pengguna_model.dart';
 import 'dart:async';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
-import 'package:hydrate/presentation/widgets/navigation.dart';
+import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
 
 class HomeScreens extends StatefulWidget {
-  // final String name;
-  // final int penggunaId;
-
-  // const HomeScreens({super.key, required this.name, required this.penggunaId});
-
   const HomeScreens({
     super.key,
   });
@@ -25,6 +21,7 @@ class HomeScreens extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreens>
     with SingleTickerProviderStateMixin {
   late final HomeController _controller;
+  List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
   late HydrationCalculator
       _hydrationCalculator; // Ensure HydrationCalculator is defined
@@ -32,69 +29,80 @@ class _HomeScreenState extends State<HomeScreens>
   double currentIntake = 0; // Initial water intake in mL
   final ValueNotifier<double> _valueNotifier =
       ValueNotifier<double>(0); // Progress percentage
-  int selectedWater = 150; // Default water selection is 150mL
+  int selectedWater = 150;
+  late final PenggunaController
+      _penggunaController; // Default water selection is 150mL
+  int? idPengguna;
+  String? namaPengguna;
 
   Timer? _coutdownTimer;
   int _remainingSeconds = 0; // Initial countdown timer value
-  int? idPengguna;
-  String? namaPengguna;
+
+  Map<double, double> _glassOffsets = {}; // Posisi awal
 
   @override
   void initState() {
     super.initState();
     _controller = HomeController();
-    _loadSession().then((_) {
-      if (idPengguna != null) {
-        _hydrationCalculator = HydrationCalculator(penggunaId: idPengguna!);
-        _initializeTarget();
-      }
-    });
+    _penggunaController = PenggunaController();
     _controller.initAnimation(this);
-    _pageController.addListener(() {
-      setState(() {});
-    });
+    _pageController.addListener(() => setState(() {}));
+    _loadUserData(); // Panggil method untuk load data
   }
 
-  Future<void> _loadSession() async {
-    int? id = await SessionManager.getSession();
-
-    if (id != null) {
-      setState(() {
-        idPengguna = id;
-      });
-      _loadPenggunaById(id);
-    } else {
-      print("Session data is null");
-    }
-  }
-
-  Future<void> _loadPenggunaById(int id) async {
+  Future<void> _loadUserData() async {
     try {
-      var penggunaData = await PenggunaRepository().getPenggunaById(id);
-      print("Data Pengguna: $penggunaData"); // Debugging
+      final session = SessionManager();
+      final userId = await session.getUserId();
 
-      if (penggunaData != null) {
-        setState(() {
-          idPengguna = penggunaData['id'];
-          namaPengguna = penggunaData['nama_pengguna'] ?? 'Nama Tidak Tersedia';
-        });
-      } else {
-        print("Pengguna data is null");
+      if (userId != null) {
+        final pengguna = await _penggunaController.getPenggunaById(userId);
+
+        if (pengguna != null) {
+          // Inisialisasi hydration calculator setelah mendapatkan ID
+          _hydrationCalculator = HydrationCalculator(penggunaId: userId);
+
+          setState(() {
+            idPengguna = userId;
+            namaPengguna = pengguna.nama;
+          });
+
+          await _initializeTarget();
+        }
       }
     } catch (e) {
-      print("Error saat mengambil data pengguna: $e");
+      print("Error loading user data: $e");
     }
   }
 
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    await _hydrationCalculator.initializeData(idPengguna!);
+    if (idPengguna == null) return;
+
+    try {
+      await _hydrationCalculator.initializeData(idPengguna!);
+      setState(() {
+        target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+        target = target > 0 ? target : 2000;
+      });
+    } catch (e) {
+      print("Error initializing target: $e");
+    }
+  }
+
+  // Animasi Gerakan Buat Gelas
+  void _animateGlass(double amount) {
     setState(() {
-      target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-      if (target <= 0) {
-        target = 2000; // Default value if target is 0 or negative
-      }
+      _glassOffsets[amount] = -40; // posisi gerakan Naik
     });
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      setState(() {
+        _glassOffsets[amount] = 0; // Kembali ke posisi awal
+      });
+    });
+
+    _addWater(amount);
   }
 
   // Function to add water intake
@@ -105,14 +113,13 @@ class _HomeScreenState extends State<HomeScreens>
     }
 
     setState(() {
-      if (currentIntake + amount <= target) {
-        currentIntake += amount;
-      } else {
-        currentIntake = target; // Max limit
-      }
-      _valueNotifier.value = (currentIntake / target) * 100;
+      currentIntake += amount; // Tetap menambah intake tanpa batas
+
+      // Batasi progress agar tidak lebih dari 100%
+      _valueNotifier.value = min(100, (currentIntake / target) * 100);
     });
     _startCoutdown();
+    _showAddedWaterPopup(context, amount);
   }
 
   // Start countdown timer
@@ -137,6 +144,70 @@ class _HomeScreenState extends State<HomeScreens>
     int minutes = seconds ~/ 60;
     int secs = seconds % 60;
     return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+  }
+
+  // Show snack bar to indicate added water
+  void _showAddedWaterPopup(BuildContext context, double amount) {
+    OverlayEntry overlayEntry;
+    final overlay = Overlay.of(context);
+    final animationController = AnimationController(
+      vsync: Navigator.of(context),
+      duration: Duration(milliseconds: 500),
+    );
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 50, // Posisi awal di bagian atas
+          left: 0,
+          right: 0, // Pastikan berada di tengah horizontal
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: Offset(0, -0.5), // Muncul dari atas
+              end: Offset(0, 0), // Turun ke bawah
+            ).animate(CurvedAnimation(
+              parent: animationController,
+              curve: Curves.easeOut,
+            )),
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: Duration(milliseconds: 300),
+              child: Material(
+                color: Colors.transparent,
+                child: Center(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 64, 186, 137),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 5)
+                      ],
+                    ),
+                    child: Text(
+                      "Berhasil menambahkan ${amount.toInt()}  mL air!",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    // Masukkan overlay ke layar
+    overlay.insert(overlayEntry);
+    animationController.forward(); // Mulai animasi
+
+    // Hapus overlay setelah 2 detik dengan animasi naik ke atas
+    Future.delayed(Duration(seconds: 2), () {
+      animationController.reverse().then((_) {
+        overlayEntry.remove();
+      });
+    });
   }
 
   // Show the modal bottom sheet for custom water intake selection
@@ -238,15 +309,16 @@ class _HomeScreenState extends State<HomeScreens>
                       onPressed: () {
                         setState(() {
                           selectedWater = tempSelectedWater;
-                          if (currentIntake + selectedWater <= target) {
-                            currentIntake += selectedWater;
-                          } else {
-                            currentIntake =
-                                target; // If exceeds target, set to max target
-                          }
-                          _valueNotifier.value = (currentIntake / target) * 100;
+                          currentIntake +=
+                              selectedWater; // Selalu menambah intake
+
+                          // Pastikan progress tidak lebih dari 100%
+                          _valueNotifier.value =
+                              min(100, (currentIntake / target) * 100);
                         });
+
                         _startCoutdown();
+                        _showAddedWaterPopup(context, selectedWater.toDouble());
                         Navigator.pop(context);
                       },
                       style: ElevatedButton.styleFrom(
@@ -277,58 +349,71 @@ class _HomeScreenState extends State<HomeScreens>
 
   @override
   Widget build(BuildContext context) {
+    if (namaPengguna == null) {
+      return Scaffold(
+        backgroundColor: Colors.blue[50],
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: Colors.blue[50],
-      body: Stack(
-        children: [
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text("HYDRATE",
-                    style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.blue,
-                        fontFamily: "Gluten")),
-                Transform.translate(
-                  offset: const Offset(0, -5),
-                  child: Text(
-                    namaPengguna != null
-                        ? "Hai, $namaPengguna"
-                        : "Hai, Pengguna!",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+      backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+      body: SingleChildScrollView(
+        child: Stack(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.05,
+                  vertical: screenHeight * 0.07),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text("HYDRATE",
+                      style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.blue,
+                          fontFamily: "Gluten")),
+                  Transform.translate(
+                    offset: Offset(0, screenHeight * -0.008),
+                    child: Text(
+                      "Hai, $namaPengguna",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
-                ),
-                const Text(
-                  "Ayo selesaikan pencapaianmu hari ini!",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black54,
+                  const Text(
+                    "Ayo selesaikan pencapaianmu hari ini!",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black54,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(42.0),
-                  child: Center(
-                    child: DashedCircularProgressBar.aspectRatio(
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: screenHeight * 0.2,
+                  ),
+                  Padding(
+                    padding: EdgeInsets.all(screenWidth * 0.1),
+                    child: Center(
+                        child: DashedCircularProgressBar.aspectRatio(
                       aspectRatio: 1,
                       valueNotifier: _valueNotifier,
-                      progress: _valueNotifier.value,
+                      progress:
+                          _valueNotifier.value, // Pastikan progress max 100%
                       startAngle: 230,
                       sweepAngle: 260,
                       foregroundColor: const Color(0xFF00A6FB),
@@ -345,7 +430,7 @@ class _HomeScreenState extends State<HomeScreens>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${value.ceil()}%',
+                                '${value.ceil()}%', // Tetap menampilkan maksimal 100%
                                 style: const TextStyle(
                                   color: Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w300,
@@ -356,7 +441,7 @@ class _HomeScreenState extends State<HomeScreens>
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    '${currentIntake.toInt()} mL',
+                                    '${currentIntake.toInt()} mL', // Tetap menampilkan jumlah air yang dikonsumsi sebenarnya
                                     style: TextStyle(
                                       color: currentIntake >= target
                                           ? Colors.blue
@@ -379,79 +464,81 @@ class _HomeScreenState extends State<HomeScreens>
                           ),
                         ),
                       ),
-                    ),
+                    )),
                   ),
-                ),
-                Transform.translate(
-                  offset: const Offset(0, -40),
-                  child: Container(
-                    width: screenWidth * 0.6,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: Colors.deepOrange,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _remainingSeconds > 0
-                          ? "NEXT DRINK IN ${_formatTime(_remainingSeconds)}"
-                          : "TAP TO DRINK!",
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  Transform.translate(
+                    offset: Offset(0, screenHeight * -0.05),
+                    child: Container(
+                      width: screenWidth * 0.7,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: _remainingSeconds > 0
+                            ? const Color(0XFFFFB831)
+                            : const Color(
+                                0XFFEF9651), // Ubah warna berdasarkan kondisi
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _remainingSeconds > 0
+                            ? "Hydrasi selanjutnya ${_formatTime(_remainingSeconds)}"
+                            : "SAATNYA MINUM!",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Container(
-                  width: screenWidth * (0.8 + 0.04),
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
-                      topRight: Radius.circular(10),
+                  Container(
+                    width: screenWidth * (0.8 + 0.04),
+                    padding: const EdgeInsets.all(16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildDrinkOption(100),
-                      _buildDrinkOption(150),
-                      _buildDrinkOption(200),
-                      GestureDetector(
-                        onTap: () => _showAddWaterModal(context),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 10),
-                          child: SizedBox(
-                            width: 40,
-                            height: 40,
-                            child: FloatingActionButton(
-                              backgroundColor: Colors.blue,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildDrinkOption(100),
+                        _buildDrinkOption(150),
+                        _buildDrinkOption(200),
+                        GestureDetector(
+                          onTap: () => _showAddWaterModal(context),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 10),
+                            child: SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: FloatingActionButton(
+                                backgroundColor: Colors.blue,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                onPressed: () {
+                                  _showAddWaterModal(context);
+                                },
+                                child:
+                                    const Icon(Icons.add, color: Colors.white),
                               ),
-                              onPressed: () {
-                                _showAddWaterModal(context);
-                              },
-                              child: const Icon(Icons.add, color: Colors.white),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          //Positioning the navbar at the bottom
-          const Navigasi(),
-        ],
+            //Positioning the navbar at the bottom
+            // const Navigasi(),
+          ],
+        ),
       ),
+      // bottomNavigationBar: Navigasi(),
     );
   }
 
@@ -459,12 +546,17 @@ class _HomeScreenState extends State<HomeScreens>
     return Column(
       children: [
         GestureDetector(
-          onTap: () => _addWater(amount),
-          child: Image.asset(
-            "assets/images/glass.png",
-            fit: BoxFit.contain,
-            width: 30,
-            height: 30,
+          onTap: () => _animateGlass(amount),
+          child: AnimatedContainer(
+            duration: const Duration(seconds: 1),
+            transform: Matrix4.translationValues(0, _glassOffsets[amount] ?? 0,
+                0), // Hanya gelas yang diklik bergerak
+            child: SvgPicture.asset(
+              'assets/images/glass.svg',
+              fit: BoxFit.contain,
+              width: 30,
+              height: 30,
+            ),
           ),
         ),
         Text(
