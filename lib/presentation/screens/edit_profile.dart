@@ -29,7 +29,7 @@ class _EditProfileState extends State<EditProfile> {
               style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF00A6FB),
+                color: Color(0xFF2F2E41),
               ),
             ),
             const SizedBox(height: 20),
