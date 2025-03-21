@@ -29,7 +29,7 @@ class _EditProfileState extends State<EditProfile> {
               style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
+                color: Color(0xFF00A6FB),
               ),
             ),
             const SizedBox(height: 20),
@@ -54,7 +54,7 @@ class _EditProfileState extends State<EditProfile> {
               children: [
                 Expanded(child: _buildButton("Batal", Colors.grey, () => Navigator.pop(context))),
                 const SizedBox(width: 10),
-                Expanded(child: _buildButton("Simpan", Colors.blueAccent, _saveProfile)),
+                Expanded(child: _buildButton("Simpan", Color(0xFF00A6FB), _saveProfile)),
               ],
             ),
           ],
@@ -70,7 +70,7 @@ class _EditProfileState extends State<EditProfile> {
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Colors.blueAccent),
+        prefixIcon: Icon(icon, color: Color(0xFF00A6FB)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );
@@ -82,7 +82,7 @@ class _EditProfileState extends State<EditProfile> {
       value: selectedGender,
       decoration: InputDecoration(
         labelText: "Jenis Kelamin",
-        prefixIcon: const Icon(Icons.wc, color: Colors.blueAccent),
+        prefixIcon: const Icon(Icons.wc, color: Color(0xFF00A6FB)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
       items: ["Laki-laki", "Perempuan"].map((String value) {

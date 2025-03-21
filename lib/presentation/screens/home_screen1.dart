@@ -18,17 +18,15 @@ class HomeScreens extends StatefulWidget {
   State<HomeScreens> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreens>
-    with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
   late HydrationCalculator
-      _hydrationCalculator; // Ensure HydrationCalculator is defined
+ _hydrationCalculator; // Ensure HydrationCalculator is defined
   double target = 0; // Target hydration dynamically calculated
   double currentIntake = 0; // Initial water intake in mL
-  final ValueNotifier<double> _valueNotifier =
-      ValueNotifier<double>(0); // Progress percentage
+  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); // Progress percentage
   int selectedWater = 150; // Default water selection is 150mL
 
   Timer? _coutdownTimer;
@@ -61,7 +59,7 @@ class _HomeScreenState extends State<HomeScreens>
     });
   }
 
-  // Animasi Gerakan Buatan Gelas
+  // Animasi Gerakan Buat Gelas
   void _animateGlass(double amount) {
     setState(() {
       _glassOffsets[amount] = -40; // posisi gerakan Naik

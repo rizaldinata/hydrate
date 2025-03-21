@@ -257,10 +257,10 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => MainScreen(
-                                  name: widget.name,
-                                  penggunaId: penggunaData[
-                                      'id'], // Ganti dengan ID pengguna yang sesuai dari backend
-                                  ),
+                                name: widget.name,
+                                penggunaId: penggunaData[
+                                    'id'], // Ganti dengan ID pengguna yang sesuai dari backend
+                              ),
                             ),
                           );
                         }
@@ -320,7 +320,10 @@ class _RegistrationTimeState extends State<RegistrationTime> {
               color: Color(0xFF00A6FB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+            child: SvgPicture.asset(
+              'assets/images/clock.svg',
+              height: 24,
+            ),
           ),
         ),
       ],
@@ -425,7 +428,10 @@ class _TimePickerInputState extends State<TimePickerInput> {
               color: Color(0xFF00A6FB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.access_time, color: Colors.white, size: 24),
+            child: SvgPicture.asset(
+              'assets/images/clock.svg',
+              height: 24,
+            ),
           ),
         ),
       ],

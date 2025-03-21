@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/screens/edit_profile.dart';
 import 'package:hydrate/presentation/widgets/navigation.dart';
@@ -32,9 +33,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Kontainer Profil
                 Container(
                   width: double.infinity,
-                  height: screenHeight * 0.50,
+                  height: screenHeight * 0.55,
                   decoration: const BoxDecoration(
-                    color: Colors.blue,
+                    color: Color(0xFF00A6FB),
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(25),
                       bottomRight: Radius.circular(25),
@@ -50,17 +51,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         // Foto Profil
                         Padding(
-                          padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.02),
-                          child: const Center(
-                            child: CircleAvatar(
-                              radius:
-                                  25, 
-                              backgroundColor: Colors
-                                  .blueAccent, 
-                              backgroundImage: AssetImage(
-                                  "assets/images/navigasi/user.png"),
-                            ),
+                          padding: EdgeInsets.only(
+                              top: screenHeight * 0.02, bottom: screenHeight * 0.015),
+                          child: Center(
+                            child: SvgPicture.asset('assets/images/profile.svg', height: 80, ),
                           ),
                         ),
 
@@ -77,16 +71,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
-                        // SizedBox(height: screenHeight * 0.02),
+                        SizedBox(height: screenHeight * 0.02),
 
                         // Informasi Profil
-                        _profileInfo(
-                            Icons.person, "Jenis Kelamin", "Laki - Laki"),
-                        _profileInfo(
-                            Icons.fitness_center, "Berat badan", "60 kg"),
-                        _profileInfo(
-                            Icons.nightlight_round, "Jam Tidur", "22:00 WIB"),
-                        _profileInfo(Icons.wb_sunny, "Jam Bangun", "05:00 WIB"),
+                        _profileInfo(Icons.person, "Jenis Kelamin", "Laki - Laki"),
+                        _profileInfo(Icons.fitness_center, "Berat badan", "60 kg"),
+                        _profileInfo(Icons.wb_sunny, "Jam Bangun", "08:00 WIB"),
+                        _profileInfo(Icons.nightlight_round, "Jam Tidur", "22:00 WIB"),
 
                         SizedBox(height: screenHeight * 0.01,),
 
@@ -104,9 +95,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: const Text(
                                 "Edit Profile",
                                 style: TextStyle(
-                                    color: Colors.black,
+                                    color: Color(0xFF2F2E41),
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 18),
+                                    fontSize: 16),
                               )),
                         ),
                       ],
@@ -150,7 +141,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: GoogleFonts.inter(
               fontSize: 16,
               color: Colors.white,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],

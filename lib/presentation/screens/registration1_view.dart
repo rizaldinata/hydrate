@@ -238,16 +238,16 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.woman,
-                                      color: _gender == "Female"
-                                          ? Colors.white
-                                          : const Color(0xFF2F2E41)
-                                              .withOpacity(0.5),
-                                      size: 24,
+                                  children: [ _gender == "Female"
+                                    ? SvgPicture.asset(
+                                      'assets/images/women.svg',
+                                      height: 22,
+                                    ) : SvgPicture.asset(
+                                      'assets/images/women.svg',
+                                      height: 22,
+                                       colorFilter: ColorFilter.mode(const Color(0xFF2F2E41).withOpacity(0.5), BlendMode.srcIn),
                                     ),
-                                    const SizedBox(width: 5),
+                                    const SizedBox(width: 10),
                                     Text(
                                       "Perempuan",
                                       style: TextStyle(
@@ -283,15 +283,16 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(
-                                      Icons.man,
-                                      color: _gender == "Male"
-                                          ? Colors.white
-                                          : const Color(0xFF2F2E41)
-                                              .withOpacity(0.5),
-                                      size: 24,
+                                    _gender == "Male"
+                                    ? SvgPicture.asset(
+                                      'assets/images/man.svg',
+                                      height: 22,
+                                    ) : SvgPicture.asset(
+                                      'assets/images/man.svg',
+                                      height: 22,
+                                       colorFilter: ColorFilter.mode(const Color(0xFF2F2E41).withOpacity(0.5), BlendMode.srcIn),
                                     ),
-                                    const SizedBox(width: 5),
+                                    const SizedBox(width: 10),
                                     Text(
                                       "Laki - Laki",
                                       style: TextStyle(
@@ -346,7 +347,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 50),
 
                 // Tombol Selanjutnya
                 GestureDetector(

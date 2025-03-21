@@ -13,10 +13,9 @@ import 'package:hydrate/presentation/screens/statistic_screen.dart';
 
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp
-  ]).then((_) {
-      runApp(const MyApp());
+  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
+      .then((_) {
+    runApp(const MyApp());
   });
 }
 
@@ -78,6 +77,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
             backgroundColor: Colors.white,
             title: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   'Keluar Aplikasi',
@@ -86,22 +86,32 @@ class _MainScreenState extends State<MainScreen> {
               ],
             ),
             content: const Text(
-              'Apakah Anda yakin ingin keluar?',
+              'Apakah Anda yakin ingin keluar dari aplikasi?',
               style: TextStyle(fontSize: 16),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                style: TextButton.styleFrom(foregroundColor: Colors.black),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.lightBlueAccent,
+                  foregroundColor: Colors.white,
+                ),
                 child: const Text('Batal'),
               ),
               ElevatedButton(
                 onPressed: () => SystemNavigator.pop(), // Keluar dari aplikasi
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.lightBlueAccent,
-                  foregroundColor: Colors.black,
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                      Colors.white), // Warna latar default
+                  shadowColor: MaterialStateProperty.all(Colors
+                      .transparent), // Menghilangkan shadow// Border agar hover terlihat
+                  overlayColor: MaterialStateProperty.all(Colors.red
+                      .withOpacity(0.2)), // Warna hover biru transparan
                 ),
-                child: const Text('Keluar'),
+                child: const Text(
+                  'Keluar',
+                  style: TextStyle(color: Colors.red), // Warna teks tetap merah
+                ),
               ),
             ],
           ),
