@@ -4,32 +4,59 @@ import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 class RiwayatHidrasiRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // tambah hidrasi dan tambah riwayat hidrasi
-  Future<int> tambahRiwayatHidrasi(RiwayatHidrasi riwayat) async {
+  Future<int> tambahRiwayatHidrasi({
+    required int fkIdPengguna,
+    required double jumlahHidrasi,
+  }) async {
     try {
       final db = await _dbHelper.database;
 
-      // cek pengguna nya udah ada atau belom
-      final userExists = (await db.query(
-        'pengguna',
-        where: 'id = ?',
-        whereArgs: [riwayat.fkIdPengguna],
-      ))
-          .isNotEmpty;
+      print("Menambahkan riwayat hidrasi dengan jumlah: $jumlahHidrasi");
 
-      if (!userExists) {
-        print("User dengan ID ${riwayat.fkIdPengguna} tidak ditemukan.");
-        return -1;
+      int result = await db.rawInsert('''
+      INSERT INTO riwayat_hidrasi (fk_id_pengguna, jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi)
+      VALUES (?, ?, DATE('now'), TIME('now'))
+    ''', [fkIdPengguna, jumlahHidrasi]);
+
+      if (result > 0) {
+        print("Riwayat hidrasi berhasil ditambahkan! ID: $result");
+      } else {
+        print("Gagal menambahkan riwayat hidrasi.");
       }
 
-      int result = await db.insert('riwayat_hidrasi', riwayat.toMap());
-      print("Riwayat hidrasi berhasil ditambahkan dengan ID: $result");
       return result;
     } catch (e) {
       print("Error saat menambahkan riwayat hidrasi: $e");
       return -1;
     }
   }
+
+  // tambah hidrasi dan tambah riwayat hidrasi
+  // Future<int> tambahRiwayatHidrasi(RiwayatHidrasi riwayat) async {
+  //   try {
+  //     final db = await _dbHelper.database;
+
+  //     // cek pengguna nya udah ada atau belom
+  //     final userExists = (await db.query(
+  //       'pengguna',
+  //       where: 'id = ?',
+  //       whereArgs: [riwayat.fkIdPengguna],
+  //     ))
+  //         .isNotEmpty;
+
+  //     if (!userExists) {
+  //       print("User dengan ID ${riwayat.fkIdPengguna} tidak ditemukan.");
+  //       return -1;
+  //     }
+
+  //     int result = await db.insert('riwayat_hidrasi', riwayat.toMap());
+  //     print("Riwayat hidrasi berhasil ditambahkan dengan ID: $result");
+  //     return result;
+  //   } catch (e) {
+  //     print("Error saat menambahkan riwayat hidrasi: $e");
+  //     return -1;
+  //   }
+  // }
 
   // ambil semua data riwayat hidrasi (peripheral kayake sambil nunggu halaman riwayat ada atau ngga)
   Future<List<RiwayatHidrasi>> getRiwayatHidrasi(int idPengguna) async {

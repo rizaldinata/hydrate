@@ -5,8 +5,14 @@ class RiwayatHidrasiController {
   final RiwayatHidrasiRepository _repository = RiwayatHidrasiRepository();
 
   // tambah hidrasi dan tambah riwayat hidrasi
-  Future<int> tambahRiwayatHidrasi(RiwayatHidrasi riwayat) async {
-    return await _repository.tambahRiwayatHidrasi(riwayat);
+  Future<void> tambahRiwayatHidrasi({
+    required int fkIdPengguna,
+    required double jumlahHidrasi,
+  }) async {
+    await _repository.tambahRiwayatHidrasi(
+      fkIdPengguna: fkIdPengguna,
+      jumlahHidrasi: jumlahHidrasi,
+    );
   }
 
   // tampilin semua riwayat hidrasi
