@@ -48,6 +48,8 @@ dependencies:
   water_bottle: ^0.0.7
   dashed_circular_progress_bar: ^0.0.6
   curved_navigation_bar: ^1.0.6
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.5
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +61,24 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^4.0.0
+
+flutter_icons:
+  android: true
+  ios: false
+  image_path: "assets/images/hydrate-logo1.png"
+
+flutter_native_splash:
+  color: "#d4e4ed"
+  image: assets/images/hydrate-logo1.png
+  android: true
+  ios: true
+
+  android_12:
+    image: assets/images/hydrate-logo1.png
+    color: "#fafafa"
+    icon_background_color: "#fafafa"
+    color_dark: "#042a49"
+    icon_background_color_dark: "#042a49"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
