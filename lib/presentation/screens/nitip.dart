@@ -22,8 +22,7 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
-  late HydrationCalculator
- _hydrationCalculator; // Ensure HydrationCalculator is defined
+  late HydrationCalculator _hydrationCalculator; // Ensure HydrationCalculator is defined
   double target = 0; // Target hydration dynamically calculated
   double currentIntake = 0; // Initial water intake in mL
   final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); // Progress percentage
@@ -51,11 +50,9 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
 
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    await _hydrationCalculator
-        .initializeData(widget.penggunaId); // Ensure this method works
+    await _hydrationCalculator.initializeData(widget.penggunaId); // Ensure this method works
     setState(() {
-      target = _hydrationCalculator.calculateDailyWaterIntake() *
-          1000; // Calculate target in mL
+      target = _hydrationCalculator.calculateDailyWaterIntake() * 1000; // Calculate target in mL
     });
   }
 

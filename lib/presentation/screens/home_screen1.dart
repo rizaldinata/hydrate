@@ -18,7 +18,8 @@ class HomeScreens extends StatefulWidget {
   State<HomeScreens> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreens>
+    with SingleTickerProviderStateMixin {
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
@@ -37,7 +38,11 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
   Timer? _coutdownTimer;
   int _remainingSeconds = 0; // Initial countdown timer value
 
-  Map<double, double> _glassOffsets = {}; // Posisi awal
+  Map<double, double> _glassOffsets = {
+    100: 0,
+    150: 0,
+    200: 0,
+  }; // Posisi awal
 
   @override
   void initState() {
@@ -91,18 +96,19 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
 
   // Animasi Gerakan Buat Gelas Kalau ditap
   void _animateGlass(double amount) {
+  setState(() {
+    _glassOffsets[amount] = -10; // Move up by 20 pixels
+  });
+
+  // Reset the offset back to 0 after 500 milliseconds
+  Future.delayed(Duration(seconds: 1), () {
     setState(() {
-      _glassOffsets[amount] = -40; // posisi gerakan Naik
+      _glassOffsets[amount] = 0; // Move back down
     });
+  });
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        _glassOffsets[amount] = 0; // Kembali ke posisi awal
-      });
-    });
-
-    _addWater(amount);
-  }
+  _addWater(amount); // Add water intake
+}
 
   // Function to add water intake
   void _addWater(double amount) {
@@ -346,20 +352,6 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
     );
   }
 
-
-  // Fungsi untuk overflow nama
-  String truncateName(String name, int maxLength) {
-    if (name.length <= maxLength) return name;
-
-    int lastSpace = name.substring(0, maxLength).lastIndexOf(' ');
-    if (lastSpace == -1) {
-      return "${name.substring(0, maxLength)}..."; // Jika tidak ada spasi, potong langsung
-    } else {
-      return "${name.substring(0, lastSpace)}..."; // Jika ada spasi, potong di spasi terakhir
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     if (namaPengguna == null) {
@@ -393,14 +385,12 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
-                      "Hai, ${truncateName(namaPengguna!, 22)}",
+                      "Hai, $namaPengguna",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
                   ),
                   const Text(
