@@ -347,6 +347,20 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
+
+  // Fungsi untuk overflow nama
+  String truncateName(String name, int maxLength) {
+    if (name.length <= maxLength) return name;
+
+    int lastSpace = name.substring(0, maxLength).lastIndexOf(' ');
+    if (lastSpace == -1) {
+      return "${name.substring(0, maxLength)}..."; // Jika tidak ada spasi, potong langsung
+    } else {
+      return "${name.substring(0, lastSpace)}..."; // Jika ada spasi, potong di spasi terakhir
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     if (namaPengguna == null) {
@@ -380,12 +394,14 @@ class _HomeScreenState extends State<HomeScreens>
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
-                      "Hai, $namaPengguna",
+                      "Hai, ${truncateName(namaPengguna!, 22)}",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
                     ),
                   ),
                   const Text(
