@@ -1,15 +1,11 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
 import 'package:hydrate/presentation/screens/info_product_view.dart';
 import 'package:hydrate/presentation/screens/profile_screen.dart';
 import 'package:hydrate/presentation/screens/statistic_screen.dart';
-// import 'package:hydrate/presentation/widgets/circular.dart';
-// import 'package:hydrate/presentation/screens/coba_air.dart';
-// // import 'package:hydrate/view/info_product_view.dart';
-// import 'package:hydrate/presentation/screens/home_screen.dart';
-// import 'package:hydrate/presentation/screens/home_screen1.dart';
 
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,8 +22,18 @@ class MyApp extends StatelessWidget {
       title: 'HYDRATE',
       theme: ThemeData(),
       debugShowCheckedModeBanner: false,
-      home: InfoProduct(),
-      // home:  StatisticScreen(),
+      home: FutureBuilder(
+        future: PenggunaRepository().isPenggunaTerdaftar(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          return snapshot.data == true ? MainScreen() : InfoProduct();
+        },
+      ),
     );
   }
 }
@@ -38,31 +44,17 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 1; // Default halaman utama (Home)
-
-  // Data yang harus diteruskan ke HomeScreens
-  // final String _userName = ;
-  // final int _penggunaId = ;
+  int _selectedIndex = 1;
 
   Future<bool> _onWillPop() async {
-    // Menampilkan konfirmasi keluar hanya di homescreen
     if (_selectedIndex != 1) {
-      setState(() {
-        _selectedIndex = 1; // Kembali ke HomeScreen jika bukan di halaman Home
-      });
-      return false; // Mencegah keluar dari aplikasi
-    } else {
-      return await _showExitConfirmation(); // Menampilkan konfirmasi keluar saat di halaman Home
+      setState(() => _selectedIndex = 1);
+      return false;
     }
+    return await _showExitConfirmation();
   }
 
-  // Future<bool> _onWillPop() async {
-  //   // Menampilkan konfirmasi keluar di setiap halaman
-  //   return await _showExitConfirmation();
-  // }
-
   Future<bool> _showExitConfirmation() async {
-    //Styling konfirmasi keluar di sini
     return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -70,43 +62,30 @@ class _MainScreenState extends State<MainScreen> {
               borderRadius: BorderRadius.circular(20),
             ),
             backgroundColor: Colors.white,
-            title: Row(
+            title: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Keluar Aplikasi',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                Text('Keluar Aplikasi',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
-            content: const Text(
-              'Apakah Anda yakin ingin keluar dari aplikasi?',
-              style: TextStyle(fontSize: 16),
-            ),
+            content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?',
+                style: TextStyle(fontSize: 16)),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.lightBlueAccent,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Batal'),
-              ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightBlueAccent,
+                      foregroundColor: Colors.white),
+                  child: const Text('Batal')),
               ElevatedButton(
-                onPressed: () => SystemNavigator.pop(), // Keluar dari aplikasi
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
-                      Colors.white), // Warna latar default
-                  shadowColor: MaterialStateProperty.all(Colors
-                      .transparent), // Menghilangkan shadow// Border agar hover terlihat
-                  overlayColor: MaterialStateProperty.all(Colors.red
-                      .withOpacity(0.2)), // Warna hover biru transparan
-                ),
-                child: const Text(
-                  'Keluar',
-                  style: TextStyle(color: Colors.red), // Warna teks tetap merah
-                ),
-              ),
+                  onPressed: () => SystemNavigator.pop(),
+                  style: ButtonStyle(
+                      backgroundColor: MaterialStateProperty.all(Colors.white),
+                      overlayColor: MaterialStateProperty.all(
+                          Colors.red.withOpacity(0.2))),
+                  child: const Text('Keluar',
+                      style: TextStyle(color: Colors.red))),
             ],
           ),
         ) ??
@@ -125,18 +104,13 @@ class _MainScreenState extends State<MainScreen> {
           animationDuration: const Duration(milliseconds: 300),
           backgroundColor: const Color.fromARGB(255, 227, 242, 253),
           color: Colors.blue,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
+          onTap: (index) => setState(() => _selectedIndex = index),
           items: const [
             Image(
-              image: AssetImage('assets/images/navigasi/stats.png'),
-              width: 25,
-              height: 25,
-              color: Colors.white,
-            ),
+                image: AssetImage('assets/images/navigasi/stats.png'),
+                width: 25,
+                height: 25,
+                color: Colors.white),
             Image(
                 image: AssetImage('assets/images/navigasi/home.png'),
                 width: 25,

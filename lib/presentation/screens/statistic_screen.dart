@@ -27,8 +27,11 @@ class _StatisticScreenState extends State<StatisticScreen> {
       backgroundColor: const Color.fromARGB(255, 227, 242, 253),
       appBar: AppBar(
         title: Center(
-            child: Text("Riwayat Minum Air",
-                style: TextStyle(color: Colors.white))),
+          child: Text(
+            "Riwayat Minum Air",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
         backgroundColor: Colors.blue,
         automaticallyImplyLeading: false, // Hilangkan tombol back
       ),
