@@ -1,18 +1,18 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:hydrate/core/utils/session_manager.dart';
-import 'package:hydrate/data/models/pengguna_model.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
-import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
+import 'package:hydrate/presentation/widgets/navigation.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
-import 'package:hydrate/core/utils/hydration_calculator.dart';
+import 'package:hydrate/core/utils/hydration_calculator.dart'; // Ensure this import is correct
 
 class HomeScreens extends StatefulWidget {
-  const HomeScreens({
-    super.key,
-  });
+  final String name;
+  final int penggunaId;
+
+  const HomeScreens({super.key, required this.name, required this.penggunaId});
 
   @override
   State<HomeScreens> createState() => _HomeScreenState();
@@ -23,16 +23,11 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
   late HydrationCalculator
-      _hydrationCalculator; // Ensure HydrationCalculator is defined
+ _hydrationCalculator; // Ensure HydrationCalculator is defined
   double target = 0; // Target hydration dynamically calculated
   double currentIntake = 0; // Initial water intake in mL
-  final ValueNotifier<double> _valueNotifier =
-      ValueNotifier<double>(0); // Progress percentage
-  int selectedWater = 150;
-  late final PenggunaController
-      _penggunaController; // Default water selection is 150mL
-  int? idPengguna;
-  String? namaPengguna;
+  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0); // Progress percentage
+  int selectedWater = 150; // Default water selection is 150mL
 
   Timer? _coutdownTimer;
   int _remainingSeconds = 0; // Initial countdown timer value
@@ -43,53 +38,28 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
   void initState() {
     super.initState();
     _controller = HomeController();
-    _penggunaController = PenggunaController();
     _controller.initAnimation(this);
-    _pageController.addListener(() => setState(() {}));
-    _loadUserData(); // Panggil method untuk load data
-  }
 
-  Future<void> _loadUserData() async {
-    try {
-      final session = SessionManager();
-      final userId = await session.getUserId();
+    // Initialize HydrationCalculator with correct user ID
+    _hydrationCalculator = HydrationCalculator(penggunaId: widget.penggunaId);
+    _initializeTarget(); // Initialize the hydration target dynamically based on user data
 
-      if (userId != null) {
-        final pengguna = await _penggunaController.getPenggunaById(userId);
-
-        if (pengguna != null) {
-          // Inisialisasi hydration calculator setelah mendapatkan ID
-          _hydrationCalculator = HydrationCalculator(penggunaId: userId);
-
-          setState(() {
-            idPengguna = userId;
-            namaPengguna = pengguna.nama;
-          });
-
-          await _initializeTarget();
-        }
-      }
-    } catch (e) {
-      print("Error loading user data: $e");
-    }
+    _pageController.addListener(() {
+      setState(() {});
+    });
   }
 
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    if (idPengguna == null) return;
-
-    try {
-      await _hydrationCalculator.initializeData(idPengguna!);
-      setState(() {
-        target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-        target = target > 0 ? target : 2000;
-      });
-    } catch (e) {
-      print("Error initializing target: $e");
-    }
+    await _hydrationCalculator
+        .initializeData(widget.penggunaId); // Ensure this method works
+    setState(() {
+      target = _hydrationCalculator.calculateDailyWaterIntake() *
+          1000; // Calculate target in mL
+    });
   }
 
-  // Animasi Gerakan Buat Gelas Kalau ditap
+  // Animasi Gerakan Buat Gelas
   void _animateGlass(double amount) {
     setState(() {
       _glassOffsets[amount] = -40; // posisi gerakan Naik
@@ -106,11 +76,6 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
 
   // Function to add water intake
   void _addWater(double amount) {
-    if (target <= 0) {
-      print("Target is not set or invalid");
-      return;
-    }
-
     setState(() {
       currentIntake += amount; // Tetap menambah intake tanpa batas
 
@@ -348,14 +313,6 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
 
   @override
   Widget build(BuildContext context) {
-    if (namaPengguna == null) {
-      return Scaffold(
-        backgroundColor: Colors.blue[50],
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -379,7 +336,7 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
-                      "Hai, $namaPengguna",
+                      "Hai, ${widget.name}",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -570,4 +527,3 @@ class _HomeScreenState extends State<HomeScreens> with SingleTickerProviderState
     );
   }
 }
-
