@@ -33,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 // Kontainer Profil
                 Container(
                   width: double.infinity,
-                  height: screenHeight * 0.55,
+                  height: screenHeight * 0.56,
                   decoration: const BoxDecoration(
                     color: Color(0xFF00A6FB),
                     borderRadius: BorderRadius.only(
@@ -54,7 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           padding: EdgeInsets.only(
                               top: screenHeight * 0.02, bottom: screenHeight * 0.015),
                           child: Center(
-                            child: SvgPicture.asset('assets/images/profile.svg', height: 80, ),
+                            child: SvgPicture.asset('assets/images/profile.svg', width: screenWidth * 0.2, ),
                           ),
                         ),
 
@@ -91,7 +91,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     borderRadius: BorderRadius.circular(25),
                                   ),
                                   minimumSize: Size(
-                                      screenWidth * 0.9, screenHeight * 0.04)),
+                                      screenWidth * 0.9, screenHeight * 0.05)),
                               child: const Text(
                                 "Edit Profile",
                                 style: TextStyle(
