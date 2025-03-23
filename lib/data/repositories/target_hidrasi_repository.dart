@@ -1,10 +1,19 @@
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/models/target_hidrasi_model.dart';
 import 'package:intl/intl.dart';
-import 'package:hydrate/core/utils/hydration_calculator.dart'; // Import HydrationCalculator
+import 'package:hydrate/core/utils/hydration_calculator.dart';
+import 'dart:math';
 
 class TargetHidrasiRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  
+  // Method untuk menghitung persentase hidrasi
+  double _hitungPersentaseHidrasi(double totalHidrasi, double targetHidrasi) {
+    if (targetHidrasi <= 0) return 0.0;
+    
+    // Batasi maksimal 100%
+    return min(100.0, (totalHidrasi / targetHidrasi) * 100);
+  }
   
   // Method untuk mendapatkan presentasi harian
   Future<double> getPresentasiHidrasiHarian(int idPengguna, String tanggal) async {
@@ -22,16 +31,11 @@ class TargetHidrasiRepository {
         return 0.0; // Jika tidak ada data, kembalikan 0
       }
 
+      // Gunakan persentase yang tersimpan di database
       final targetHidrasi = results.first;
-      final double target = targetHidrasi['target_hidrasi'] ?? 0.0;
-      final double totalHidrasi = targetHidrasi['total_hidrasi_harian'] ?? 0.0;
-
-      // Hitung presentasi
-      if (target > 0) {
-        return (totalHidrasi / target) * 100;
-      } else {
-        return 0.0;
-      }
+      final double persentaseHidrasi = targetHidrasi['persentase_hidrasi'] ?? 0.0;
+      
+      return persentaseHidrasi;
     } catch (e) {
       print("Error saat menghitung presentasi hidrasi: $e");
       return 0.0;
@@ -100,14 +104,18 @@ class TargetHidrasiRepository {
         targetHidrasi = await _calculateTargetHidrasi(idPengguna);
       }
       
+      // Hitung persentase hidrasi
+      double persentase = _hitungPersentaseHidrasi(totalHidrasiHarian, targetHidrasi);
+      
       final int id = await db.insert('target_hidrasi', {
         'fk_id_pengguna': idPengguna,
         'target_hidrasi': targetHidrasi,
         'tanggal_hidrasi': tanggal,
         'total_hidrasi_harian': totalHidrasiHarian,
+        'persentase_hidrasi': persentase,
       });
       
-      print("Target hidrasi berhasil dibuat dengan ID: $id (Target: $targetHidrasi mL)");
+      print("Target hidrasi berhasil dibuat dengan ID: $id (Target: $targetHidrasi mL, Persentase: $persentase%)");
       return id;
     } catch (e) {
       print("Error saat membuat target hidrasi: $e");
@@ -115,7 +123,7 @@ class TargetHidrasiRepository {
     }
   }
 
-  // Mengupdate total hidrasi harian
+  // Mengupdate total hidrasi harian dan persentase
   Future<bool> updateTotalHidrasi(
     int idPengguna, 
     String tanggal, 
@@ -128,15 +136,32 @@ class TargetHidrasiRepository {
       final targetExists = await checkTargetHidrasiExists(idPengguna, tanggal);
       
       if (targetExists) {
-        // Update total hidrasi yang sudah ada
+        // Dapatkan target hidrasi untuk menghitung persentase
+        final List<Map<String, dynamic>> result = await db.query(
+          'target_hidrasi',
+          columns: ['target_hidrasi'],
+          where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
+          whereArgs: [idPengguna, tanggal],
+          limit: 1,
+        );
+        
+        double targetHidrasi = result.first['target_hidrasi'] ?? 0.0;
+        
+        // Hitung persentase hidrasi
+        double persentase = _hitungPersentaseHidrasi(totalHidrasi, targetHidrasi);
+        
+        // Update total hidrasi dan persentase yang sudah ada
         final int count = await db.update(
           'target_hidrasi',
-          {'total_hidrasi_harian': totalHidrasi},
+          {
+            'total_hidrasi_harian': totalHidrasi,
+            'persentase_hidrasi': persentase
+          },
           where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
           whereArgs: [idPengguna, tanggal],
         );
         
-        print("Target hidrasi berhasil diupdate: $count row(s)");
+        print("Target hidrasi berhasil diupdate: $count row(s). Total: $totalHidrasi mL, Persentase: $persentase%");
         return count > 0;
       } else {
         // Jika belum ada, buat target hidrasi baru dengan perhitungan dinamis
@@ -221,11 +246,16 @@ class TargetHidrasiRepository {
         // Jika targetnya 0 atau negatif, hitung ulang
         if ((result.first['target_hidrasi'] ?? 0) <= 0) {
           double targetHidrasi = await _calculateTargetHidrasi(idPengguna);
+          double totalHidrasi = result.first['total_hidrasi_harian'] ?? 0.0;
+          double persentase = _hitungPersentaseHidrasi(totalHidrasi, targetHidrasi);
           
           // Update target yang sudah ada dengan nilai yang benar
           await db.update(
             'target_hidrasi',
-            {'target_hidrasi': targetHidrasi},
+            {
+              'target_hidrasi': targetHidrasi,
+              'persentase_hidrasi': persentase
+            },
             where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
             whereArgs: [idPengguna, tanggal],
           );
@@ -233,6 +263,7 @@ class TargetHidrasiRepository {
           // Kembalikan data yang diperbarui
           Map<String, dynamic> updatedResult = Map.from(result.first);
           updatedResult['target_hidrasi'] = targetHidrasi;
+          updatedResult['persentase_hidrasi'] = persentase;
           return updatedResult;
         }
         
@@ -242,7 +273,8 @@ class TargetHidrasiRepository {
         double targetHidrasi = await _calculateTargetHidrasi(idPengguna);
         return {
           'target_hidrasi': targetHidrasi,
-          'total_hidrasi_harian': 0.0
+          'total_hidrasi_harian': 0.0,
+          'persentase_hidrasi': 0.0
         };
       }
     } catch (e) {
@@ -253,7 +285,8 @@ class TargetHidrasiRepository {
         double targetHidrasi = await _calculateTargetHidrasi(idPengguna);
         return {
           'target_hidrasi': targetHidrasi,
-          'total_hidrasi_harian': 0.0
+          'total_hidrasi_harian': 0.0,
+          'persentase_hidrasi': 0.0
         };
       } catch (_) {
         return null;
@@ -271,15 +304,30 @@ class TargetHidrasiRepository {
       final targetExists = await checkTargetHidrasiExists(idPengguna, tanggal);
       
       if (targetExists) {
-        // Update target hidrasi yang sudah ada
+        // Dapatkan total hidrasi saat ini untuk menghitung persentase baru
+        final List<Map<String, dynamic>> result = await db.query(
+          'target_hidrasi',
+          columns: ['total_hidrasi_harian'],
+          where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
+          whereArgs: [idPengguna, tanggal],
+          limit: 1,
+        );
+        
+        double totalHidrasi = result.first['total_hidrasi_harian'] ?? 0.0;
+        double persentase = _hitungPersentaseHidrasi(totalHidrasi, newTarget);
+        
+        // Update target hidrasi yang sudah ada dan persentase
         final int count = await db.update(
           'target_hidrasi',
-          {'target_hidrasi': newTarget},
+          {
+            'target_hidrasi': newTarget,
+            'persentase_hidrasi': persentase
+          },
           where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
           whereArgs: [idPengguna, tanggal],
         );
         
-        print("Target hidrasi berhasil diperbarui menjadi $newTarget mL");
+        print("Target hidrasi berhasil diperbarui menjadi $newTarget mL dengan persentase $persentase%");
         return count > 0;
       } else {
         // Jika belum ada, buat target hidrasi baru
