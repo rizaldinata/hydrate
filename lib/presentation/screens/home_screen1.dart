@@ -8,6 +8,9 @@ import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
+import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
+import 'package:intl/intl.dart';
+import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 
 class HomeScreens extends StatefulWidget {
   const HomeScreens({
@@ -23,20 +26,22 @@ class _HomeScreenState extends State<HomeScreens>
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
-  late HydrationCalculator
-      _hydrationCalculator; // Ensure HydrationCalculator is defined
-  double target = 0; // Target hydration dynamically calculated
-  double currentIntake = 0; // Initial water intake in mL
-  final ValueNotifier<double> _valueNotifier =
-      ValueNotifier<double>(0); // Progress percentage
+  late HydrationCalculator _hydrationCalculator;
+  double target = 0;
+  double currentIntake = 0;
+  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
   int selectedWater = 150;
-  late final PenggunaController
-      _penggunaController; // Default water selection is 150mL
+  late final PenggunaController _penggunaController;
   int? idPengguna;
   String? namaPengguna;
+  final RiwayatHidrasiController _riwayatHidrasiController =
+      RiwayatHidrasiController();
+  final TargetHidrasiRepository _targetHidrasiRepository = TargetHidrasiRepository();
+  // Menggunakan WIB (UTC+7)
+  String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
 
   Timer? _coutdownTimer;
-  int _remainingSeconds = 0; // Initial countdown timer value
+  int _remainingSeconds = 0;
 
   Map<double, double> _glassOffsets = {
     100: 0,
@@ -51,9 +56,10 @@ class _HomeScreenState extends State<HomeScreens>
     _penggunaController = PenggunaController();
     _controller.initAnimation(this);
     _pageController.addListener(() => setState(() {}));
-    _loadUserData(); // Panggil method untuk load data
+    _loadUserData();
   }
 
+// Load user data
   Future<void> _loadUserData() async {
     try {
       final session = SessionManager();
@@ -63,7 +69,6 @@ class _HomeScreenState extends State<HomeScreens>
         final pengguna = await _penggunaController.getPenggunaById(userId);
 
         if (pengguna != null) {
-          // Inisialisasi hydration calculator setelah mendapatkan ID
           _hydrationCalculator = HydrationCalculator(penggunaId: userId);
 
           setState(() {
@@ -72,6 +77,7 @@ class _HomeScreenState extends State<HomeScreens>
           });
 
           await _initializeTarget();
+          await _loadTodayIntake(); // Load today's intake
         }
       }
     } catch (e) {
@@ -89,26 +95,112 @@ class _HomeScreenState extends State<HomeScreens>
         target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
         target = target > 0 ? target : 2000;
       });
+      
+      // Cek apakah target hidrasi untuk hari ini sudah ada
+      await _checkAndCreateTodayTarget();
     } catch (e) {
       print("Error initializing target: $e");
     }
   }
 
-  // Animasi Gerakan Buat Gelas Kalau ditap
-  void _animateGlass(double amount) {
-  setState(() {
-    _glassOffsets[amount] = -10; // Move up by 20 pixels
-  });
+  // Fungsi baru untuk memeriksa dan membuat target hidrasi hari ini jika belum ada
+  Future<void> _checkAndCreateTodayTarget() async {
+    if (idPengguna == null) return;
+    
+    try {
+      final targetExists = await _targetHidrasiRepository.checkTargetHidrasiExists(
+        idPengguna!,
+        todayDate
+      );
+      
+      if (!targetExists) {
+        await _targetHidrasiRepository.createTargetHidrasi(
+          idPengguna!,
+          target,
+          todayDate,
+          0.0 // Total hidrasi awal adalah 0
+        );
+        print("Target hidrasi baru dibuat untuk tanggal $todayDate");
+      } else {
+        print("Target hidrasi untuk tanggal $todayDate sudah ada");
+      }
+    } catch (e) {
+      print("Error saat memeriksa/membuat target hidrasi: $e");
+    }
+  }
 
-  // Reset the offset back to 0 after 500 milliseconds
-  Future.delayed(Duration(seconds: 1), () {
+  // Fungsi baru untuk memuat jumlah hidrasi hari ini
+  Future<void> _loadTodayIntake() async {
+    if (idPengguna == null) return;
+    
+    try {
+      // Ambil data dari tabel riwayat_hidrasi untuk hari ini
+      final riwayatHariIni = await _riwayatHidrasiController.getRiwayatHidrasiHariIni(idPengguna!);
+      
+      // Hitung total hidrasi
+      double totalIntake = 0;
+      for (var riwayat in riwayatHariIni) {
+        totalIntake += riwayat.jumlahHidrasi;
+      }
+      
+      setState(() {
+        currentIntake = totalIntake;
+        _valueNotifier.value = min(100, (currentIntake / target) * 100);
+      });
+      
+      // Perbarui juga data di tabel target_hidrasi
+      await _targetHidrasiRepository.updateTotalHidrasi(idPengguna!, todayDate, totalIntake);
+      
+      // Jika total hidrasi sudah ada, set countdown timer
+      if (riwayatHariIni.isNotEmpty) {
+        _startCoutdown();
+      }
+      
+      print("Total hidrasi hari ini: $totalIntake dari ${riwayatHariIni.length} catatan");
+    } catch (e) {
+      print("Error saat memuat intake hari ini: $e");
+    }
+  }
+
+  // Animasi Gerakan Buat Gelas
+  void _animateGlass(double amount) async {
+    if (idPengguna == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User tidak teridentifikasi!")));
+      return;
+    }
+
+    try {
+      // Simpan riwayat hidrasi
+      await _riwayatHidrasiController.tambahRiwayatHidrasi(
+        fkIdPengguna: idPengguna!,
+        jumlahHidrasi: amount,
+      );
+      
+      // Perbarui total hidrasi di tabel target_hidrasi
+      double newTotalIntake = currentIntake + amount;
+      await _targetHidrasiRepository.updateTotalHidrasi(
+        idPengguna!, 
+        todayDate, 
+        newTotalIntake
+      );
+    } catch (e) {
+      print("Gagal menyimpan riwayat: $e");
+    }
+
     setState(() {
-      _glassOffsets[amount] = 0; // Move back down
+      _glassOffsets[amount] = -40;
     });
-  });
+  
 
-  _addWater(amount); // Add water intake
-}
+    Future.delayed( Duration(milliseconds: 300), () {
+      setState(() {
+        _glassOffsets[amount] = 0;
+      });
+    });
+
+    _addWater(amount); // Tetap panggil untuk update progress
+  }
 
   // Function to add water intake
   void _addWater(double amount) {
@@ -148,7 +240,7 @@ class _HomeScreenState extends State<HomeScreens>
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int secs = seconds % 60;
-    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')} WIB";
   }
 
   // Show snack bar to indicate added water
@@ -163,13 +255,13 @@ class _HomeScreenState extends State<HomeScreens>
     overlayEntry = OverlayEntry(
       builder: (context) {
         return Positioned(
-          top: 50, // Posisi awal di bagian atas
+          top: 50,
           left: 0,
-          right: 0, // Pastikan berada di tengah horizontal
+          right: 0,
           child: SlideTransition(
             position: Tween<Offset>(
-              begin: Offset(0, -0.5), // Muncul dari atas
-              end: Offset(0, 0), // Turun ke bawah
+              begin: Offset(0, -0.5),
+              end: Offset(0, 0),
             ).animate(CurvedAnimation(
               parent: animationController,
               curve: Curves.easeOut,
@@ -203,11 +295,9 @@ class _HomeScreenState extends State<HomeScreens>
       },
     );
 
-    // Masukkan overlay ke layar
     overlay.insert(overlayEntry);
-    animationController.forward(); // Mulai animasi
+    animationController.forward();
 
-    // Hapus overlay setelah 2 detik dengan animasi naik ke atas
     Future.delayed(Duration(seconds: 2), () {
       animationController.reverse().then((_) {
         overlayEntry.remove();
@@ -311,15 +401,37 @@ class _HomeScreenState extends State<HomeScreens>
                   SizedBox(
                     width: MediaQuery.of(context).size.width - 100,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        if (idPengguna == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("User tidak teridentifikasi!"),
+                            ),
+                          );
+                          return;
+                        }
+
                         setState(() {
                           selectedWater = tempSelectedWater;
-                          currentIntake +=
-                              selectedWater; // Selalu menambah intake
+                        });
 
-                          // Pastikan progress tidak lebih dari 100%
-                          _valueNotifier.value =
-                              min(100, (currentIntake / target) * 100);
+                        // Simpan riwayat hidrasi
+                        await _riwayatHidrasiController.tambahRiwayatHidrasi(
+                          fkIdPengguna: idPengguna!,
+                          jumlahHidrasi: selectedWater.toDouble(),
+                        );
+                        
+                        // Perbarui total hidrasi di tabel target_hidrasi
+                        double newTotalIntake = currentIntake + selectedWater;
+                        await _targetHidrasiRepository.updateTotalHidrasi(
+                          idPengguna!, 
+                          todayDate, 
+                          newTotalIntake
+                        );
+
+                        setState(() {
+                          currentIntake += selectedWater;
+                          _valueNotifier.value = min(100, (currentIntake / target) * 100);
                         });
 
                         _startCoutdown();
@@ -352,6 +464,17 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
+  // Fungsi untuk overflow nama
+  String truncateName(String name, int maxLength) {
+    if (name.length <= maxLength) return name;
+
+    int lastSpace = name.substring(0, maxLength).lastIndexOf(' ');
+    if (lastSpace == -1) {
+      return "${name.substring(0, maxLength)}..."; // Jika tidak ada spasi, potong langsung
+    } else {
+      return "${name.substring(0, lastSpace)}..."; // Jika ada spasi, potong di spasi terakhir
+    }
+  }
   @override
   Widget build(BuildContext context) {
     if (namaPengguna == null) {
@@ -376,12 +499,14 @@ class _HomeScreenState extends State<HomeScreens>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("HYDRATE",
-                      style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.blue,
-                          fontFamily: "Gluten")),
+                  const Text(
+                    "HYDRATE",
+                    style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.blue,
+                        fontFamily: "Gluten"),
+                  ),
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
@@ -538,12 +663,9 @@ class _HomeScreenState extends State<HomeScreens>
                 ],
               ),
             ),
-            //Positioning the navbar at the bottom
-            // const Navigasi(),
           ],
         ),
       ),
-      // bottomNavigationBar: Navigasi(),
     );
   }
 
@@ -575,5 +697,10 @@ class _HomeScreenState extends State<HomeScreens>
       ],
     );
   }
-}
 
+  @override
+  void dispose() {
+    _coutdownTimer?.cancel();
+    super.dispose();
+  }
+}
