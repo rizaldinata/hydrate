@@ -85,20 +85,40 @@ class _HomeScreenState extends State<HomeScreens>
     if (idPengguna == null) return;
 
     try {
+      // Gunakan HydrationCalculator untuk mendapatkan nilai target
       await _hydrationCalculator.initializeData(idPengguna!);
+      final targetHidrasi = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+      
       setState(() {
-        target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-        target = target > 0 ? target : 2000;
+        // Selalu gunakan nilai dari algoritma, jangan ada default
+        target = targetHidrasi;
       });
       
       // Cek apakah target hidrasi untuk hari ini sudah ada
       await _checkAndCreateTodayTarget();
+      
+      print("Target hidrasi diinisialisasi: $target mL berdasarkan algoritma");
     } catch (e) {
       print("Error initializing target: $e");
+      
+      // Jika terjadi error, tetap coba hitung dengan nilai default dalam HydrationCalculator
+      // yang akan menggunakan berat badan default dll.
+      try {
+        final calculator = HydrationCalculator(penggunaId: idPengguna!);
+        final targetHidrasi = calculator.calculateDailyWaterIntake() * 1000;
+        
+        setState(() {
+          target = targetHidrasi;
+        });
+        
+        print("Target hidrasi (fallback): $target mL");
+      } catch (e2) {
+        print("Error saat menghitung target hidrasi (fallback): $e2");
+      }
     }
   }
 
-  // Fungsi baru untuk memeriksa dan membuat target hidrasi hari ini jika belum ada
+  // Update fungsi _checkAndCreateTodayTarget() untuk menggunakan nilai target dari calculator
   Future<void> _checkAndCreateTodayTarget() async {
     if (idPengguna == null) return;
     
@@ -109,23 +129,54 @@ class _HomeScreenState extends State<HomeScreens>
       );
       
       if (!targetExists) {
+        // Pastikan nilai target sudah dihitung dari _hydrationCalculator
+        if (target <= 0) {
+          await _hydrationCalculator.initializeData(idPengguna!);
+          target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+        }
+        
+        // Buat target baru dengan nilai dari calculator
         await _targetHidrasiRepository.createTargetHidrasi(
           idPengguna!,
           target,
           todayDate,
           0.0 // Total hidrasi awal adalah 0
         );
-        print("Target hidrasi baru dibuat untuk tanggal $todayDate");
+        print("Target hidrasi baru dibuat untuk tanggal $todayDate: $target mL");
       } else {
-        print("Target hidrasi untuk tanggal $todayDate sudah ada");
+        // Perbarui nilai target setiap kali aplikasi dibuka untuk memastikan data terbaru
+        // selalu digunakan (misal jika pengguna mengubah berat badan atau gender)
+        await _targetHidrasiRepository.updateTargetHidrasiValue(idPengguna!, todayDate);
+        print("Target hidrasi untuk tanggal $todayDate sudah ada dan diperbarui");
+        
+        // Ambil nilai target terbaru dari database
+        final updatedTarget = await _targetHidrasiRepository.getTargetHidrasiHarian(
+          idPengguna!, 
+          todayDate
+        );
+        
+        if (updatedTarget != null && (updatedTarget['target_hidrasi'] ?? 0) > 0) {
+          setState(() {
+            target = updatedTarget['target_hidrasi'];
+          });
+          print("Target hidrasi diperbarui: $target mL");
+        }
       }
     } catch (e) {
       print("Error saat memeriksa/membuat target hidrasi: $e");
+      
+      // Jika terjadi error, tetap coba hitung dengan nilai default dalam HydrationCalculator
+      try {
+        await _hydrationCalculator.initializeData(idPengguna!);
+        target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+        print("Target hidrasi (recovery): $target mL");
+      } catch (e2) {
+        print("Error saat menghitung target hidrasi (recovery): $e2");
+      }
     }
   }
 
-  // Fungsi baru untuk memuat jumlah hidrasi hari ini
-  // Modifikasi _loadTodayIntake
+  // Update fungsi _loadTodayIntake() untuk menggunakan nilai target yang dinamis
   Future<void> _loadTodayIntake() async {
     if (idPengguna == null) return;
     
@@ -139,19 +190,33 @@ class _HomeScreenState extends State<HomeScreens>
         totalIntake += riwayat.jumlahHidrasi;
       }
       
-      // Dapatkan target hidrasi harian
+      // Dapatkan target hidrasi harian dari repositori
       final targetHarian = await _targetHidrasiRepository.getTargetHidrasiHarian(
         idPengguna!, 
         todayDate
       );
 
-      double targetHidrasi = targetHarian?['target_hidrasi'] ?? 2000;
+      // Tentukan nilai target dengan prioritas:
+      // 1. Dari database (jika ada)
+      // 2. Dari HydrationCalculator
+      double targetHidrasi;
+      
+      if (targetHarian != null && (targetHarian['target_hidrasi'] ?? 0) > 0) {
+        // Gunakan nilai dari database
+        targetHidrasi = targetHarian['target_hidrasi'];
+        print("Menggunakan target hidrasi dari database: $targetHidrasi mL");
+      } else {
+        // Hitung dari algoritma
+        await _hydrationCalculator.initializeData(idPengguna!);
+        targetHidrasi = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+        print("Menghitung ulang target hidrasi: $targetHidrasi mL");
+      }
       
       setState(() {
         target = targetHidrasi;
         currentIntake = totalIntake;
         
-        // Hitung presentasi dengan benar
+        // Hitung presentasi dengan benar dan batasi maksimal 100%
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
       });
       
@@ -163,54 +228,33 @@ class _HomeScreenState extends State<HomeScreens>
         _startCoutdown();
       }
       
-      print("Total hidrasi hari ini: $totalIntake dari ${riwayatHariIni.length} catatan");
+      print("Total hidrasi hari ini: $totalIntake mL dari target $targetHidrasi mL");
     } catch (e) {
       print("Error saat memuat intake hari ini: $e");
+      
+      // Jika terjadi error, tetap coba hitung dengan nilai default dalam HydrationCalculator
+      try {
+        await _hydrationCalculator.initializeData(idPengguna!);
+        final targetHidrasi = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+        
+        setState(() {
+          target = targetHidrasi;
+          // currentIntake tetap 0 karena tidak bisa mengambil data
+          
+          // Hitung presentasi dengan benar
+          _valueNotifier.value = min(100, (currentIntake / target) * 100);
+        });
+        
+        print("Menggunakan target hidrasi fallback: $targetHidrasi mL");
+      } catch (e2) {
+        print("Error saat menghitung target hidrasi (fallback): $e2");
+      }
     }
   }
 
-  // // Animasi Gerakan Buat Gelas
-  // void _animateGlass(double amount) async {
-  //   if (idPengguna == null) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("User tidak teridentifikasi!")));
-  //     return;
-  //   }
-
-  //   try {
-  //     // Simpan riwayat hidrasi
-  //     await _riwayatHidrasiController.tambahRiwayatHidrasi(
-  //       fkIdPengguna: idPengguna!,
-  //       jumlahHidrasi: amount,
-  //     );
-      
-  //     // Perbarui total hidrasi di tabel target_hidrasi
-  //     double newTotalIntake = currentIntake + amount;
-  //     await _targetHidrasiRepository.updateTotalHidrasi(
-  //       idPengguna!, 
-  //       todayDate, 
-  //       newTotalIntake
-  //     );
-  //   } catch (e) {
-  //     print("Gagal menyimpan riwayat: $e");
-  //   }
-
-  //   setState(() {
-  //     _glassOffsets[amount] = -40;
-  //   });
-
-  //   Future.delayed(const Duration(milliseconds: 300), () {
-  //     setState(() {
-  //       _glassOffsets[amount] = 0;
-  //     });
-  //   });
-
-  //   _addWater(amount); // Tetap panggil untuk update progress
-  // }
-
-  // Function to add water intake
-  void _addWater(double amount) async {
-        if (idPengguna == null) {
+  // Animasi Gerakan Buat Gelas
+  void _animateGlass(double amount) async {
+    if (idPengguna == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User tidak teridentifikasi!")));
       return;
@@ -233,6 +277,22 @@ class _HomeScreenState extends State<HomeScreens>
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
     }
+
+    setState(() {
+      _glassOffsets[amount] = -40;
+    });
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      setState(() {
+        _glassOffsets[amount] = 0;
+      });
+    });
+
+    _addWater(amount); // Tetap panggil untuk update progress
+  }
+
+  // Function to add water intake
+  void _addWater(double amount) {
     if (target <= 0) {
       print("Target is not set or invalid");
       return;
@@ -705,7 +765,7 @@ class _HomeScreenState extends State<HomeScreens>
     return Column(
       children: [
         GestureDetector(
-          onTap: () => _addWater(amount),
+          onTap: () => _animateGlass(amount),
           child: AnimatedContainer(
             duration: const Duration(seconds: 1),
             transform: Matrix4.translationValues(0, _glassOffsets[amount] ?? 0,
