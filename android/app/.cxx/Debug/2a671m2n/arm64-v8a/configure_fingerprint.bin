@@ -2,6 +2,7 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	Øè ôÛ2§ ØÝçËÖ2a
 _
 ]C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\additional_project_files.txt	Øè ôÛ2 óÒ•ôÛ2^
@@ -26,3 +27,29 @@ U
 SC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\prefab_config.json	Øè ôÛ2( «Ó•ôÛ2\
 Z
 XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\symbol_folder_index.txt	Øè ôÛ2O ¹Ó•ôÛ2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	›øÐøÛ2§ ˆŒéËÖ2a
+_
+]C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\additional_project_files.txt	›øÐøÛ2 ü§ÑñÛ2^
+\
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build.json	›øÐøÛ2– ÿ§ÑñÛ2c
+a
+_C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build_mini.json	›øÐøÛ2ñ ƒ¨ÑñÛ2P
+N
+LC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja	›øÐøÛ2ØÓ à¦ÑñÛ2T
+R
+PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja.txt	›øÐøÛ2Y
+W
+UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build_file_index.txt	›øÐøÛ2G ‡¨ÑñÛ2Z
+X
+VC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json	›øÐøÛ2	^
+\
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json.bin	›øÐøÛ2
+d
+b
+`C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\metadata_generation_command.txt	›øÐøÛ2¡ …¨ÑñÛ2W
+U
+SC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\prefab_config.json	›øÐøÛ2( …¨ÑñÛ2\
+Z
+XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\symbol_folder_index.txt	›øÐøÛ2O ‡¨ÑñÛ2
+>>>>>>> ea22c3f28a20b01f8c8a35a9c552586a667ff140

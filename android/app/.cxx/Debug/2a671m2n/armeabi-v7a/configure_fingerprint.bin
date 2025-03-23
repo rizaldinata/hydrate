@@ -2,6 +2,7 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ñè ôÛ2§ ØÝçËÖ2c
 a
 _C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\additional_project_files.txt	ñè ôÛ2 Ó…–ôÛ2`
@@ -26,3 +27,29 @@ W
 UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\prefab_config.json	ñè ôÛ2( ã…–ôÛ2^
 \
 ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\symbol_folder_index.txt	ñè ôÛ2Q å…–ôÛ2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ÂøÐøÛ2§ ˆŒéËÖ2c
+a
+_C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\additional_project_files.txt	ÂøÐøÛ2 ÇÑñÛ2`
+^
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\android_gradle_build.json	ÂøÐøÛ2š  ÇÑñÛ2e
+c
+aC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\android_gradle_build_mini.json	ÂøÐøÛ2õ ¢ÇÑñÛ2R
+P
+NC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\build.ninja	ÂøÐøÛ2âÓ ÿÅÑñÛ2V
+T
+RC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\build.ninja.txt	ÂøÐøÛ2[
+Y
+WC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\build_file_index.txt	ÂøÐøÛ2G ¦ÇÑñÛ2\
+Z
+XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\compile_commands.json	ÂøÐøÛ2	`
+^
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\compile_commands.json.bin	ÂøÐøÛ2
+f
+d
+bC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\metadata_generation_command.txt	ÂøÐøÛ2« ¤ÇÑñÛ2Y
+W
+UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\prefab_config.json	ÂøÐøÛ2( ¤ÇÑñÛ2^
+\
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\symbol_folder_index.txt	ÂøÐøÛ2Q ¦ÇÑñÛ2
+>>>>>>> ea22c3f28a20b01f8c8a35a9c552586a667ff140
