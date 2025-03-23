@@ -1,5 +1,6 @@
-import 'package:hydrate/data/datasources/database_helper.dart';
+import 'package:hydrate/data/datasources/database_helper.dart'; 
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
+import 'package:intl/intl.dart';
 
 class RiwayatHidrasiRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -11,12 +12,17 @@ class RiwayatHidrasiRepository {
     try {
       final db = await _dbHelper.database;
 
-      print("Menambahkan riwayat hidrasi dengan jumlah: $jumlahHidrasi");
+      // Dapatkan waktu saat ini dalam WIB (UT+7)
+      final now = DateTime.now().toUtc().add(Duration(hours: 7));
+      final tanggalHariIni = DateFormat('yyyy-MM-dd').format(now);
+      final waktuSekarang = DateFormat('HH:mm').format(now);
+
+      print("Menambahkan riwayat hidrasi dengan jumlah: $jumlahHidrasi pada $tanggalHariIni $waktuSekarang WIB");
 
       int result = await db.rawInsert('''
-      INSERT INTO riwayat_hidrasi (fk_id_pengguna, jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi)
-      VALUES (?, ?, DATE('now'), TIME('now'))
-    ''', [fkIdPengguna, jumlahHidrasi]);
+      INSERT INTO riwayat_hidrasi (fk_id_pengguna, jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi, timestamp)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ''', [fkIdPengguna, jumlahHidrasi, tanggalHariIni, waktuSekarang]);
 
       if (result > 0) {
         print("Riwayat hidrasi berhasil ditambahkan! ID: $result");
@@ -31,34 +37,26 @@ class RiwayatHidrasiRepository {
     }
   }
 
-  // tambah hidrasi dan tambah riwayat hidrasi
-  // Future<int> tambahRiwayatHidrasi(RiwayatHidrasi riwayat) async {
-  //   try {
-  //     final db = await _dbHelper.database;
+  // Fungsi untuk mengambil riwayat hidrasi berdasarkan tanggal
+  Future<List<RiwayatHidrasi>> getRiwayatHidrasiByTanggal(int idPengguna, String tanggal) async {
+    try {
+      final db = await _dbHelper.database;
+      final List<Map<String, dynamic>> maps = await db.query(
+        'riwayat_hidrasi',
+        where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
+        whereArgs: [idPengguna, tanggal],
+        orderBy: 'waktu_hidrasi DESC',
+      );
 
-  //     // cek pengguna nya udah ada atau belom
-  //     final userExists = (await db.query(
-  //       'pengguna',
-  //       where: 'id = ?',
-  //       whereArgs: [riwayat.fkIdPengguna],
-  //     ))
-  //         .isNotEmpty;
+      print("Mengambil riwayat hidrasi untuk tanggal $tanggal: ${maps.length} data");
+      return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
+    } catch (e) {
+      print("Error saat mengambil riwayat hidrasi berdasarkan tanggal: $e");
+      return [];
+    }
+  }
 
-  //     if (!userExists) {
-  //       print("User dengan ID ${riwayat.fkIdPengguna} tidak ditemukan.");
-  //       return -1;
-  //     }
-
-  //     int result = await db.insert('riwayat_hidrasi', riwayat.toMap());
-  //     print("Riwayat hidrasi berhasil ditambahkan dengan ID: $result");
-  //     return result;
-  //   } catch (e) {
-  //     print("Error saat menambahkan riwayat hidrasi: $e");
-  //     return -1;
-  //   }
-  // }
-
-  // ambil semua data riwayat hidrasi (peripheral kayake sambil nunggu halaman riwayat ada atau ngga)
+  // ambil semua data riwayat hidrasi
   Future<List<RiwayatHidrasi>> getRiwayatHidrasi(int idPengguna) async {
     try {
       final db = await _dbHelper.database;
@@ -66,7 +64,7 @@ class RiwayatHidrasiRepository {
         'riwayat_hidrasi',
         where: 'fk_id_pengguna = ?',
         whereArgs: [idPengguna],
-        orderBy: 'tanggal_hidrasi DESC',
+        orderBy: 'tanggal_hidrasi DESC, waktu_hidrasi DESC',
       );
 
       return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
