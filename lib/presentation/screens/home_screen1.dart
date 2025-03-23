@@ -157,9 +157,48 @@ class _HomeScreenState extends State<HomeScreens>
     }
   }
 
-  // Animasi Gerakan Buat Gelas
-  void _animateGlass(double amount) async {
-    if (idPengguna == null) {
+  // // Animasi Gerakan Buat Gelas
+  // void _animateGlass(double amount) async {
+  //   if (idPengguna == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("User tidak teridentifikasi!")));
+  //     return;
+  //   }
+
+  //   try {
+  //     // Simpan riwayat hidrasi
+  //     await _riwayatHidrasiController.tambahRiwayatHidrasi(
+  //       fkIdPengguna: idPengguna!,
+  //       jumlahHidrasi: amount,
+  //     );
+      
+  //     // Perbarui total hidrasi di tabel target_hidrasi
+  //     double newTotalIntake = currentIntake + amount;
+  //     await _targetHidrasiRepository.updateTotalHidrasi(
+  //       idPengguna!, 
+  //       todayDate, 
+  //       newTotalIntake
+  //     );
+  //   } catch (e) {
+  //     print("Gagal menyimpan riwayat: $e");
+  //   }
+
+  //   setState(() {
+  //     _glassOffsets[amount] = -40;
+  //   });
+
+  //   Future.delayed(const Duration(milliseconds: 300), () {
+  //     setState(() {
+  //       _glassOffsets[amount] = 0;
+  //     });
+  //   });
+
+  //   _addWater(amount); // Tetap panggil untuk update progress
+  // }
+
+  // Function to add water intake
+  void _addWater(double amount) async {
+        if (idPengguna == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User tidak teridentifikasi!")));
       return;
@@ -182,22 +221,6 @@ class _HomeScreenState extends State<HomeScreens>
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
     }
-
-    setState(() {
-      _glassOffsets[amount] = -40;
-    });
-
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        _glassOffsets[amount] = 0;
-      });
-    });
-
-    _addWater(amount); // Tetap panggil untuk update progress
-  }
-
-  // Function to add water intake
-  void _addWater(double amount) {
     if (target <= 0) {
       print("Target is not set or invalid");
       return;
@@ -670,7 +693,7 @@ class _HomeScreenState extends State<HomeScreens>
     return Column(
       children: [
         GestureDetector(
-          onTap: () => _animateGlass(amount),
+          onTap: () => _addWater(amount),
           child: AnimatedContainer(
             duration: const Duration(seconds: 1),
             transform: Matrix4.translationValues(0, _glassOffsets[amount] ?? 0,
