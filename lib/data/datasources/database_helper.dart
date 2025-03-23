@@ -66,7 +66,6 @@ class DatabaseHelper {
     jumlah_hidrasi REAL NOT NULL,
     tanggal_hidrasi TEXT NOT NULL,
     waktu_hidrasi TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  // Tambahkan kolom ini
     FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
   );
 ''');

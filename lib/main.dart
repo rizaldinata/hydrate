@@ -30,7 +30,6 @@ class MyApp extends StatelessWidget {
               body: Center(child: CircularProgressIndicator()),
             );
           }
-
           return snapshot.data == true ? MainScreen() : InfoProduct();
         },
       ),
