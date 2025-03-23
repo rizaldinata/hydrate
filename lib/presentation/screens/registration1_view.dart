@@ -12,25 +12,22 @@ class _RegistrationDataState extends State<RegistrationData> {
   TextEditingController controllerName = TextEditingController();
   TextEditingController controllerWeight = TextEditingController();
 
-  String? _gender = "Female";
+  // Mengubah ke format yang konsisten dengan database
   String selectedGender = "Perempuan"; // Default gender
-  // bool _showWarning = false;
 
   // Validasi input
   bool _isFormValid() {
     return controllerName.text.isNotEmpty &&
-        _gender != null &&
+        selectedGender.isNotEmpty &&
         controllerWeight.text.isNotEmpty &&
-        double.tryParse(controllerWeight.text) !=
-            null; // Validasi angka untuk berat badan
+        double.tryParse(controllerWeight.text) != null;
   }
 
   // Fungsi untuk menampilkan modal peringatan
   Future<void> _showWarningDialog() async {
     showDialog(
       context: context,
-      barrierDismissible:
-          false, // Jangan bisa menutup modal dengan klik di luar
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -68,17 +65,15 @@ class _RegistrationDataState extends State<RegistrationData> {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color(0XFFFFB830), // Background color
-                        foregroundColor: Colors.white, // Text color
+                        backgroundColor: const Color(0XFFFFB830),
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
                       onPressed: () {
-                        Navigator.of(context).pop(); // Menutup modal
+                        Navigator.of(context).pop();
                       },
                       child: Text(
                         "Kembali",
@@ -101,7 +96,7 @@ class _RegistrationDataState extends State<RegistrationData> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F7FF), // Warna background
+      backgroundColor: const Color(0xFFE8F7FF),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -192,13 +187,12 @@ class _RegistrationDataState extends State<RegistrationData> {
 
                 const SizedBox(height: 10),
 
-                // Pilihan Jenis Kelamin
+                // Pilihan Jenis Kelamin - Format konsisten dengan database
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(50),
-                    border:
-                        Border.all(color: const Color(0xFF00A6FB), width: 2),
+                    border: Border.all(color: const Color(0xFF00A6FB), width: 2),
                   ),
                   child: Stack(
                     children: [
@@ -206,12 +200,11 @@ class _RegistrationDataState extends State<RegistrationData> {
                       AnimatedAlign(
                         duration: const Duration(milliseconds: 300),
                         curve: Curves.easeInOut,
-                        alignment: _gender == "Female"
+                        alignment: selectedGender == "Perempuan"
                             ? Alignment.centerLeft
                             : Alignment.centerRight,
                         child: Container(
-                          width: MediaQuery.of(context).size.width / 2 -
-                              20, // Lebar setengah dari container
+                          width: MediaQuery.of(context).size.width / 2 - 20,
                           height: 50,
                           decoration: BoxDecoration(
                             color: const Color(0xFF00A6FB),
@@ -226,32 +219,36 @@ class _RegistrationDataState extends State<RegistrationData> {
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _gender = "Female";
+                                  selectedGender = "Perempuan";
                                 });
                               },
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: const BoxDecoration(
                                   borderRadius: BorderRadius.horizontal(
                                       left: Radius.circular(50)),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [ _gender == "Female"
-                                    ? SvgPicture.asset(
-                                      'assets/images/women.svg',
-                                      height: 22,
-                                    ) : SvgPicture.asset(
-                                      'assets/images/women.svg',
-                                      height: 22,
-                                       colorFilter: ColorFilter.mode(const Color(0xFF2F2E41).withOpacity(0.5), BlendMode.srcIn),
-                                    ),
+                                  children: [
+                                    selectedGender == "Perempuan"
+                                        ? SvgPicture.asset(
+                                            'assets/images/women.svg',
+                                            height: 22,
+                                          )
+                                        : SvgPicture.asset(
+                                            'assets/images/women.svg',
+                                            height: 22,
+                                            colorFilter: ColorFilter.mode(
+                                                const Color(0xFF2F2E41)
+                                                    .withOpacity(0.5),
+                                                BlendMode.srcIn),
+                                          ),
                                     const SizedBox(width: 10),
                                     Text(
                                       "Perempuan",
                                       style: TextStyle(
-                                        color: _gender == "Female"
+                                        color: selectedGender == "Perempuan"
                                             ? Colors.white
                                             : const Color(0xFF2F2E41)
                                                 .withOpacity(0.5),
@@ -270,12 +267,11 @@ class _RegistrationDataState extends State<RegistrationData> {
                             child: GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  _gender = "Male";
+                                  selectedGender = "Laki-laki";
                                 });
                               },
                               child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 12),
+                                padding: const EdgeInsets.symmetric(vertical: 12),
                                 decoration: const BoxDecoration(
                                   borderRadius: BorderRadius.horizontal(
                                       right: Radius.circular(50)),
@@ -283,20 +279,24 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    _gender == "Male"
-                                    ? SvgPicture.asset(
-                                      'assets/images/man.svg',
-                                      height: 22,
-                                    ) : SvgPicture.asset(
-                                      'assets/images/man.svg',
-                                      height: 22,
-                                       colorFilter: ColorFilter.mode(const Color(0xFF2F2E41).withOpacity(0.5), BlendMode.srcIn),
-                                    ),
+                                    selectedGender == "Laki-laki"
+                                        ? SvgPicture.asset(
+                                            'assets/images/man.svg',
+                                            height: 22,
+                                          )
+                                        : SvgPicture.asset(
+                                            'assets/images/man.svg',
+                                            height: 22,
+                                            colorFilter: ColorFilter.mode(
+                                                const Color(0xFF2F2E41)
+                                                    .withOpacity(0.5),
+                                                BlendMode.srcIn),
+                                          ),
                                     const SizedBox(width: 10),
                                     Text(
-                                      "Laki - Laki",
+                                      "Laki-laki",
                                       style: TextStyle(
-                                        color: _gender == "Male"
+                                        color: selectedGender == "Laki-laki"
                                             ? Colors.white
                                             : const Color(0xFF2F2E41)
                                                 .withOpacity(0.5),
@@ -320,8 +320,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                 // Input Berat Badan (Only numbers)
                 TextField(
                   controller: controllerWeight,
-                  keyboardType:
-                      TextInputType.number, // Ensuring only numbers are allowed
+                  keyboardType: TextInputType.number,
                   cursorColor: const Color(0xFF00A6FB),
                   decoration: InputDecoration(
                     hintText: "Berat Badan",
@@ -384,8 +383,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                       ),
                       onPressed: () {
                         if (_isFormValid()) {
-                          double? weight =
-                              double.tryParse(controllerWeight.text);
+                          double? weight = double.tryParse(controllerWeight.text);
 
                           if (weight != null) {
                             Navigator.push(
@@ -393,7 +391,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                               MaterialPageRoute(
                                 builder: (context) => RegistrationTime(
                                   name: controllerName.text,
-                                  gender: _gender ?? "belum dipilih",
+                                  gender: selectedGender, // Menggunakan format yang konsisten dengan database
                                   weight: weight,
                                 ),
                               ),

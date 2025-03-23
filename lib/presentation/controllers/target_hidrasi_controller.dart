@@ -11,8 +11,8 @@ class TargetHidrasiController {
   }
 
   // Memeriksa apakah target hidrasi untuk hari ini sudah ada
-  Future<bool> isTargetHidrasiExist(int idPengguna) async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  Future<bool> checkTargetHidrasiExists(int idPengguna) async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
     return await _repository.checkTargetHidrasiExists(idPengguna, today);
   }
 
@@ -22,7 +22,7 @@ class TargetHidrasiController {
     double targetHidrasi, 
     {double initialIntake = 0.0}
   ) async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
     return await _repository.createTargetHidrasi(
       idPengguna, 
       targetHidrasi, 
@@ -36,7 +36,7 @@ class TargetHidrasiController {
     int idPengguna, 
     double totalHidrasi
   ) async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
     return await _repository.updateTotalHidrasi(
       idPengguna, 
       today, 
@@ -49,10 +49,10 @@ class TargetHidrasiController {
     return await _repository.getTotalHidrasiHariIni(idPengguna);
   }
 
-  // Mendapatkan target hidrasi untuk hari ini
-  Future<TargetHidrasi?> getTargetHidrasiHariIni(int idPengguna) async {
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    return await _repository.getTargetHidrasi(idPengguna, today);
+  // Mendapatkan target hidrasi harian
+  Future<Map<String, dynamic>?> getTargetHidrasiHarian(int idPengguna) async {
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
+    return await _repository.getTargetHidrasiHarian(idPengguna, today);
   }
 
   // Mendapatkan target hidrasi untuk tanggal tertentu

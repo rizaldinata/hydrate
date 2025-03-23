@@ -25,6 +25,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   double? beratBadan;
   String? jamBangun;
   String? jamTidur;
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   // Deklarasi Controller
   final ProfilPenggunaController _profilPenggunaController =
@@ -32,26 +34,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // function editprofile
   Future<void> _showEditProfile(BuildContext context) async {
-    final session = SessionManager();
-    final userId = await session.getUserId();
+    // final session = SessionManager();
+    // final userId = await session.getUserId();
 
-    if (userId == null) return;
+    // if (userId == null) return;
 
-    final pengguna = await PenggunaRepository().getPenggunaById(userId);
-    if (pengguna == null) return;
+    // final pengguna = await PenggunaRepository().getPenggunaById(userId);
+    // if (pengguna == null) return;
 
+    // await showDialog<bool>(
+    //   context: context,
+    //   builder: (context) => EditProfile(
+    //     userId: userId,
+    //     initialNama: pengguna.nama,
+    //     initialJenisKelamin: jenisKelamin ?? 'Male',
+    //     initialBeratBadan: beratBadan ?? 60.0,
+    if (idPengguna == null) {
+      _showSnackBar("Tidak dapat mengedit profil. ID pengguna tidak tersedia.");
+      return;
+    }
+
+    // Gunakan data yang sudah diambil pada state untuk inisialisasi dialog
     await showDialog<bool>(
       context: context,
       builder: (context) => EditProfile(
-        userId: userId,
-        initialNama: pengguna.nama,
-        initialJenisKelamin: jenisKelamin ?? 'Male',
+        userId: idPengguna!,
+        initialNama: namaPengguna ?? 'Belum diatur',
+        initialJenisKelamin: jenisKelamin ?? 'Laki-laki',
         initialBeratBadan: beratBadan ?? 60.0,
+        initialJamBangun: jamBangun,
+        initialJamTidur: jamTidur,
       ),
     ).then((success) {
       if (success == true) {
         _loadUserData(); // Refresh data lokal
-        widget.onProfileUpdated?.call(); // Belum tentu terpakai
+        widget.onProfileUpdated?.call();  // Callback untuk memberitahu parent widget
       }
     });
   }
@@ -63,33 +80,61 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
     try {
       final session = SessionManager();
       final userId = await session.getUserId();
 
       if (userId != null) {
-        final pengguna = await PenggunaRepository().getPenggunaById((userId));
-        final profil =
-            await _profilPenggunaController.getProfilPengguna((userId));
+        // final pengguna = await PenggunaRepository().getPenggunaById((userId));
+        // final profil =
+        //     await _profilPenggunaController.getProfilPengguna((userId));
+        setState(() => idPengguna = userId);
+        
+        final pengguna = await PenggunaRepository().getPenggunaById(userId);
+        final profil = await _profilPenggunaController.getProfilPengguna(userId);
 
-        if (pengguna != null && profil != null) {
+        if (pengguna != null) {
           setState(() {
             namaPengguna = pengguna.nama;
-            if (profil.jenisKelamin == "Female" || profil.jenisKelamin == "Perempuan") {
-              jenisKelamin = "Perempuan";
-            } else {
-              jenisKelamin = "Laki-laki";
-            }
+            // if (profil.jenisKelamin == "Female" || profil.jenisKelamin == "Perempuan") {
+            //   jenisKelamin = "Perempuan";
+            // } else {
+            //   jenisKelamin = "Laki-laki";
+            // }
             // jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" ? profil.jenisKelamin : "Laki-laki";
+          });
+        }
+        
+        if (profil != null) {
+          setState(() {
+            jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" 
+                ? profil.jenisKelamin 
+                : "Laki-laki";
             beratBadan = profil.beratBadan;
             jamBangun = profil.jamBangun;
             jamTidur = profil.jamTidur;
           });
         }
+      } else {
+        setState(() => _errorMessage = 'Pengguna belum login');
       }
     } catch (e) {
+      setState(() => _errorMessage = 'Gagal memuat data: ${e.toString()}');
       print("Error loading user data: $e");
+    } finally {
+      setState(() => _isLoading = false);
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -99,99 +144,104 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 227, 242, 253),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                // Kontainer Profil
-                Container(
-                  width: double.infinity,
-                  height: screenHeight * 0.56,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF00A6FB),
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(25),
-                      bottomRight: Radius.circular(25),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                        top: screenHeight * 0.05,
-                        left: screenWidth * 0.04,
-                        right: screenWidth * 0.04), // Top 60px untuk status bar
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Foto Profil
-                        Padding(
-                          padding: EdgeInsets.only(
-                              top: screenHeight * 0.02,
-                              bottom: screenHeight * 0.015),
-                          child: Center(
-                            child: SvgPicture.asset(
-                              'assets/images/profile.svg',
-                              width: screenWidth * 0.2,
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage.isNotEmpty
+              ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
+              : Stack(
+                  children: [
+                    SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          // Kontainer Profil
+                          Container(
+                            width: double.infinity,
+                            height: screenHeight * 0.56,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF00A6FB),
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(25),
+                                bottomRight: Radius.circular(25),
+                              ),
                             ),
-                          ),
-                        ),
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                  top: screenHeight * 0.05,
+                                  left: screenWidth * 0.04,
+                                  right: screenWidth * 0.04),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Foto Profil
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                        top: screenHeight * 0.02, bottom: screenHeight * 0.015),
+                                    child: Center(
+                                      child: SvgPicture.asset(
+                                        'assets/images/profile.svg', 
+                                        width: screenWidth * 0.2,
+                                      ),
+                                    ),
+                                  ),
 
-                        Transform.translate(
-                          offset: Offset(0, screenHeight * -0.005),
-                          child: Center(
-                            child: Text(
-                              namaPengguna ?? 'Belum diatur',
-                              style: GoogleFonts.inter(
-                                fontSize: 18,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                  Transform.translate(
+                                    offset: Offset(0, screenHeight * -0.005),
+                                    child: Center(
+                                      child: Text(
+                                        namaPengguna ?? 'Belum diatur',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 18,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(height: screenHeight * 0.02),
+
+                                  // Informasi Profil
+                                  _profileInfo(Icons.person, "Jenis Kelamin", jenisKelamin ?? 'Laki-laki'),
+                                  _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
+                                  _profileInfo(Icons.wb_sunny, "Jam Bangun", jamBangun ?? 'Belum diatur'),
+                                  _profileInfo(Icons.nightlight_round, "Jam Tidur", jamTidur ?? 'Belum diatur'),
+
+                                  SizedBox(height: screenHeight * 0.01),
+
+                                  // Tombol Edit Profile
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                    child: ElevatedButton(
+                                        onPressed: () => _showEditProfile(context),
+                                        style: ElevatedButton.styleFrom(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(25),
+                                            ),
+                                            minimumSize: Size(
+                                                screenWidth * 0.9, screenHeight * 0.05)),
+                                        child: const Text(
+                                          "Edit Profile",
+                                          style: TextStyle(
+                                              color: Color(0xFF2F2E41),
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16),
+                                        )),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ),
-                        SizedBox(height: screenHeight * 0.02),
-
-                        // Informasi Profil
-                        _profileInfo(Icons.person, "Jenis Kelamin",
-                            jenisKelamin ?? 'Male'),
-                        _profileInfo(Icons.fitness_center, "Berat badan",
-                            "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
-                        _profileInfo(Icons.wb_sunny, "Jam Bangun",
-                            jamBangun ?? 'Belum diatur'),
-                        _profileInfo(Icons.nightlight_round, "Jam Tidur",
-                            jamTidur ?? 'Belum diatur'),
-
-                        SizedBox(
-                          height: screenHeight * 0.01,
-                        ),
-
-                        // Tombol Edit Profile
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: ElevatedButton(
-                              onPressed: () => _showEditProfile(context),
-                              style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(25),
-                                  ),
-                                  minimumSize: Size(
-                                      screenWidth * 0.9, screenHeight * 0.05)),
-                              child: const Text(
-                                "Edit Profile",
-                                style: TextStyle(
-                                    color: Color(0xFF2F2E41),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 16),
-                              )),
-                        ),
-                      ],
+                          // Widget lain bisa ditambahkan di sini
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
+      // Tambahkan refresh gesture
+      floatingActionButton: FloatingActionButton(
+        onPressed: _loadUserData,
+        mini: true,
+        backgroundColor: Colors.white,
+        child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
       ),
     );
   }
