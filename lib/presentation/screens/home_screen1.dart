@@ -22,7 +22,7 @@ class HomeScreens extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreens>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
@@ -48,13 +48,27 @@ class _HomeScreenState extends State<HomeScreens>
   @override
   void initState() {
     super.initState();
+     WidgetsBinding.instance.addObserver(this);
+    _loadUserData();
     _controller = HomeController();
     _penggunaController = PenggunaController();
     _controller.initAnimation(this);
     _pageController.addListener(() => setState(() {}));
-    _loadUserData();
+  }
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Selalu refresh data ketika aplikasi kembali aktif
+      _loadUserData();
+    }
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh data setiap kali dependencies berubah
+    _loadUserData();
+  }
   Future<void> _loadUserData() async {
     try {
       final session = SessionManager();
@@ -861,6 +875,7 @@ class _HomeScreenState extends State<HomeScreens>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _coutdownTimer?.cancel();
     super.dispose();
   }
