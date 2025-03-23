@@ -125,6 +125,7 @@ class _HomeScreenState extends State<HomeScreens>
   }
 
   // Fungsi baru untuk memuat jumlah hidrasi hari ini
+  // Modifikasi _loadTodayIntake
   Future<void> _loadTodayIntake() async {
     if (idPengguna == null) return;
     
@@ -138,8 +139,19 @@ class _HomeScreenState extends State<HomeScreens>
         totalIntake += riwayat.jumlahHidrasi;
       }
       
+      // Dapatkan target hidrasi harian
+      final targetHarian = await _targetHidrasiRepository.getTargetHidrasiHarian(
+        idPengguna!, 
+        todayDate
+      );
+
+      double targetHidrasi = targetHarian?['target_hidrasi'] ?? 2000;
+      
       setState(() {
+        target = targetHidrasi;
         currentIntake = totalIntake;
+        
+        // Hitung presentasi dengan benar
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
       });
       

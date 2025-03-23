@@ -5,6 +5,11 @@ import 'package:intl/intl.dart';
 class TargetHidrasiController {
   final TargetHidrasiRepository _repository = TargetHidrasiRepository();
 
+  // Method untuk mendapatkan presentasi harian
+  Future<double> getPresentasiHidrasiHarian(int idPengguna, String tanggal) async {
+    return await _repository.getPresentasiHidrasiHarian(idPengguna, tanggal);
+  }
+
   // Memeriksa apakah target hidrasi untuk hari ini sudah ada
   Future<bool> isTargetHidrasiExist(int idPengguna) async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
