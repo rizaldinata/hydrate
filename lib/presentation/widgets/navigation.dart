@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/presentation/screens/profile_screen.dart';
-import 'package:hydrate/presentation/screens/home_screen1.dart';
 
 class Navigasi extends StatefulWidget {
-  const Navigasi({super.key});
+  final VoidCallback? onProfileUpdated; //
+  const Navigasi({super.key,  this.onProfileUpdated});
 
   @override
   State<Navigasi> createState() => _NavigasiState();

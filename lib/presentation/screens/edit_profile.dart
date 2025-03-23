@@ -1,17 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 
 class EditProfile extends StatefulWidget {
-  const EditProfile({super.key});
+  final String initialNama;
+  final String initialJenisKelamin;
+  final double initialBeratBadan;
+  final int userId;
+
+  const EditProfile({
+    super.key,
+    required this.initialNama,
+    required this.initialJenisKelamin,
+    required this.initialBeratBadan,
+    required this.userId,
+  });
 
   @override
   State<EditProfile> createState() => _EditProfileState();
 }
 
 class _EditProfileState extends State<EditProfile> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController weightController = TextEditingController();
-  String? selectedGender;
+  late TextEditingController nameController = TextEditingController();
+  late TextEditingController weightController = TextEditingController();
+  late String selectedGender;
+  final ProfilPenggunaController _controller = ProfilPenggunaController();
+
+  @override 
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.initialNama);
+    weightController = TextEditingController(text: widget.initialBeratBadan.toString());
+    selectedGender = widget.initialJenisKelamin;
+  }
+
+  void _saveProfile() async {
+    // Validasi input
+    if (nameController.text.isEmpty || 
+        selectedGender.isEmpty || 
+        weightController.text.isEmpty) {
+      _showOverlayError("Harap isi semua data!");
+      return;
+    }
+
+    final nama = nameController.text;
+    final berat = double.tryParse(weightController.text) ?? 0.0;
+    
+    final success = await _controller.updateProfilDanNama(
+      userId: widget.userId,
+      nama: nama,
+      jenisKelamin: selectedGender,
+      beratBadan: berat,
+    );
+
+    if (success && mounted) {
+      // Simpan data terbaru ke static class
+      ProfileData.nama = nama;
+      ProfileData.beratBadan = berat;
+
+      Navigator.pop(context, true);
+      _showOverlaySuccess("Profil berhasil diperbarui!");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +143,7 @@ class _EditProfileState extends State<EditProfile> {
       }).toList(),
       onChanged: (newValue) {
         setState(() {
-          selectedGender = newValue;
+          selectedGender = newValue!;
         });
       },
     );
@@ -114,17 +164,6 @@ class _EditProfileState extends State<EditProfile> {
       ),
     );
   }
-
-  void _saveProfile() {
-  if (nameController.text.isEmpty || selectedGender == null || weightController.text.isEmpty) {
-    _showOverlayError("Harap isi semua data!");
-    return;
-  }
-
-  // Simpan data atau kirim ke backend
-  Navigator.pop(context);
-  _showOverlaySuccess("Profil berhasil diperbarui!");
-}
 
 // Fungsi untuk menampilkan Overlay Error
 void _showOverlayError(String message) {
@@ -179,4 +218,9 @@ void _showOverlay(String message, Color color) {
   );
 }
 
+}
+
+class ProfileData {
+  static String? nama;
+  static double? beratBadan;
 }
