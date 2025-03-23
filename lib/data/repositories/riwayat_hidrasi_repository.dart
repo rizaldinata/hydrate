@@ -12,7 +12,7 @@ class RiwayatHidrasiRepository {
     try {
       final db = await _dbHelper.database;
 
-      // Dapatkan waktu saat ini dalam WIB (UT+7)
+      // Dapatkan waktu saat ini dalam WIB (UTC+7)
       final now = DateTime.now().toUtc().add(Duration(hours: 7));
       final tanggalHariIni = DateFormat('yyyy-MM-dd').format(now);
       final waktuSekarang = DateFormat('HH:mm').format(now);
@@ -20,8 +20,8 @@ class RiwayatHidrasiRepository {
       print("Menambahkan riwayat hidrasi dengan jumlah: $jumlahHidrasi pada $tanggalHariIni $waktuSekarang WIB");
 
       int result = await db.rawInsert('''
-      INSERT INTO riwayat_hidrasi (fk_id_pengguna, jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi, timestamp)
-      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+      INSERT INTO riwayat_hidrasi (fk_id_pengguna, jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi)
+      VALUES (?, ?, ?, ?)
     ''', [fkIdPengguna, jumlahHidrasi, tanggalHariIni, waktuSekarang]);
 
       if (result > 0) {
