@@ -15,25 +15,70 @@ class ProfilPenggunaRepository {
     return result.isNotEmpty ? ProfilPengguna.fromMap(result.first) : null;
   }
 
-  // Method Repository Update Profil Pengguna
+  // Method Repository Update Profil Pengguna dengan jam bangun dan jam tidur
+  Future<int> updateProfilPenggunaLengkap({
+    required int fkIdPengguna,
+    required String jenisKelamin,
+    required double beratBadan,
+    required String jamBangun,
+    required String jamTidur,
+  }) async {
+    try {
+      final db = await _dbHelper.database;
+      final existingProfile = await getProfilPenggunaByUserId(fkIdPengguna);
+      
+      if (existingProfile == null) {
+        // Jika profil belum ada, buat baru
+        return await db.insert(
+          'profil_pengguna',
+          {
+            'fk_id_pengguna': fkIdPengguna,
+            'jenis_kelamin': jenisKelamin,
+            'berat_badan': beratBadan,
+            'jam_bangun': jamBangun,
+            'jam_tidur': jamTidur,
+          },
+        );
+      } else {
+        // Update profil yang sudah ada
+        return await db.update(
+          'profil_pengguna',
+          {
+            'jenis_kelamin': jenisKelamin,
+            'berat_badan': beratBadan,
+            'jam_bangun': jamBangun,
+            'jam_tidur': jamTidur,
+          },
+          where: 'fk_id_pengguna = ?',
+          whereArgs: [fkIdPengguna],
+        );
+      }
+    } catch (e) {
+      print("Error updating profile: $e");
+      throw Exception('Database error: $e');
+    }
+  }
+  
+  // Method lama dipertahankan untuk backward compatibility
   Future<int> updateProfilPengguna({
     required int fkIdPengguna,
     required String jenisKelamin,
     required double beratBadan,
   }) async {
     try {
-      final db = await _dbHelper.database;
-      return await db.update(
-        'profil_pengguna',
-        {
-          'jenis_kelamin': jenisKelamin,
-          'berat_badan': beratBadan,
-        },
-        where: 'fk_id_pengguna = ?',
-        whereArgs: [fkIdPengguna],
+      final currentProfile = await getProfilPenggunaByUserId(fkIdPengguna);
+      final jamBangun = currentProfile?.jamBangun ?? 'Belum diatur';
+      final jamTidur = currentProfile?.jamTidur ?? 'Belum diatur';
+      
+      return await updateProfilPenggunaLengkap(
+        fkIdPengguna: fkIdPengguna, 
+        jenisKelamin: jenisKelamin, 
+        beratBadan: beratBadan,
+        jamBangun: jamBangun,
+        jamTidur: jamTidur,
       );
     } catch (e) {
-      print("Error updating profile: $e");
+      print("Error in updateProfilPengguna: $e");
       return 0;
     }
   }
