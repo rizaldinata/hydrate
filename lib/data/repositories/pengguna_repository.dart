@@ -115,4 +115,14 @@ class PenggunaRepository {
       return null;
     }
   }
+
+  Future<int> updateNama(int userId, String newNama) async {
+    final db = await _dbHelper.database;
+    return await db.update(
+      'pengguna',
+      {'nama_pengguna': newNama}, 
+      where: 'id = ?',
+      whereArgs: [userId],
+    );
+  }
 }
