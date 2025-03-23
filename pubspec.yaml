@@ -77,7 +77,7 @@ flutter_native_splash:
     image: assets/images/logo.png
     color: "#fafafa"
     icon_background_color: "#fafafa"
-    color_dark: "#042a49"
+    color_dark: "#fafafa"
     icon_background_color_dark: "#042a49"
 
 # For information on the generic Dart part of this file, see the
