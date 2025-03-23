@@ -1,7 +1,6 @@
 import 'package:hydrate/data/models/pengguna_model.dart';
 import 'package:hydrate/data/models/profil_pengguna_model.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
-
 import '../../presentation/controllers/pengguna_controller.dart';
 
 class HydrationCalculator {
@@ -9,8 +8,8 @@ class HydrationCalculator {
   final ProfilPenggunaController _profilPenggunaController =
       ProfilPenggunaController();
 
-  late String gender;
-  late double weight;
+  late String jenisKelamin;
+  late double beratBadan;
   late int wakeUpTime;
   late int sleepTime;
 
@@ -18,8 +17,7 @@ class HydrationCalculator {
   HydrationCalculator({
     required int penggunaId,
   }) {
-    initializeData(
-        penggunaId); // Memanggil metode publik untuk inisialisasi data pengguna
+    initializeData(penggunaId); // Memanggil metode publik untuk inisialisasi data pengguna
   }
 
   // Mengubah _initializeData menjadi metode publik
@@ -38,40 +36,66 @@ class HydrationCalculator {
 
       // Setel nilai properti berdasarkan data pengguna
       // Pastikan profilPenggunaData tidak null sebelum mengakses propertinya
-      gender = profilPenggunaData?.jenisKelamin ?? 'unknown';
-      weight = profilPenggunaData?.beratBadan ?? 70.0; // Default 70 kg
-      wakeUpTime = int.tryParse(profilPenggunaData?.jamBangun ?? '') ?? 6;
-      sleepTime = int.tryParse(profilPenggunaData?.jamTidur ?? '') ?? 22;
-      // Konversi string ke int, default 22
+      jenisKelamin = profilPenggunaData?.jenisKelamin ?? 'Laki-laki'; // Default ke Laki-laki
+      beratBadan = profilPenggunaData?.beratBadan ?? 70.0; // Default 70 kg
+      
+      // Parsing jam bangun dan tidur
+      // Format jam yang diharapkan: "HH:MM"
+      String jamBangunStr = profilPenggunaData?.jamBangun ?? '';
+      String jamTidurStr = profilPenggunaData?.jamTidur ?? '';
+      
+      wakeUpTime = _parseHour(jamBangunStr, 6); // Default 6 pagi
+      sleepTime = _parseHour(jamTidurStr, 22);  // Default 10 malam
 
       // Debugging
-      print("Gender: $gender, Weight: $weight");
+      print("Jenis Kelamin: $jenisKelamin, Berat Badan: $beratBadan kg");
+      print("Jam Bangun: $wakeUpTime, Jam Tidur: $sleepTime");
 
-      // Jika weight masih 0, beri peringatan
-      if (weight <= 0) {
-        print("Warning: Weight is not valid. Using default value.");
-        weight = 70.0; // Set default weight if invalid
+      // Jika beratBadan masih 0, beri peringatan
+      if (beratBadan <= 0) {
+        print("Warning: Berat badan tidak valid. Menggunakan nilai default.");
+        beratBadan = 70.0; // Set default weight if invalid
       }
     } catch (e) {
       print("Error saat mengambil data pengguna: $e");
-      gender = 'unknown';
-      weight = 70.0; // Default weight jika error
+      jenisKelamin = 'Laki-laki';
+      beratBadan = 70.0; // Default weight jika error
       wakeUpTime = 6;
       sleepTime = 22;
+    }
+  }
+  
+  // Helper method untuk mengekstrak jam dari string format "HH:MM"
+  int _parseHour(String timeString, int defaultValue) {
+    if (timeString == 'Belum diatur' || timeString.isEmpty) {
+      return defaultValue;
+    }
+    
+    try {
+      // Untuk format "HH:MM"
+      if (timeString.contains(':')) {
+        return int.parse(timeString.split(':')[0]);
+      }
+      // Untuk format integer dalam string
+      return int.parse(timeString);
+    } catch (e) {
+      print("Error parsing time: $e");
+      return defaultValue;
     }
   }
 
   // Menghitung kebutuhan hidrasi harian dalam liter
   double calculateDailyWaterIntake() {
-    if (weight <= 0) {
-      print("Warning: Weight is not valid. Using default value.");
-      weight = 70.0; // Set default weight if invalid
+    if (beratBadan <= 0) {
+      print("Warning: Berat badan tidak valid. Menggunakan nilai default.");
+      beratBadan = 70.0; // Set default weight if invalid
     }
 
-    if (gender.toLowerCase() == "male") {
-      return weight * 35 / 1000 * 1.1; // Tambah 10% untuk laki-laki
+    // Gunakan format yang konsisten dengan database: "Laki-laki" dan "Perempuan"
+    if (jenisKelamin == "Laki-laki") {
+      return beratBadan * 35 / 1000; // 35ml per kg berat badan untuk laki-laki
     } else {
-      return weight * 35 / 1000; // 35ml per kg berat badan
+      return beratBadan * 31 / 1000; // 31ml per kg berat badan untuk perempuan
     }
   }
 
