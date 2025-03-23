@@ -2,54 +2,27 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
-<<<<<<< HEAD
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	é ôÛ2§ ØÝçËÖ2[
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	¨ü§‹Ü2§ ØÝçËÖ2[
 Y
-WC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\additional_project_files.txt	é ôÛ2 »–ôÛ2X
+WC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\additional_project_files.txt	¨ü§‹Ü2 ª®Ï‰Ü2X
 V
-TC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\android_gradle_build.json	é ôÛ2¢ ƒ»–ôÛ2]
+TC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\android_gradle_build.json	¨ü§‹Ü2¢ ­®Ï‰Ü2]
 [
-YC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\android_gradle_build_mini.json	é ôÛ2ñ ‹»–ôÛ2J
+YC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\android_gradle_build_mini.json	¨ü§‹Ü2ñ °®Ï‰Ü2J
 H
-FC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build.ninja	é ôÛ2î‹ º–ôÛ2N
+FC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build.ninja	¨ü§‹Ü2î‹ „­Ï‰Ü2N
 L
-JC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build.ninja.txt	é ôÛ2S
+JC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build.ninja.txt	¨ü§‹Ü2S
 Q
-OC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build_file_index.txt	é ôÛ2G Ž»–ôÛ2T
+OC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build_file_index.txt	¨ü§‹Ü2G ³®Ï‰Ü2T
 R
-PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\compile_commands.json	é ôÛ2	X
+PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\compile_commands.json	¨ü§‹Ü2	X
 V
-TC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\compile_commands.json.bin	é ôÛ2
+TC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\compile_commands.json.bin	¨ü§‹Ü2
 ^
 \
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\metadata_generation_command.txt	‘é ôÛ2› »–ôÛ2Q
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\metadata_generation_command.txt	¨ü§‹Ü2› ±®Ï‰Ü2Q
 O
-MC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\prefab_config.json	‘é ôÛ2( Ž»–ôÛ2V
+MC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\prefab_config.json	¨ü§‹Ü2( ²®Ï‰Ü2V
 T
-RC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\symbol_folder_index.txt	‘é ôÛ2I Ž»–ôÛ2
-=======
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	èøÐøÛ2§ ˆŒéËÖ2[
-Y
-WC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\additional_project_files.txt	èøÐøÛ2 ÖÝÑñÛ2X
-V
-TC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\android_gradle_build.json	èøÐøÛ2Š ×ÝÑñÛ2]
-[
-YC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\android_gradle_build_mini.json	èøÐøÛ2å ÚÝÑñÛ2J
-H
-FC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build.ninja	èøÐøÛ2ºÓ ÔÜÑñÛ2N
-L
-JC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build.ninja.txt	èøÐøÛ2S
-Q
-OC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\build_file_index.txt	èøÐøÛ2G ÞÝÑñÛ2T
-R
-PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\compile_commands.json	èøÐøÛ2	X
-V
-TC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\compile_commands.json.bin	èøÐøÛ2
-^
-\
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\metadata_generation_command.txt	èøÐøÛ2ƒ ÜÝÑñÛ2Q
-O
-MC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\prefab_config.json	èøÐøÛ2( ÝÝÑñÛ2V
-T
-RC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\symbol_folder_index.txt	èøÐøÛ2I ÝÝÑñÛ2
->>>>>>> ea22c3f28a20b01f8c8a35a9c552586a667ff140
+RC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\x86\symbol_folder_index.txt	¨ü§‹Ü2I ³®Ï‰Ü2
