@@ -1,21 +1,89 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/edit_profile.dart';
-import 'package:hydrate/presentation/widgets/navigation.dart';
+import 'package:hydrate/core/utils/session_manager.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final VoidCallback? onProfileUpdated;
+  const ProfileScreen({
+    super.key,
+    this.onProfileUpdated,
+  });
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // Variabel state
+  int? idPengguna;
+  String? namaPengguna;
+  String? jenisKelamin;
+  double? beratBadan;
+  String? jamBangun;
+  String? jamTidur;
+
+  // Deklarasi Controller 
+  final ProfilPenggunaController _profilPenggunaController = ProfilPenggunaController();
 
   // function editprofile
   Future<void> _showEditProfile(BuildContext context) async {
-    await showDialog(context: context, builder: (context) => const EditProfile(),);
+    final session = SessionManager();
+    final userId = await session.getUserId();
+    
+    if (userId == null) return;
+
+    final pengguna = await PenggunaRepository().getPenggunaById(userId);
+    if (pengguna == null) return;
+
+    await showDialog<bool>(
+    context: context,
+    builder: (context) => EditProfile(
+      userId: userId,
+      initialNama: pengguna.nama,
+      initialJenisKelamin: jenisKelamin ?? 'Laki-laki',
+      initialBeratBadan: beratBadan ?? 60.0,
+    ),
+    ).then((success) {
+    if (success == true) {
+      _loadUserData(); // Refresh data lokal
+      widget.onProfileUpdated?.call();  // Belum tentu terpakai
+    }
+    });
+
+  }
+
+  @override 
+  void initState() {
+    super .initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final session = SessionManager();
+      final userId = await session.getUserId();
+
+      if (userId != null) {
+        final pengguna = await PenggunaRepository().getPenggunaById((userId));
+        final profil = await _profilPenggunaController.getProfilPengguna((userId));
+
+        if (pengguna != null && profil != null) {
+          setState(() {
+            namaPengguna = pengguna.nama; 
+            jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" ? profil.jenisKelamin : "Laki-laki";
+            beratBadan = profil.beratBadan;
+            jamBangun = profil.jamBangun;
+            jamTidur = profil.jamTidur;
+          });
+        }
+      }
+    } catch (e) {
+      print("Error loading user data: $e");
+    }
   }
 
   @override
@@ -62,7 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           offset: Offset(0, screenHeight * -0.005),
                           child: Center(
                             child: Text(
-                              "Hilmi Afifi",
+                              namaPengguna ?? 'Belum diatur',
                               style: GoogleFonts.inter(
                                 fontSize: 18,
                                 color: Colors.white,
@@ -74,10 +142,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(height: screenHeight * 0.02),
 
                         // Informasi Profil
-                        _profileInfo(Icons.person, "Jenis Kelamin", "Laki - Laki"),
-                        _profileInfo(Icons.fitness_center, "Berat badan", "60 kg"),
-                        _profileInfo(Icons.wb_sunny, "Jam Bangun", "08:00 WIB"),
-                        _profileInfo(Icons.nightlight_round, "Jam Tidur", "22:00 WIB"),
+                        _profileInfo(Icons.person, "Jenis Kelamin", jenisKelamin ?? 'Laki-laki'),
+                        _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
+                        _profileInfo(Icons.wb_sunny, "Jam Bangun", jamBangun ?? 'Belum diatur'),
+                        _profileInfo(Icons.nightlight_round, "Jam Tidur", jamTidur ?? 'Belum diatur'),
 
                         SizedBox(height: screenHeight * 0.01,),
 
