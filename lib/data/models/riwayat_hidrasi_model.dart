@@ -15,7 +15,7 @@ class RiwayatHidrasi {
 
   factory RiwayatHidrasi.fromMap(Map<String, dynamic> map) => RiwayatHidrasi(
         id: map['id'],
-        fkIdPengguna: map['user_id'],
+        fkIdPengguna: map['fk_id_pengguna'],
         jumlahHidrasi: map['jumlah_hidrasi'],
         tanggalHidrasi: map['tanggal_hidrasi'],
         waktuHidrasi: map['waktu_hidrasi'],
@@ -23,7 +23,7 @@ class RiwayatHidrasi {
 
   Map<String, dynamic> toMap() => {
         'id': id,
-        'user_id': fkIdPengguna,
+        'fk_id_pengguna': fkIdPengguna,
         'jumlah_hidrasi': jumlahHidrasi,
         'tanggal_hidrasi': tanggalHidrasi,
         'waktu_hidrasi': waktuHidrasi,

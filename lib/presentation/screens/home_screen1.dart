@@ -8,6 +8,7 @@ import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
+import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 
 class HomeScreens extends StatefulWidget {
   const HomeScreens({
@@ -23,22 +24,21 @@ class _HomeScreenState extends State<HomeScreens>
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
   final PageController _pageController = PageController();
-  late HydrationCalculator
-      _hydrationCalculator; // Ensure HydrationCalculator is defined
-  double target = 0; // Target hydration dynamically calculated
-  double currentIntake = 0; // Initial water intake in mL
-  final ValueNotifier<double> _valueNotifier =
-      ValueNotifier<double>(0); // Progress percentage
+  late HydrationCalculator _hydrationCalculator;
+  double target = 0;
+  double currentIntake = 0;
+  final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
   int selectedWater = 150;
-  late final PenggunaController
-      _penggunaController; // Default water selection is 150mL
+  late final PenggunaController _penggunaController;
   int? idPengguna;
   String? namaPengguna;
+  final RiwayatHidrasiController _riwayatHidrasiController =
+      RiwayatHidrasiController();
 
   Timer? _coutdownTimer;
-  int _remainingSeconds = 0; // Initial countdown timer value
+  int _remainingSeconds = 0;
 
-  Map<double, double> _glassOffsets = {}; // Posisi awal
+  Map<double, double> _glassOffsets = {};
 
   @override
   void initState() {
@@ -47,7 +47,7 @@ class _HomeScreenState extends State<HomeScreens>
     _penggunaController = PenggunaController();
     _controller.initAnimation(this);
     _pageController.addListener(() => setState(() {}));
-    _loadUserData(); // Panggil method untuk load data
+    _loadUserData();
   }
 
   Future<void> _loadUserData() async {
@@ -59,7 +59,6 @@ class _HomeScreenState extends State<HomeScreens>
         final pengguna = await _penggunaController.getPenggunaById(userId);
 
         if (pengguna != null) {
-          // Inisialisasi hydration calculator setelah mendapatkan ID
           _hydrationCalculator = HydrationCalculator(penggunaId: userId);
 
           setState(() {
@@ -91,18 +90,33 @@ class _HomeScreenState extends State<HomeScreens>
   }
 
   // Animasi Gerakan Buat Gelas
-  void _animateGlass(double amount) {
+  void _animateGlass(double amount) async {
+    if (idPengguna == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User tidak teridentifikasi!")));
+      return;
+    }
+
+    try {
+      await _riwayatHidrasiController.tambahRiwayatHidrasi(
+        fkIdPengguna: idPengguna!,
+        jumlahHidrasi: amount,
+      );
+    } catch (e) {
+      print("Gagal menyimpan riwayat: $e");
+    }
+
     setState(() {
-      _glassOffsets[amount] = -40; // posisi gerakan Naik
+      _glassOffsets[amount] = -40;
     });
 
     Future.delayed(const Duration(milliseconds: 300), () {
       setState(() {
-        _glassOffsets[amount] = 0; // Kembali ke posisi awal
+        _glassOffsets[amount] = 0;
       });
     });
 
-    _addWater(amount);
+    _addWater(amount); // Tetap panggil untuk update progress
   }
 
   // Function to add water intake
@@ -306,16 +320,27 @@ class _HomeScreenState extends State<HomeScreens>
                   SizedBox(
                     width: MediaQuery.of(context).size.width - 100,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
+                        if (idPengguna == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("User tidak teridentifikasi!"),
+                            ),
+                          );
+                          return;
+                        }
+
                         setState(() {
                           selectedWater = tempSelectedWater;
-                          currentIntake +=
-                              selectedWater; // Selalu menambah intake
-
-                          // Pastikan progress tidak lebih dari 100%
+                          currentIntake += selectedWater;
                           _valueNotifier.value =
                               min(100, (currentIntake / target) * 100);
                         });
+
+                        await _riwayatHidrasiController.tambahRiwayatHidrasi(
+                          fkIdPengguna: idPengguna!,
+                          jumlahHidrasi: selectedWater.toDouble(),
+                        );
 
                         _startCoutdown();
                         _showAddedWaterPopup(context, selectedWater.toDouble());
@@ -347,7 +372,6 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
-
   // Fungsi untuk overflow nama
   String truncateName(String name, int maxLength) {
     if (name.length <= maxLength) return name;
@@ -359,7 +383,6 @@ class _HomeScreenState extends State<HomeScreens>
       return "${name.substring(0, lastSpace)}..."; // Jika ada spasi, potong di spasi terakhir
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -385,12 +408,14 @@ class _HomeScreenState extends State<HomeScreens>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("HYDRATE",
-                      style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.blue,
-                          fontFamily: "Gluten")),
+                  const Text(
+                    "HYDRATE",
+                    style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.blue,
+                        fontFamily: "Gluten"),
+                  ),
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
