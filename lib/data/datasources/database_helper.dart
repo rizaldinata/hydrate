@@ -23,12 +23,13 @@ class DatabaseHelper {
 
       return await openDatabase(
         path,
-        version: 1,
+        version: 2, // Naikkan versi untuk migrasi
         onCreate: (db, version) async {
           print("Membuat tabel database...");
 
           await db.execute("PRAGMA foreign_keys = ON;");
 
+          // Tabel Pengguna
           await db.execute('''
             CREATE TABLE pengguna (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,6 +37,7 @@ class DatabaseHelper {
             )
           ''');
 
+          // Tabel Profil Pengguna
           await db.execute('''
             CREATE TABLE profil_pengguna (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -48,30 +50,44 @@ class DatabaseHelper {
             )
           ''');
 
+          // Tabel Target Hidrasi
           await db.execute('''
             CREATE TABLE target_hidrasi (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            fk_id_pengguna INTEGER NOT NULL,
-            target_hidrasi REAL NOT NULL,
-            tanggal_hidrasi TEXT NOT NULL,
-            total_hidrasi_harian REAL NOT NULL, 
-            FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
-          );
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              fk_id_pengguna INTEGER NOT NULL,
+              target_hidrasi REAL NOT NULL,
+              tanggal_hidrasi TEXT NOT NULL,
+              total_hidrasi_harian REAL NOT NULL,
+              persentase_hidrasi REAL DEFAULT 0.0,
+              FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
+            )
           ''');
 
-       await db.execute('''
-  CREATE TABLE riwayat_hidrasi (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    fk_id_pengguna INTEGER NOT NULL,
-    jumlah_hidrasi REAL NOT NULL,
-    tanggal_hidrasi TEXT NOT NULL,
-    waktu_hidrasi TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,  // Tambahkan kolom ini
-    FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
-  );
-''');
+          // Tabel Riwayat Hidrasi
+          await db.execute('''
+            CREATE TABLE riwayat_hidrasi (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              fk_id_pengguna INTEGER NOT NULL,
+              jumlah_hidrasi REAL NOT NULL,
+              tanggal_hidrasi TEXT NOT NULL,
+              waktu_hidrasi TEXT NOT NULL,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+              FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
+            )
+          ''');
 
           print("Database berhasil dibuat!");
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          // Migrasi database jika diperlukan
+          if (oldVersion < 2) {
+            // Tambahkan kolom persentase_hidrasi ke tabel target_hidrasi
+            await db.execute('''
+              ALTER TABLE target_hidrasi 
+              ADD COLUMN persentase_hidrasi REAL DEFAULT 0.0
+            ''');
+            print("Kolom persentase_hidrasi berhasil ditambahkan");
+          }
         },
         onOpen: (db) async {
           await db.execute("PRAGMA foreign_keys = ON;");
@@ -81,6 +97,29 @@ class DatabaseHelper {
     } catch (e) {
       print("Error saat membuka database: $e");
       rethrow;
+    }
+  }
+
+  // Method untuk update skema jika diperlukan
+  Future<void> updateTargetHidrasiSchema() async {
+    try {
+      final db = await database;
+      
+      final columns = await db.rawQuery("PRAGMA table_info(target_hidrasi)");
+      
+      bool hasPersentaseColumn = columns.any((column) => 
+        column['name'] == 'persentase_hidrasi'
+      );
+
+      if (!hasPersentaseColumn) {
+        await db.execute('''
+          ALTER TABLE target_hidrasi 
+          ADD COLUMN persentase_hidrasi REAL DEFAULT 0.0
+        ''');
+        print("Kolom persentase_hidrasi berhasil ditambahkan");
+      }
+    } catch (e) {
+      print("Error saat update skema: $e");
     }
   }
 }

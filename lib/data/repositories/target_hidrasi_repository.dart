@@ -4,6 +4,37 @@ import 'package:intl/intl.dart';
 
 class TargetHidrasiRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
+    // Method untuk mendapatkan presentasi harian
+  Future<double> getPresentasiHidrasiHarian(int idPengguna, String tanggal) async {
+    try {
+      final db = await _dbHelper.database;
+      
+      // Query untuk mengambil data target hidrasi
+      final List<Map<String, dynamic>> results = await db.query(
+        'target_hidrasi',
+        where: 'fk_id_pengguna = ? AND tanggal_hidrasi = ?',
+        whereArgs: [idPengguna, tanggal],
+      );
+
+      if (results.isEmpty) {
+        return 0.0; // Jika tidak ada data, kembalikan 0
+      }
+
+      final targetHidrasi = results.first;
+      final double target = targetHidrasi['target_hidrasi'] ?? 0.0;
+      final double totalHidrasi = targetHidrasi['total_hidrasi_harian'] ?? 0.0;
+
+      // Hitung presentasi
+      if (target > 0) {
+        return (totalHidrasi / target) * 100;
+      } else {
+        return 0.0;
+      }
+    } catch (e) {
+      print("Error saat menghitung presentasi hidrasi: $e");
+      return 0.0;
+    }
+  }
 
   // Memeriksa apakah target hidrasi untuk hari ini sudah ada
   Future<bool> checkTargetHidrasiExists(int idPengguna, String tanggal) async {
@@ -139,4 +170,6 @@ class TargetHidrasiRepository {
       return null;
     }
   }
+
+  getTargetHidrasiHarian(int i, String todayDate) {}
 }
