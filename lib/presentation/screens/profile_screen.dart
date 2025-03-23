@@ -212,12 +212,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
       // Tambahkan refresh gesture
-      floatingActionButton: FloatingActionButton(
-        onPressed: _loadUserData,
-        mini: true,
-        backgroundColor: Colors.white,
-        child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _loadUserData,
+      //   mini: true,
+      //   backgroundColor: Colors.white,
+      //   child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
+      // ),
     );
   }
 
