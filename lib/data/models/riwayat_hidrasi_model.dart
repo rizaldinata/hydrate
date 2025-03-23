@@ -1,31 +1,39 @@
 class RiwayatHidrasi {
-  int? id;
-  int fkIdPengguna;
-  double jumlahHidrasi;
-  String tanggalHidrasi;
-  String waktuHidrasi;
+  final int? id;
+  final int fkIdPengguna;
+  final double jumlahHidrasi;
+  final String? tanggalHidrasi;
+  final String? waktuHidrasi;
+  final String? timestamp;
 
   RiwayatHidrasi({
     this.id,
     required this.fkIdPengguna,
     required this.jumlahHidrasi,
-    required this.tanggalHidrasi,
-    required this.waktuHidrasi,
+    this.tanggalHidrasi,
+    this.waktuHidrasi,
+    this.timestamp,
   });
 
-  factory RiwayatHidrasi.fromMap(Map<String, dynamic> map) => RiwayatHidrasi(
-        id: map['id'],
-        fkIdPengguna: map['user_id'],
-        jumlahHidrasi: map['jumlah_hidrasi'],
-        tanggalHidrasi: map['tanggal_hidrasi'],
-        waktuHidrasi: map['waktu_hidrasi'],
-      );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'fk_id_pengguna': fkIdPengguna,
+      'jumlah_hidrasi': jumlahHidrasi,
+      'tanggal_hidrasi': tanggalHidrasi,
+      'waktu_hidrasi': waktuHidrasi,
+      'timestamp': timestamp,
+    };
+  }
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'user_id': fkIdPengguna,
-        'jumlah_hidrasi': jumlahHidrasi,
-        'tanggal_hidrasi': tanggalHidrasi,
-        'waktu_hidrasi': waktuHidrasi,
-      };
+  factory RiwayatHidrasi.fromMap(Map<String, dynamic> map) {
+    return RiwayatHidrasi(
+      id: map['id'],
+      fkIdPengguna: map['fk_id_pengguna'],
+      jumlahHidrasi: map['jumlah_hidrasi'],
+      tanggalHidrasi: map['tanggal_hidrasi'],
+      waktuHidrasi: map['waktu_hidrasi'],
+      timestamp: map['timestamp'],
+    );
+  }
 }
