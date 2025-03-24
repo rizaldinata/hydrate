@@ -2,54 +2,27 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
-<<<<<<< HEAD
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	²¹›Ü2§ ØÝçËÖ2a
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	¨Ï²³Ü2§ ˆŒéËÖ2a
 _
-]C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\additional_project_files.txt	‘²¹›Ü2 òÊÎ‰Ü2^
+]C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\additional_project_files.txt	¨Ï²³Ü2 ðÎ²³Ü2^
 \
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build.json	‘²¹›Ü2® ùÊÎ‰Ü2c
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build.json	¨Ï²³Ü2– ÷Î²³Ü2c
 a
-_C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build_mini.json	‘²¹›Ü2ý ƒËÎ‰Ü2P
+_C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build_mini.json	¨Ï²³Ü2ñ Ï²³Ü2P
 N
-LC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja	‘²¹›Ü2ŒŒ îÉÎ‰Ü2T
+LC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja	¨Ï²³Ü2ØÓ ÀÍ²³Ü2T
 R
-PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja.txt	‘²¹›Ü2Y
+PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja.txt	¨Ï²³Ü2Y
 W
-UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build_file_index.txt	‘²¹›Ü2G ŒËÎ‰Ü2Z
+UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build_file_index.txt	¨Ï²³Ü2G ‹Ï²³Ü2Z
 X
-VC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json	‘²¹›Ü2	^
+VC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json	¨Ï²³Ü2	^
 \
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json.bin	‘²¹›Ü2
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json.bin	¨Ï²³Ü2
 d
 b
-`C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\metadata_generation_command.txt	‘²¹›Ü2¹ ˆËÎ‰Ü2W
+`C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\metadata_generation_command.txt	¨Ï²³Ü2¡ „Ï²³Ü2W
 U
-SC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\prefab_config.json	‘²¹›Ü2( ŠËÎ‰Ü2\
+SC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\prefab_config.json	¨Ï²³Ü2( ˆÏ²³Ü2\
 Z
-XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\symbol_folder_index.txt	‘²¹›Ü2O ŠËÎ‰Ü2
-=======
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ìñÛ™Ü2§ ˆŒéËÖ2a
-_
-]C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\additional_project_files.txt	ìñÛ™Ü2 Î³Ï™Ü2^
-\
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build.json	íñÛ™Ü2– Ó³Ï™Ü2c
-a
-_C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\android_gradle_build_mini.json	íñÛ™Ü2ñ Û³Ï™Ü2P
-N
-LC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja	íñÛ™Ü2ØÓ Ç²Ï™Ü2T
-R
-PC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build.ninja.txt	íñÛ™Ü2Y
-W
-UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\build_file_index.txt	íñÛ™Ü2G ß³Ï™Ü2Z
-X
-VC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json	íñÛ™Ü2	^
-\
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\compile_commands.json.bin	íñÛ™Ü2
-d
-b
-`C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\metadata_generation_command.txt	íñÛ™Ü2¡ Ü³Ï™Ü2W
-U
-SC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\prefab_config.json	íñÛ™Ü2( Þ³Ï™Ü2\
-Z
-XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\symbol_folder_index.txt	íñÛ™Ü2O Þ³Ï™Ü2
->>>>>>> c9c618a (save commit)
+XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\arm64-v8a\symbol_folder_index.txt	¨Ï²³Ü2O ‰Ï²³Ü2
