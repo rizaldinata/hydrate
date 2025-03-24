@@ -2,6 +2,7 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	©²¹›Ü2§ ØÝçËÖ2c
 a
 _C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\additional_project_files.txt	©²¹›Ü2 œúÎ‰Ü2`
@@ -26,3 +27,29 @@ W
 UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\prefab_config.json	©²¹›Ü2( §úÎ‰Ü2^
 \
 ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\symbol_folder_index.txt	©²¹›Ü2Q ¨úÎ‰Ü2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	˜òÛ™Ü2§ ˆŒéËÖ2c
+a
+_C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\additional_project_files.txt	˜òÛ™Ü2 ›ËÏ™Ü2`
+^
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\android_gradle_build.json	˜òÛ™Ü2š ŸËÏ™Ü2e
+c
+aC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\android_gradle_build_mini.json	˜òÛ™Ü2õ £ËÏ™Ü2R
+P
+NC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\build.ninja	˜òÛ™Ü2âÓ ’ÊÏ™Ü2V
+T
+RC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\build.ninja.txt	˜òÛ™Ü2[
+Y
+WC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\build_file_index.txt	˜òÛ™Ü2G ¦ËÏ™Ü2\
+Z
+XC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\compile_commands.json	˜òÛ™Ü2	`
+^
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\compile_commands.json.bin	šòÛ™Ü2
+f
+d
+bC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\metadata_generation_command.txt	šòÛ™Ü2« ¤ËÏ™Ü2Y
+W
+UC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\prefab_config.json	šòÛ™Ü2( ¥ËÏ™Ü2^
+\
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\2a671m2n\armeabi-v7a\symbol_folder_index.txt	šòÛ™Ü2Q ¥ËÏ™Ü2
+>>>>>>> c9c618a (save commit)
