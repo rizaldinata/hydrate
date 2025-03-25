@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/core/utils/app_event_bus.dart';
 
 class Navigasi extends StatefulWidget {
-  final VoidCallback? onProfileUpdated; //
-  const Navigasi({super.key,  this.onProfileUpdated});
+  final VoidCallback? onProfileUpdated;
+  final Function(int)? onPageChanged;
+  
+  const Navigasi({
+    super.key, 
+    this.onProfileUpdated,
+    this.onPageChanged,
+  });
 
   @override
   State<Navigasi> createState() => _NavigasiState();
@@ -15,6 +22,7 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
   int noOfIcons = 3;
 
   late double position;
+  final _eventBus = AppEventBus();
 
   List<String> icons = [
     'assets/images/navigasi/stats.png',
@@ -71,16 +79,31 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
     });
   }
 
+  // Metode untuk refresh halaman yang dipilih
+  void _refreshCurrentPage(int index) {
+    // Trigger refresh di halaman yang sedang aktif
+    switch (index) {
+      case 0:
+        _eventBus.fire('refresh_statistics');
+        break;
+      case 1:
+        _eventBus.fire('refresh_home');
+        break;
+      case 2:
+        _eventBus.fire('refresh_profile');
+        break;
+    }
+    
+    // Panggil callback onPageChanged jika ada
+    if (widget.onPageChanged != null) {
+      widget.onPageChanged!(index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Positioned.fill(
-        //     child: AnimatedContainer(
-        //   duration: const Duration(milliseconds: 375),
-        //   curve: Curves.easeOut,
-        //   color: colors[selected],
-        // )),
         Positioned(
           bottom: horizontalMargin,
           left: horizontalMargin,
@@ -104,18 +127,36 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
                         children: icons.map<Widget>((icon) {
                           return GestureDetector(
                             onTap: () {
+                              final selectedIndex = icons.indexOf(icon);
+                              
                               setState(() {
-                                animateDrop(icons.indexOf(icon));
-                                selected = icons.indexOf(icon);
+                                animateDrop(selectedIndex);
+                                selected = selectedIndex;
                               });
                               
+                              // Refresh halaman yang dipilih
+                              _refreshCurrentPage(selectedIndex);
+                              
                               // Pindah Halaman Profile
-                              if (icons.indexOf(icon) == 2){
+                              if (selectedIndex == 2){
                                 Navigator.push(
                                   context, 
-                                  MaterialPageRoute(builder: (context) => const ProfileScreen()));
+                                  MaterialPageRoute(
+                                    builder: (context) => ProfileScreen(
+                                      onProfileUpdated: () {
+                                        // Ketika profile di-update, refresh semua halaman
+                                        if (widget.onProfileUpdated != null) {
+                                          widget.onProfileUpdated!();
+                                        }
+                                        _eventBus.fire('refresh_all');
+                                      },
+                                    )
+                                  )
+                                ).then((_) {
+                                  // Refresh halaman setelah kembali dari profile
+                                  _eventBus.fire('refresh_all');
+                                });
                               }
-
                             },
                             child: AnimatedContainer(
                               duration: const Duration(
@@ -165,6 +206,12 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
         )
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 }
 
