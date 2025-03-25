@@ -169,8 +169,8 @@ class ProfileScreenState extends State<ProfileScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 227, 242, 253),
-      body: _isLoading
+      backgroundColor: const Color(0xFFE8F7FF),
+      body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
               ? Center(
@@ -182,16 +182,15 @@ class ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         children: [
                           // Kontainer Profil
-                          // Kontainer Profil dengan Efek Neumorphism & Gradasi
                           Container(
                             width: double.infinity,
-                            height: screenHeight * 0.56,
+                            height: 480,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Color(0xFF4EE9BD), // Biru muda lebih terang
+                                  Color(0xFF2AD1D1), // Biru muda lebih terang
                                   Colors.blueAccent, // Biru lebih tua
                                 ],
                               ),
@@ -219,8 +218,8 @@ class ProfileScreenState extends State<ProfileScreen> {
                             child: Padding(
                               padding: EdgeInsets.only(
                                 top: screenHeight * 0.05,
-                                left: screenWidth * 0.04,
-                                right: screenWidth * 0.04,
+                                left: 20,
+                                right: 20,
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +273,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                   SizedBox(height: screenHeight * 0.01),
-
+                                  
                                   // Informasi Profil dengan Neumorphism Card
                                   _profileInfo(Icons.person, "Jenis Kelamin",
                                       jenisKelamin ?? 'Laki-laki'),
@@ -282,6 +281,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       Icons.fitness_center,
                                       "Berat badan",
                                       "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
+                                  // _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toInt() ?? '0'} kg"),
                                   _profileInfo(Icons.wb_sunny, "Jam Bangun",
                                       jamBangun ?? 'Belum diatur'),
                                   _profileInfo(Icons.nightlight_round,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 
@@ -30,7 +31,7 @@ class _EditProfileState extends State<EditProfile> {
   late String selectedGender;
   late TimeOfDay? wakeUpTime;
   late TimeOfDay? sleepTime;
-  
+
   final ProfilPenggunaController _controller = ProfilPenggunaController();
   bool _isLoading = false;
 
@@ -53,15 +54,15 @@ class _EditProfileState extends State<EditProfile> {
     //     TextEditingController(text: widget.initialBeratBadan.toString());
 
     // // Konversi "Male" / "Female" ke "Laki-laki" / "Perempuan"
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ?? 
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
     //               (widget.initialJenisKelamin == "Male" ? "Laki-laki" : "Perempuan");
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ?? 
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
     //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
 
-
-    weightController = TextEditingController(text: widget.initialBeratBadan.toString());
+    weightController =
+        TextEditingController(text: widget.initialBeratBadan.toString());
     selectedGender = widget.initialJenisKelamin;
-    
+
     // Parse jam bangun dan tidur jika tersedia
     wakeUpTime = _parseTimeString(widget.initialJamBangun);
     sleepTime = _parseTimeString(widget.initialJamTidur);
@@ -69,14 +70,12 @@ class _EditProfileState extends State<EditProfile> {
 
   TimeOfDay? _parseTimeString(String? timeString) {
     if (timeString == null || timeString == 'Belum diatur') return null;
-    
+
     try {
       final parts = timeString.split(':');
       if (parts.length == 2) {
         return TimeOfDay(
-          hour: int.parse(parts[0]), 
-          minute: int.parse(parts[1])
-        );
+            hour: int.parse(parts[0]), minute: int.parse(parts[1]));
       }
     } catch (e) {
       print('Error parsing time: $e');
@@ -90,23 +89,52 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _selectTime(BuildContext context, bool isWakeUpTime) async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: isWakeUpTime 
-          ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
-          : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
-    );
-    
-    if (pickedTime != null) {
-      setState(() {
-        if (isWakeUpTime) {
-          wakeUpTime = pickedTime;
-        } else {
-          sleepTime = pickedTime;
-        }
-      });
-    }
+  final TimeOfDay? pickedTime = await showTimePicker(
+    context: context,
+    initialTime: isWakeUpTime
+        ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
+        : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData(
+          primaryColor: const Color(0xFF00A6FB), // Warna utama biru
+          hintColor: const Color(0xFF00A6FB),
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF00A6FB), // Warna utama
+            onPrimary: Colors.white, // Warna teks di atas warna utama
+            onSurface: Color(0xFF2F2E41), // Warna teks utama
+          ),
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: Colors.white,
+            hourMinuteColor: MaterialStateColor.resolveWith((states) =>
+                states.contains(MaterialState.selected)
+                    ? const Color(0xFF00A6FB)
+                    : const Color(0xFFE8F7FF)),
+            hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
+                states.contains(MaterialState.selected)
+                    ? Colors.white
+                    : const Color(0xFF2F2E41)),
+            dialHandColor: const Color(0xFF00A6FB),
+            dialBackgroundColor: const Color(0xFFE8F7FF),
+            entryModeIconColor: const Color(0xFF00A6FB),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
+
+  if (pickedTime != null) {
+    setState(() {
+      if (isWakeUpTime) {
+        wakeUpTime = pickedTime;
+      } else {
+        sleepTime = pickedTime;
+      }
+    });
   }
+}
+
 
   void _saveProfile() async {
     // Validasi input
@@ -127,7 +155,6 @@ class _EditProfileState extends State<EditProfile> {
     //   beratBadan: berat,
     // );
 
-    
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
       return;
@@ -170,6 +197,7 @@ class _EditProfileState extends State<EditProfile> {
   Widget build(BuildContext context) {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      backgroundColor: Colors.white,
       child: Container(
         width: MediaQuery.of(context).size.width * 0.85,
         padding: const EdgeInsets.all(20),
@@ -193,7 +221,7 @@ class _EditProfileState extends State<EditProfile> {
                     const SizedBox(height: 20),
 
                     // Nama
-                    _buildTextField(nameController, "Nama", Icons.person),
+                    _buildTextField(nameController, "Nama", "assets/images/profile/profile.svg"),
 
                     const SizedBox(height: 15),
 
@@ -203,25 +231,27 @@ class _EditProfileState extends State<EditProfile> {
                     const SizedBox(height: 15),
 
                     // Berat Badan
-                    _buildTextField(weightController, "Berat Badan (kg)", Icons.fitness_center, isNumber: true),
+                    _buildTextField(weightController, "Berat Badan (kg)",
+                        "assets/images/profile/weight.svg",
+                        isNumber: true),
 
                     const SizedBox(height: 15),
-                    
+
                     // Jam Bangun
                     _buildTimeSelector(
-                      "Jam Bangun", 
-                      Icons.wb_sunny, 
-                      wakeUpTime, 
+                      "Jam Bangun",
+                      "assets/images/profile/waketime.svg",
+                      wakeUpTime,
                       () => _selectTime(context, true),
                     ),
-                    
+
                     const SizedBox(height: 15),
-                    
+
                     // Jam Tidur
                     _buildTimeSelector(
-                      "Jam Tidur", 
-                      Icons.nightlight_round, 
-                      sleepTime, 
+                      "Jam Tidur",
+                      "assets/images/profile/sleeptime.svg",
+                      sleepTime,
                       () => _selectTime(context, false),
                     ),
 
@@ -232,16 +262,16 @@ class _EditProfileState extends State<EditProfile> {
                       children: [
                         Expanded(
                           child: _buildButton(
-                            "Batal", 
-                            Colors.grey, 
+                            "Batal",
+                            Colors.grey,
                             () => Navigator.pop(context),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _buildButton(
-                            "Simpan", 
-                            Color(0xFF00A6FB), 
+                            "Simpan",
+                            Color(0xFF00A6FB),
                             _saveProfile,
                           ),
                         ),
@@ -256,15 +286,33 @@ class _EditProfileState extends State<EditProfile> {
 
   // Widget untuk input text
   Widget _buildTextField(
-      TextEditingController controller, String label, IconData icon,
+      TextEditingController controller, String label, String icon,
       {bool isNumber = false}) {
     return TextField(
+      cursorColor: const Color(0xFF00A6FB),
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: Color(0xFF00A6FB)),
+        labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
+        prefixIcon: Padding(
+          padding:
+              const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
+          child: SvgPicture.asset(
+            icon,
+            width: 24,
+            height: 24,
+          ),
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -276,8 +324,25 @@ class _EditProfileState extends State<EditProfile> {
           selectedGender, // Pastikan nilainya dalam format "Laki-laki" atau "Perempuan"
       decoration: InputDecoration(
         labelText: "Jenis Kelamin",
-        prefixIcon: const Icon(Icons.wc, color: Color(0xFF00A6FB)),
+        labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
+        prefixIcon: Padding(
+            padding:
+                const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
+            child: SvgPicture.asset(
+              "assets/images/profile/gender.svg",
+              width: 24,
+              height: 24,
+            ),
+          ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
       items: genderMap.keys.map((String value) {
         return DropdownMenuItem<String>(
@@ -295,22 +360,39 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   // Widget untuk Pemilih Waktu
-  Widget _buildTimeSelector(String label, IconData icon, TimeOfDay? time, VoidCallback onTap) {
+  Widget _buildTimeSelector(
+      String label, String icon, TimeOfDay? time, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Color(0xFF00A6FB)),
+          labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
+          prefixIcon: Padding(
+            padding:
+                const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
+            child: SvgPicture.asset(
+              icon,
+              width: 24,
+              height: 24,
+            ),
+          ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(time == null 
-              ? 'Belum diatur' 
-              : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'
-            ),
+            Text(time == null
+                ? 'Belum diatur'
+                : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'),
             const Icon(Icons.arrow_drop_down),
           ],
         ),
@@ -334,7 +416,6 @@ class _EditProfileState extends State<EditProfile> {
       ),
     );
   }
-
 
 // Fungsi untuk menampilkan Overlay Error
   void _showOverlayError(String message) {
@@ -392,6 +473,8 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 }
+
+
 
 // class ProfileData {
 //   static String? nama;

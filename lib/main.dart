@@ -22,7 +22,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'HYDRATE',
-      theme: ThemeData(),
+      theme: ThemeData(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Color(0xFF00A6FB), // Warna kursor
+          selectionColor:
+              Color(0xFF00A6FB).withOpacity(0.5), // Warna seleksi teks
+          selectionHandleColor: Color(0xFF00A6FB), // Warna titik pemilih teks
+        ),
+      ),
       debugShowCheckedModeBanner: false,
       home: FutureBuilder(
         future: PenggunaRepository().isPenggunaTerdaftar(),
@@ -184,12 +191,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+        backgroundColor: const Color(0xFFE8F7FF),
         bottomNavigationBar: CurvedNavigationBar(
           index: _selectedIndex,
           animationCurve: Curves.easeInOut,
           animationDuration: const Duration(milliseconds: 300),
-          backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+          backgroundColor: const Color(0xFFE8F7FF),
           color: Colors.blue,
           onTap: (index) {
             _handlePageChanged(index);
