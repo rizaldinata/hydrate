@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -5,15 +6,17 @@ import 'package:intl/intl.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
+// Import event bus
+import 'package:hydrate/core/utils/app_event_bus.dart';
 
 class StatisticScreen extends StatefulWidget {
   const StatisticScreen({Key? key}) : super(key: key);
 
   @override
-  _StatisticScreenState createState() => _StatisticScreenState();
+  StatisticScreenState createState() => StatisticScreenState();
 }
 
-class _StatisticScreenState extends State<StatisticScreen> {
+class StatisticScreenState extends State<StatisticScreen> {
   // Refined Color Palette based on 0xFF00A6FB
   final Color _primaryColor = const Color(0xFF00A6FB); // Vibrant Blue
   final Color _accentColor = const Color(0xFF38BDF8); // Light Blue
@@ -28,6 +31,10 @@ class _StatisticScreenState extends State<StatisticScreen> {
   bool isLoading = true;
   int? userId;
   String? errorMessage;
+  
+  // Stream subscription untuk event bus
+  StreamSubscription? _eventSubscription;
+  final _eventBus = AppEventBus();
 
   @override
   void initState() {
@@ -38,6 +45,26 @@ class _StatisticScreenState extends State<StatisticScreen> {
       statusBarIconBrightness: Brightness.light,
     ));
     _initData();
+    
+    // Subscribe ke event bus untuk refresh data
+    _eventSubscription = _eventBus.stream.listen((event) {
+      if (event.type == 'refresh_statistics' || event.type == 'refresh_all') {
+        refresh();
+      }
+    });
+  }
+  
+  // Metode publik untuk memaksa refresh data
+  void refresh() {
+    print("Refreshing Statistics data...");
+    if (selectedDate.isAtSameMomentAs(DateTime.now())) {
+      _initData();
+    } else {
+      setState(() {
+        selectedDate = DateTime.now();
+      });
+      _initData();
+    }
   }
 
   Future<void> _initData() async {
@@ -403,5 +430,11 @@ class _StatisticScreenState extends State<StatisticScreen> {
         ),
       ),
     );
+  }
+  
+  @override
+  void dispose() {
+    _eventSubscription?.cancel(); // Batalkan subscription saat widget dihapus
+    super.dispose();
   }
 }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,6 +6,8 @@ import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/edit_profile.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
+// Import event bus
+import 'package:hydrate/core/utils/app_event_bus.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onProfileUpdated;
@@ -14,10 +17,10 @@ class ProfileScreen extends StatefulWidget {
   });
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  State<ProfileScreen> createState() => ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class ProfileScreenState extends State<ProfileScreen> {
   // Variabel state
   int? idPengguna;
   String? namaPengguna;
@@ -28,9 +31,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  // Deklarasi Controller
-  final ProfilPenggunaController _profilPenggunaController =
-      ProfilPenggunaController();
+  // Deklarasi Controller 
+  final ProfilPenggunaController _profilPenggunaController = ProfilPenggunaController();
+  
+  // Stream subscription untuk event bus
+  StreamSubscription? _eventSubscription;
+  final _eventBus = AppEventBus();
 
   // function editprofile
   Future<void> _showEditProfile(BuildContext context) async {
@@ -69,14 +75,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (success == true) {
         _loadUserData(); // Refresh data lokal
         widget.onProfileUpdated?.call();  // Callback untuk memberitahu parent widget
+        
+        // Trigger refresh pada halaman lain
+        _eventBus.fire('refresh_all');
       }
     });
+  }
+  
+  // Metode publik untuk memaksa refresh data
+  void refresh() {
+    print("Refreshing Profile data...");
+    _loadUserData();
   }
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    
+    // Subscribe ke event bus untuk refresh data
+    _eventSubscription = _eventBus.stream.listen((event) {
+      if (event.type == 'refresh_profile' || event.type == 'refresh_all') {
+        refresh();
+      }
+    });
   }
 
   Future<void> _loadUserData() async {
@@ -236,13 +258,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-      // Tambahkan refresh gesture
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: _loadUserData,
-      //   mini: true,
-      //   backgroundColor: Colors.white,
-      //   child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
-      // ),
+      // Tambahkan refresh indicator
+      floatingActionButton: FloatingActionButton(
+        onPressed: refresh,
+        mini: true,
+        backgroundColor: Colors.white,
+        child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
+      ),
     );
   }
 
@@ -281,5 +303,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
     );
+  }
+  
+  @override
+  void dispose() {
+    _eventSubscription?.cancel(); // Batalkan subscription saat widget dihapus
+    super.dispose();
   }
 }

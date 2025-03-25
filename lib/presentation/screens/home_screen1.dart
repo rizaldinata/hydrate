@@ -18,10 +18,10 @@ class HomeScreens extends StatefulWidget {
   });
 
   @override
-  State<HomeScreens> createState() => _HomeScreenState();
+  State<HomeScreens> createState() => HomeScreensState();
 }
 
-class _HomeScreenState extends State<HomeScreens>
+class HomeScreensState extends State<HomeScreens>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final HomeController _controller;
   List<Map<String, dynamic>> waterHistory = [];
