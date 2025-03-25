@@ -31,9 +31,10 @@ class ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
 
-  // Deklarasi Controller 
-  final ProfilPenggunaController _profilPenggunaController = ProfilPenggunaController();
-  
+  // Deklarasi Controller
+  final ProfilPenggunaController _profilPenggunaController =
+      ProfilPenggunaController();
+
   // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
@@ -74,14 +75,15 @@ class ProfileScreenState extends State<ProfileScreen> {
     ).then((success) {
       if (success == true) {
         _loadUserData(); // Refresh data lokal
-        widget.onProfileUpdated?.call();  // Callback untuk memberitahu parent widget
-        
+        widget.onProfileUpdated
+            ?.call(); // Callback untuk memberitahu parent widget
+
         // Trigger refresh pada halaman lain
         _eventBus.fire('refresh_all');
       }
     });
   }
-  
+
   // Metode publik untuk memaksa refresh data
   void refresh() {
     print("Refreshing Profile data...");
@@ -92,7 +94,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _loadUserData();
-    
+
     // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event.type == 'refresh_profile' || event.type == 'refresh_all') {
@@ -116,9 +118,10 @@ class ProfileScreenState extends State<ProfileScreen> {
         // final profil =
         //     await _profilPenggunaController.getProfilPengguna((userId));
         setState(() => idPengguna = userId);
-        
+
         final pengguna = await PenggunaRepository().getPenggunaById(userId);
-        final profil = await _profilPenggunaController.getProfilPengguna(userId);
+        final profil =
+            await _profilPenggunaController.getProfilPengguna(userId);
 
         if (pengguna != null) {
           setState(() {
@@ -131,11 +134,12 @@ class ProfileScreenState extends State<ProfileScreen> {
             // jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" ? profil.jenisKelamin : "Laki-laki";
           });
         }
-        
+
         if (profil != null) {
           setState(() {
-            jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" 
-                ? profil.jenisKelamin 
+            jenisKelamin = profil.jenisKelamin == "Laki-laki" ||
+                    profil.jenisKelamin == "Perempuan"
+                ? profil.jenisKelamin
                 : "Laki-laki";
             beratBadan = profil.beratBadan;
             jamBangun = profil.jamBangun;
@@ -165,11 +169,13 @@ class ProfileScreenState extends State<ProfileScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFE8F7FF),
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
-              ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
+              ? Center(
+                  child: Text(_errorMessage,
+                      style: const TextStyle(color: Colors.red)))
               : Stack(
                   children: [
                     SingleChildScrollView(
@@ -178,30 +184,77 @@ class ProfileScreenState extends State<ProfileScreen> {
                           // Kontainer Profil
                           Container(
                             width: double.infinity,
-                            height: screenHeight * 0.56,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF00A6FB),
+                            height: 480,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFF2AD1D1), // Biru muda lebih terang
+                                  Colors.blueAccent, // Biru lebih tua
+                                ],
+                              ),
                               borderRadius: BorderRadius.only(
                                 bottomLeft: Radius.circular(25),
                                 bottomRight: Radius.circular(25),
                               ),
+                              boxShadow: [
+                                // Shadow di bawah untuk efek timbul
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(
+                                      0.2), // Bayangan gelap di bawah
+                                  offset: Offset(4, 4),
+                                  blurRadius: 10,
+                                ),
+                                // Highlight di atas untuk efek cahaya
+                                BoxShadow(
+                                  color: Colors.white
+                                      .withOpacity(0.5), // Cahaya di atas
+                                  offset: Offset(-4, -4),
+                                  blurRadius: 10,
+                                ),
+                              ],
                             ),
                             child: Padding(
                               padding: EdgeInsets.only(
-                                  top: screenHeight * 0.05,
-                                  left: screenWidth * 0.04,
-                                  right: screenWidth * 0.04),
+                                top: screenHeight * 0.05,
+                                left: 20,
+                                right: 20,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Foto Profil
+                                  // Foto Profil dengan Efek Neumorphism
                                   Padding(
                                     padding: EdgeInsets.only(
-                                        top: screenHeight * 0.02, bottom: screenHeight * 0.015),
+                                        top: screenHeight * 0.02,
+                                        bottom: screenHeight * 0.015),
                                     child: Center(
-                                      child: SvgPicture.asset(
-                                        'assets/images/profile.svg', 
-                                        width: screenWidth * 0.2,
+                                      child: Container(
+                                        padding: EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors
+                                              .white, // Warna background profil
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.2),
+                                              offset: Offset(4, 4),
+                                              blurRadius: 8,
+                                            ),
+                                            BoxShadow(
+                                              color:
+                                                  Colors.white.withOpacity(0.6),
+                                              offset: Offset(-4, -4),
+                                              blurRadius: 8,
+                                            ),
+                                          ],
+                                        ),
+                                        child: SvgPicture.asset(
+                                          'assets/images/profile.svg',
+                                          width: screenWidth * 0.2,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -219,40 +272,58 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                     ),
                                   ),
-                                  SizedBox(height: screenHeight * 0.02),
-
-                                  // Informasi Profil
-                                  _profileInfo(Icons.person, "Jenis Kelamin", jenisKelamin ?? 'Laki-laki'),
-                                  _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toInt() ?? '0'} kg"),
-                                  _profileInfo(Icons.wb_sunny, "Jam Bangun", jamBangun ?? 'Belum diatur'),
-                                  _profileInfo(Icons.nightlight_round, "Jam Tidur", jamTidur ?? 'Belum diatur'),
+                                  SizedBox(height: screenHeight * 0.01),
+                                  
+                                  // Informasi Profil dengan Neumorphism Card
+                                  _profileInfo(Icons.person, "Jenis Kelamin",
+                                      jenisKelamin ?? 'Laki-laki'),
+                                  _profileInfo(
+                                      Icons.fitness_center,
+                                      "Berat badan",
+                                      "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
+                                  // _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toInt() ?? '0'} kg"),
+                                  _profileInfo(Icons.wb_sunny, "Jam Bangun",
+                                      jamBangun ?? 'Belum diatur'),
+                                  _profileInfo(Icons.nightlight_round,
+                                      "Jam Tidur", jamTidur ?? 'Belum diatur'),
 
                                   SizedBox(height: screenHeight * 0.01),
 
-                                  // Tombol Edit Profile
+                                  // Tombol Edit Profile dengan Efek Neumorphism
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
                                     child: ElevatedButton(
-                                        onPressed: () => _showEditProfile(context),
-                                        style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(25),
-                                            ),
-                                            minimumSize: Size(
-                                                screenWidth * 0.9, screenHeight * 0.05)),
-                                        child: const Text(
-                                          "Edit Profile",
-                                          style: TextStyle(
-                                              color: Color(0xFF2F2E41),
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 16),
-                                        )),
+                                      onPressed: () =>
+                                          _showEditProfile(context),
+                                      style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(25),
+                                        ),
+                                        elevation:
+                                            5, // Tambahan efek timbul untuk button
+                                        backgroundColor: Colors.white,
+                                        shadowColor:
+                                            Colors.black.withOpacity(0.2),
+                                        minimumSize: Size(screenWidth * 0.9,
+                                            screenHeight * 0.05),
+                                      ),
+                                      child: const Text(
+                                        "Edit Profile",
+                                        style: TextStyle(
+                                          color: Color(0xFF2F2E41),
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
+
                           // Widget lain bisa ditambahkan di sini
                         ],
                       ),
@@ -260,12 +331,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
       // Tambahkan refresh indicator
-      floatingActionButton: FloatingActionButton(
-        onPressed: refresh,
-        mini: true,
-        backgroundColor: Colors.white,
-        child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: refresh,
+      //   mini: true,
+      //   backgroundColor: Colors.white,
+      //   child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
+      // ),
     );
   }
 
@@ -305,7 +376,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
+
   @override
   void dispose() {
     _eventSubscription?.cancel(); // Batalkan subscription saat widget dihapus

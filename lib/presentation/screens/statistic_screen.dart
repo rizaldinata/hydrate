@@ -20,7 +20,7 @@ class StatisticScreenState extends State<StatisticScreen> {
   // Refined Color Palette based on 0xFF00A6FB
   final Color _primaryColor = const Color(0xFF00A6FB); // Vibrant Blue
   final Color _accentColor = const Color(0xFF38BDF8); // Light Blue
-  final Color _backgroundColor = const Color(0xFFF0F9FF); // Very Light Blue
+  final Color _backgroundColor = const Color(0xFFE8F7FF); // Very Light Blue
   final Color _textPrimaryColor = const Color(0xFF0F172A); // Deep Slate
   final Color _textSecondaryColor = const Color(0xFF475569); // Slate Gray
   final Color _surfaceColor = Colors.white;

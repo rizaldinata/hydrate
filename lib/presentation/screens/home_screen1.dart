@@ -766,7 +766,7 @@ class HomeScreensState extends State<HomeScreens>
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+      backgroundColor: const Color(0xFFE8F7FF),
       body: SingleChildScrollView(
         child: Stack(
           children: [
