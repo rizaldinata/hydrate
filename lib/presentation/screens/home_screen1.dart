@@ -510,7 +510,7 @@ class HomeScreensState extends State<HomeScreens>
                         vertical: 10, horizontal: 20),
                     decoration: BoxDecoration(
                       // color: const Color(0xFF69CE6C).withOpacity(0.9), // Warna hijau
-                      color: Colors.white.withOpacity(0.95), // Warna hijau
+                      color: Colors.white.withOpacity(0.90), // Warna hijau
                       borderRadius: BorderRadius.circular(
                           10), // Border radius agar rounded
                       boxShadow: [
