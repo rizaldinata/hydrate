@@ -416,7 +416,7 @@ class _HomeScreenState extends State<HomeScreens>
   String _formatTime(int seconds) {
     int minutes = seconds ~/ 60;
     int secs = seconds % 60;
-    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')} WIB";
+    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
   }
 
   // Show snack bar to indicate added water
@@ -425,42 +425,63 @@ class _HomeScreenState extends State<HomeScreens>
     final overlay = Overlay.of(context);
     final animationController = AnimationController(
       vsync: Navigator.of(context),
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
     );
 
     overlayEntry = OverlayEntry(
       builder: (context) {
         return Positioned(
           top: 50,
-          left: 0,
-          right: 0,
+          left: 20,
+          right: 20,
           child: SlideTransition(
             position: Tween<Offset>(
-              begin: Offset(0, -0.5),
-              end: Offset(0, 0),
+              begin: const Offset(0, -0.5),
+              end: const Offset(0, 0),
             ).animate(CurvedAnimation(
               parent: animationController,
               curve: Curves.easeOut,
             )),
             child: AnimatedOpacity(
               opacity: 1.0,
-              duration: Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
               child: Material(
                 color: Colors.transparent,
                 child: Center(
                   child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 64, 186, 137),
-                      borderRadius: BorderRadius.circular(10),
+                      // color: const Color(0xFF69CE6C).withOpacity(0.9), // Warna hijau
+                      color: Colors.white.withOpacity(0.95), // Warna hijau
+                      borderRadius: BorderRadius.circular(
+                          10), // Border radius agar rounded
                       boxShadow: [
-                        BoxShadow(color: Colors.black26, blurRadius: 5)
+                        BoxShadow(color: Colors.black26, blurRadius: 5),
                       ],
                     ),
-                    child: Text(
-                      "Berhasil menambahkan ${amount.toInt()}  mL air!",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/berhasil.svg',
+                          color: const Color(0xFF3EDAC0),
+                          width: 24, // Ukuran ikon
+                          height: 24,
+                        ),
+                        const SizedBox(width: 16), // Jarak antara ikon dan teks
+                        const Text(
+                          "Berhasil menambahkan air !",
+                          style: TextStyle(
+                              // color: Colors.white,
+                              color: const Color(0xFF2F2E41),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -474,8 +495,9 @@ class _HomeScreenState extends State<HomeScreens>
     overlay.insert(overlayEntry);
     animationController.forward();
 
-    Future.delayed(Duration(seconds: 2), () {
-      animationController.reverse().then((_) {
+    // Hapus snackbar setelah beberapa detik
+    Future.delayed(const Duration(seconds: 2), () {
+      animationController.reverse().then((value) {
         overlayEntry.remove();
       });
     });
@@ -675,6 +697,7 @@ class _HomeScreenState extends State<HomeScreens>
       return "${name.substring(0, lastSpace)}..."; // Jika ada spasi, potong di spasi terakhir
     }
   }
+
   @override
   Widget build(BuildContext context) {
     if (namaPengguna == null) {
@@ -799,13 +822,22 @@ class _HomeScreenState extends State<HomeScreens>
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.05),
                     child: Container(
-                      width: screenWidth * 0.7,
-                      height: 30,
+                      width: screenWidth * 0.75,
+                      height: 40,
                       decoration: BoxDecoration(
-                        color: _remainingSeconds > 0
-                            ? const Color(0XFFFFB831)
-                            : const Color(
-                                0XFFEF9651), // Ubah warna berdasarkan kondisi
+                        gradient: LinearGradient(
+                          colors: _remainingSeconds > 0
+                              ? [
+                                  Color(0xFF38DBC9),
+                                  Color(0xFF38DBC9),
+                                ] // Gradasi Biru ke Merah
+                              : [
+                                  Color(0xFF4EE9BD),
+                                  Color(0xFF07BAE4),
+                                ], // Full Merah saat harus minum
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       alignment: Alignment.center,
@@ -825,16 +857,26 @@ class _HomeScreenState extends State<HomeScreens>
                   Container(
                     width: screenWidth * (0.8 + 0.04),
                     padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
+                    decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.all(Radius.circular(10)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF2F2E41).withOpacity(0.1), // Warna bayangan
+                          blurRadius: 12, // Seberapa jauh bayangan menyebar
+                          offset: Offset(1, 2), // Posisi bayangan (X, Y)
+                        ),
+                      ],
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildDrinkOption(100),
-                        _buildDrinkOption(150),
-                        _buildDrinkOption(200),
+                        _buildDrinkOption(
+                            'assets/images/glass/100.svg', 100, 28),
+                        _buildDrinkOption(
+                            'assets/images/glass/150.svg', 150, 24),
+                        _buildDrinkOption(
+                            'assets/images/glass/200.svg', 200, 24),
                         GestureDetector(
                           onTap: () => _showAddWaterModal(context),
                           child: Container(
@@ -869,23 +911,24 @@ class _HomeScreenState extends State<HomeScreens>
     );
   }
 
-  Widget _buildDrinkOption(double amount) {
+  Widget _buildDrinkOption(String gambar, double amount, double size) {
     return Column(
+      mainAxisSize: MainAxisSize.min, // Supaya ukuran sesuai isi
       children: [
         GestureDetector(
           onTap: () => _animateGlass(amount),
           child: AnimatedContainer(
             duration: const Duration(seconds: 1),
-            transform: Matrix4.translationValues(0, _glassOffsets[amount] ?? 0,
-                0), // Hanya gelas yang diklik bergerak
+            transform:
+                Matrix4.translationValues(0, _glassOffsets[amount] ?? 0, 0),
             child: SvgPicture.asset(
-              'assets/images/glass.svg',
-              fit: BoxFit.contain,
-              width: 30,
-              height: 30,
+              gambar,
+              fit: BoxFit.scaleDown,
+              width: size,
             ),
           ),
         ),
+        const SizedBox(height: 5), // Beri sedikit jarak
         Text(
           '${amount.toInt()} mL',
           style: const TextStyle(
@@ -896,12 +939,5 @@ class _HomeScreenState extends State<HomeScreens>
         ),
       ],
     );
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    _coutdownTimer?.cancel();
-    super.dispose();
   }
 }

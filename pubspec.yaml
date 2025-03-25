@@ -92,7 +92,8 @@ flutter:
 
   assets:
     - assets/images/
-    - assets/images/glass.svg
+    - assets/images/berhasil.svg
+    - assets/images/glass/
     - assets/images/navigasi/
 
   # To add assets to your application, add an assets section, like this:
