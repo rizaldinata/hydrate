@@ -45,14 +45,14 @@ class HomeScreensState extends State<HomeScreens>
 
   Timer? _countdownTimer;
   Duration _remainingTime = Duration.zero;
-  
+
   // Konstanta untuk timer
   static const int _countdownDurationInSeconds = 3600; // 1 jam
   static const String _endTimeKey = 'countdown_end_time';
 
   Map<double, double> _glassOffsets = {};
 
-   // Stream subscription untuk event bus
+  // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
 
@@ -73,7 +73,7 @@ class HomeScreensState extends State<HomeScreens>
     _controller.initAnimation(this);
     _pageController.addListener(() => setState(() {}));
     _loadCountdownState();
-    
+
     // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event.type == 'refresh_home' || event.type == 'refresh_all') {
@@ -99,15 +99,15 @@ class HomeScreensState extends State<HomeScreens>
     _loadUserData();
   }
 
-    // Load timer state based on absolute end time
+  // Load timer state based on absolute end time
   Future<void> _loadCountdownState() async {
     final prefs = await SharedPreferences.getInstance();
     final endTimeMillis = prefs.getInt(_endTimeKey);
-    
+
     if (endTimeMillis != null) {
       final now = DateTime.now().millisecondsSinceEpoch;
       final remainingMillis = endTimeMillis - now;
-      
+
       if (remainingMillis > 0) {
         setState(() {
           _remainingTime = Duration(milliseconds: remainingMillis);
@@ -128,10 +128,11 @@ class HomeScreensState extends State<HomeScreens>
       final now = DateTime.now().millisecondsSinceEpoch;
       final endTimeMillis = now + _remainingTime.inMilliseconds;
       await prefs.setInt(_endTimeKey, endTimeMillis);
-      print("Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
+      print(
+          "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
     }
   }
-  
+
   // Start countdown from the current remaining time
   void _startCountdownFromCurrentState() {
     _countdownTimer?.cancel();
@@ -214,36 +215,32 @@ class HomeScreensState extends State<HomeScreens>
   // Update fungsi _checkAndCreateTodayTarget() untuk menggunakan nilai target dari calculator
   Future<void> _checkAndCreateTodayTarget() async {
     if (idPengguna == null) return;
-    
+
     try {
-      final targetExists = await _targetHidrasiRepository.checkTargetHidrasiExists(
-        idPengguna!,
-        todayDate
-      );
-      
+      final targetExists = await _targetHidrasiRepository
+          .checkTargetHidrasiExists(idPengguna!, todayDate);
+
       if (!targetExists) {
         if (target <= 0) {
           await _hydrationCalculator.initializeData(idPengguna!);
           target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
         }
-        
+
         await _targetHidrasiRepository.createTargetHidrasi(
-          idPengguna!,
-          target,
-          todayDate,
-          0.0
-        );
-        print("Target hidrasi baru dibuat untuk tanggal $todayDate: $target mL");
+            idPengguna!, target, todayDate, 0.0);
+        print(
+            "Target hidrasi baru dibuat untuk tanggal $todayDate: $target mL");
       } else {
-        await _targetHidrasiRepository.updateTargetHidrasiValue(idPengguna!, todayDate);
-        print("Target hidrasi untuk tanggal $todayDate sudah ada dan diperbarui");
-        
-        final updatedTarget = await _targetHidrasiRepository.getTargetHidrasiHarian(
-          idPengguna!, 
-          todayDate
-        );
-        
-        if (updatedTarget != null && (updatedTarget['target_hidrasi'] ?? 0) > 0) {
+        await _targetHidrasiRepository.updateTargetHidrasiValue(
+            idPengguna!, todayDate);
+        print(
+            "Target hidrasi untuk tanggal $todayDate sudah ada dan diperbarui");
+
+        final updatedTarget = await _targetHidrasiRepository
+            .getTargetHidrasiHarian(idPengguna!, todayDate);
+
+        if (updatedTarget != null &&
+            (updatedTarget['target_hidrasi'] ?? 0) > 0) {
           setState(() {
             target = updatedTarget['target_hidrasi'];
           });
@@ -252,7 +249,7 @@ class HomeScreensState extends State<HomeScreens>
       }
     } catch (e) {
       print("Error saat memeriksa/membuat target hidrasi: $e");
-      
+
       try {
         await _hydrationCalculator.initializeData(idPengguna!);
         target = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
@@ -266,47 +263,46 @@ class HomeScreensState extends State<HomeScreens>
   // Update fungsi _loadTodayIntake() untuk menggunakan persentase dari database
   Future<void> _loadTodayIntake() async {
     if (idPengguna == null) return;
-    
+
     try {
-      final targetHarian = await _targetHidrasiRepository.getTargetHidrasiHarian(
-        idPengguna!, 
-        todayDate
-      );
+      final targetHarian = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(idPengguna!, todayDate);
 
       if (targetHarian != null) {
         double targetHidrasi = targetHarian['target_hidrasi'] ?? 0.0;
         double totalHidrasi = targetHarian['total_hidrasi_harian'] ?? 0.0;
         double persentaseHidrasi = targetHarian['persentase_hidrasi'] ?? 0.0;
-        
+
         setState(() {
           target = targetHidrasi;
           currentIntake = totalHidrasi;
           _valueNotifier.value = persentaseHidrasi;
         });
-        
-        print("Data hidrasi dimuat: $totalHidrasi mL dari target $targetHidrasi mL (${persentaseHidrasi.toStringAsFixed(1)}%)");
-        
+
+        print(
+            "Data hidrasi dimuat: $totalHidrasi mL dari target $targetHidrasi mL (${persentaseHidrasi.toStringAsFixed(1)}%)");
+
         if (totalHidrasi > 0 && _remainingTime.inSeconds <= 0) {
           _startCountdown();
         }
       } else {
         await _checkAndCreateTodayTarget();
-        
-        final riwayatHariIni = await _riwayatHidrasiController.getRiwayatHidrasiHariIni(idPengguna!);
-        
+
+        final riwayatHariIni = await _riwayatHidrasiController
+            .getRiwayatHidrasiHariIni(idPengguna!);
+
         double totalIntake = 0;
         for (var riwayat in riwayatHariIni) {
           totalIntake += riwayat.jumlahHidrasi;
         }
-        
+
         if (totalIntake > 0) {
-          await _targetHidrasiRepository.updateTotalHidrasi(idPengguna!, todayDate, totalIntake);
-          
-          final updatedTarget = await _targetHidrasiRepository.getTargetHidrasiHarian(
-            idPengguna!, 
-            todayDate
-          );
-          
+          await _targetHidrasiRepository.updateTotalHidrasi(
+              idPengguna!, todayDate, totalIntake);
+
+          final updatedTarget = await _targetHidrasiRepository
+              .getTargetHidrasiHarian(idPengguna!, todayDate);
+
           if (updatedTarget != null) {
             setState(() {
               currentIntake = totalIntake;
@@ -318,7 +314,7 @@ class HomeScreensState extends State<HomeScreens>
               _valueNotifier.value = min(100, (currentIntake / target) * 100);
             });
           }
-          
+
           if (_remainingTime.inSeconds <= 0) {
             _startCountdown();
           }
@@ -326,16 +322,17 @@ class HomeScreensState extends State<HomeScreens>
       }
     } catch (e) {
       print("Error saat memuat intake hari ini: $e");
-      
+
       try {
         await _hydrationCalculator.initializeData(idPengguna!);
-        final targetHidrasi = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-        
+        final targetHidrasi =
+            _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+
         setState(() {
           target = targetHidrasi;
           _valueNotifier.value = min(100, (currentIntake / target) * 100);
         });
-        
+
         print("Menggunakan target hidrasi fallback: $targetHidrasi mL");
       } catch (e2) {
         print("Error saat menghitung target hidrasi (fallback): $e2");
@@ -356,19 +353,14 @@ class HomeScreensState extends State<HomeScreens>
         fkIdPengguna: idPengguna!,
         jumlahHidrasi: amount,
       );
-      
+
       double newTotalIntake = currentIntake + amount;
       await _targetHidrasiRepository.updateTotalHidrasi(
-        idPengguna!, 
-        todayDate, 
-        newTotalIntake
-      );
-      
-      final targetHarian = await _targetHidrasiRepository.getTargetHidrasiHarian(
-        idPengguna!, 
-        todayDate
-      );
-      
+          idPengguna!, todayDate, newTotalIntake);
+
+      final targetHarian = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(idPengguna!, todayDate);
+
       if (targetHarian != null) {
         double persentase = targetHarian['persentase_hidrasi'] ?? 0.0;
         setState(() {
@@ -382,13 +374,12 @@ class HomeScreensState extends State<HomeScreens>
           _valueNotifier.value = min(100, (currentIntake / target) * 100);
         });
       }
-      
+
       // Notifikasi halaman lain tentang perubahan data hidrasi
       _eventBus.fire('refresh_statistics');
-      
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
-      
+
       setState(() {
         currentIntake += amount;
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
@@ -443,17 +434,18 @@ class HomeScreensState extends State<HomeScreens>
     setState(() {
       _remainingTime = const Duration(seconds: _countdownDurationInSeconds);
     });
-    
+
     // Save absolute end time
     final now = DateTime.now().millisecondsSinceEpoch;
     final endTimeMillis = now + _remainingTime.inMilliseconds;
-    
+
     // Save immediately to SharedPreferences
     SharedPreferences.getInstance().then((prefs) {
       prefs.setInt(_endTimeKey, endTimeMillis);
-      print("Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
+      print(
+          "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
     });
-    
+
     // Start the counter
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
@@ -629,15 +621,18 @@ class HomeScreensState extends State<HomeScreens>
                         height: 50,
                         width: MediaQuery.of(context).size.width - 40,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00A6FB).withOpacity(0.1),
+                          color: const Color(0xFF00A6FB).withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Icon(Icons.water_drop,
-                              size: 24, color: Color(0xFF4ACCFF)),
+                          SvgPicture.asset(
+                            'assets/images/glass2.svg',
+                            width: 32,
+                            height: 32,
+                          ),
                           Text(
                             "mL",
                             style: TextStyle(
@@ -918,7 +913,8 @@ class HomeScreensState extends State<HomeScreens>
                       borderRadius: BorderRadius.all(Radius.circular(10)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF2F2E41).withOpacity(0.1), // Warna bayangan
+                          color: const Color(0xFF2F2E41)
+                              .withOpacity(0.1), // Warna bayangan
                           blurRadius: 12, // Seberapa jauh bayangan menyebar
                           offset: Offset(1, 2), // Posisi bayangan (X, Y)
                         ),
