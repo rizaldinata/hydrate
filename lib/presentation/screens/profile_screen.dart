@@ -40,6 +40,21 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // function editprofile
   Future<void> _showEditProfile(BuildContext context) async {
+    // final session = SessionManager();
+    // final userId = await session.getUserId();
+
+    // if (userId == null) return;
+
+    // final pengguna = await PenggunaRepository().getPenggunaById(userId);
+    // if (pengguna == null) return;
+
+    // await showDialog<bool>(
+    //   context: context,
+    //   builder: (context) => EditProfile(
+    //     userId: userId,
+    //     initialNama: pengguna.nama,
+    //     initialJenisKelamin: jenisKelamin ?? 'Male',
+    //     initialBeratBadan: beratBadan ?? 60.0,
     if (idPengguna == null) {
       _showSnackBar("Tidak dapat mengedit profil. ID pengguna tidak tersedia.");
       return;
@@ -73,7 +88,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-  @override 
+  @override
   void initState() {
     super.initState();
     _loadUserData();
@@ -97,6 +112,9 @@ class ProfileScreenState extends State<ProfileScreen> {
       final userId = await session.getUserId();
 
       if (userId != null) {
+        // final pengguna = await PenggunaRepository().getPenggunaById((userId));
+        // final profil =
+        //     await _profilPenggunaController.getProfilPengguna((userId));
         setState(() => idPengguna = userId);
         
         final pengguna = await PenggunaRepository().getPenggunaById(userId);
@@ -105,6 +123,12 @@ class ProfileScreenState extends State<ProfileScreen> {
         if (pengguna != null) {
           setState(() {
             namaPengguna = pengguna.nama;
+            // if (profil.jenisKelamin == "Female" || profil.jenisKelamin == "Perempuan") {
+            //   jenisKelamin = "Perempuan";
+            // } else {
+            //   jenisKelamin = "Laki-laki";
+            // }
+            // jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" ? profil.jenisKelamin : "Laki-laki";
           });
         }
         

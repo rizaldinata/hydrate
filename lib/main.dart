@@ -47,12 +47,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   int _selectedIndex = 1;
   final _eventBus = AppEventBus();
-  
+
   // Keys untuk memaksa refresh pada widget
   final GlobalKey<StatisticScreenState> _statisticsKey = GlobalKey();
   final GlobalKey<HomeScreensState> _homeKey = GlobalKey();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey();
-  
+
   // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
 
@@ -60,7 +60,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event.type == 'refresh_all') {
@@ -68,14 +68,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       }
     });
   }
-  
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _eventSubscription?.cancel();
     super.dispose();
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -90,7 +90,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     _refreshPage(1);
     _refreshPage(2);
   }
-  
+
   // Metode untuk menandai bahwa halaman tertentu perlu direfresh
   void _refreshPage(int index) {
     switch (index) {
@@ -111,12 +111,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         break;
     }
   }
-  
+
   // Metode untuk refresh halaman yang sedang aktif
   void _refreshCurrentPage() {
     _refreshPage(_selectedIndex);
   }
-  
+
   // Handler untuk perubahan halaman
   void _handlePageChanged(int index) {
     // Jika memilih halaman yang sudah dipilih, refresh halaman tersebut
@@ -124,11 +124,11 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       _refreshCurrentPage();
       return;
     }
-    
+
     setState(() {
       _selectedIndex = index;
     });
-    
+
     // Refresh halaman yang baru dipilih untuk mendapatkan data terbaru
     _refreshCurrentPage();
   }
@@ -217,10 +217,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           children: [
             StatisticScreen(key: _statisticsKey),
             HomeScreens(key: _homeKey),
-            ProfileScreen(key: _profileKey, onProfileUpdated: () {
-              // Ketika profile diperbarui, refresh semua halaman
-              _eventBus.fire('refresh_all');
-            }),
+            ProfileScreen(
+                key: _profileKey,
+                onProfileUpdated: () {
+                  // Ketika profile diperbarui, refresh semua halaman
+                  _eventBus.fire('refresh_all');
+                }),
           ],
         ),
       ),

@@ -34,10 +34,31 @@ class _EditProfileState extends State<EditProfile> {
   final ProfilPenggunaController _controller = ProfilPenggunaController();
   bool _isLoading = false;
 
-  @override 
+  final Map<String, String> genderMap = {
+    "Laki-laki": "Male",
+    "Perempuan": "Female",
+  };
+
+  final Map<String, String> reverseGenderMap = {
+    "Male": "Laki-laki",
+    "Female": "Perempuan",
+  };
+
+  @override
+  @override
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.initialNama);
+    // weightController =
+    //     TextEditingController(text: widget.initialBeratBadan.toString());
+
+    // // Konversi "Male" / "Female" ke "Laki-laki" / "Perempuan"
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ?? 
+    //               (widget.initialJenisKelamin == "Male" ? "Laki-laki" : "Perempuan");
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ?? 
+    //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
+
+
     weightController = TextEditingController(text: widget.initialBeratBadan.toString());
     selectedGender = widget.initialJenisKelamin;
     
@@ -89,8 +110,8 @@ class _EditProfileState extends State<EditProfile> {
 
   void _saveProfile() async {
     // Validasi input
-    if (nameController.text.isEmpty || 
-        selectedGender.isEmpty || 
+    if (nameController.text.isEmpty ||
+        selectedGender.isEmpty ||
         weightController.text.isEmpty) {
       _showOverlayError("Harap isi semua data!");
       return;
@@ -98,6 +119,14 @@ class _EditProfileState extends State<EditProfile> {
 
     final nama = nameController.text;
     final berat = double.tryParse(weightController.text) ?? 0.0;
+
+    // final success = await _controller.updateProfilDanNama(
+    //   userId: widget.userId,
+    //   nama: nama,
+    //   jenisKelamin: selectedGender,
+    //   beratBadan: berat,
+    // );
+
     
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
@@ -226,7 +255,9 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   // Widget untuk input text
-  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool isNumber = false}) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, IconData icon,
+      {bool isNumber = false}) {
     return TextField(
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
@@ -241,13 +272,14 @@ class _EditProfileState extends State<EditProfile> {
   // Widget Dropdown untuk Jenis Kelamin
   Widget _buildDropdown() {
     return DropdownButtonFormField<String>(
-      value: selectedGender,
+      value:
+          selectedGender, // Pastikan nilainya dalam format "Laki-laki" atau "Perempuan"
       decoration: InputDecoration(
         labelText: "Jenis Kelamin",
         prefixIcon: const Icon(Icons.wc, color: Color(0xFF00A6FB)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
       ),
-      items: ["Laki-laki", "Perempuan"].map((String value) {
+      items: genderMap.keys.map((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value),
@@ -257,6 +289,7 @@ class _EditProfileState extends State<EditProfile> {
         setState(() {
           selectedGender = newValue!;
         });
+        print("Jenis Kelamin Dipilih: $selectedGender");
       },
     );
   }
@@ -296,12 +329,14 @@ class _EditProfileState extends State<EditProfile> {
       ),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  // Fungsi untuk menampilkan Overlay Error
+
+// Fungsi untuk menampilkan Overlay Error
   void _showOverlayError(String message) {
     _showOverlay(message, Colors.red);
   }
@@ -338,7 +373,10 @@ class _EditProfileState extends State<EditProfile> {
               ),
               child: Text(
                 message,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -354,3 +392,9 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 }
+
+// class ProfileData {
+//   static String? nama;
+//   static double? beratBadan;
+// }
+// }
