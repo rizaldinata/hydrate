@@ -30,7 +30,7 @@ class _EditProfileState extends State<EditProfile> {
   late String selectedGender;
   late TimeOfDay? wakeUpTime;
   late TimeOfDay? sleepTime;
-  
+
   final ProfilPenggunaController _controller = ProfilPenggunaController();
   bool _isLoading = false;
 
@@ -53,15 +53,15 @@ class _EditProfileState extends State<EditProfile> {
     //     TextEditingController(text: widget.initialBeratBadan.toString());
 
     // // Konversi "Male" / "Female" ke "Laki-laki" / "Perempuan"
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ?? 
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
     //               (widget.initialJenisKelamin == "Male" ? "Laki-laki" : "Perempuan");
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ?? 
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
     //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
 
-
-    weightController = TextEditingController(text: widget.initialBeratBadan.toString());
+    weightController =
+        TextEditingController(text: widget.initialBeratBadan.toString());
     selectedGender = widget.initialJenisKelamin;
-    
+
     // Parse jam bangun dan tidur jika tersedia
     wakeUpTime = _parseTimeString(widget.initialJamBangun);
     sleepTime = _parseTimeString(widget.initialJamTidur);
@@ -69,14 +69,12 @@ class _EditProfileState extends State<EditProfile> {
 
   TimeOfDay? _parseTimeString(String? timeString) {
     if (timeString == null || timeString == 'Belum diatur') return null;
-    
+
     try {
       final parts = timeString.split(':');
       if (parts.length == 2) {
         return TimeOfDay(
-          hour: int.parse(parts[0]), 
-          minute: int.parse(parts[1])
-        );
+            hour: int.parse(parts[0]), minute: int.parse(parts[1]));
       }
     } catch (e) {
       print('Error parsing time: $e');
@@ -92,11 +90,11 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _selectTime(BuildContext context, bool isWakeUpTime) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
-      initialTime: isWakeUpTime 
+      initialTime: isWakeUpTime
           ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
           : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
     );
-    
+
     if (pickedTime != null) {
       setState(() {
         if (isWakeUpTime) {
@@ -127,7 +125,6 @@ class _EditProfileState extends State<EditProfile> {
     //   beratBadan: berat,
     // );
 
-    
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
       return;
@@ -203,25 +200,27 @@ class _EditProfileState extends State<EditProfile> {
                     const SizedBox(height: 15),
 
                     // Berat Badan
-                    _buildTextField(weightController, "Berat Badan (kg)", Icons.fitness_center, isNumber: true),
+                    _buildTextField(weightController, "Berat Badan (kg)",
+                        Icons.fitness_center,
+                        isNumber: true),
 
                     const SizedBox(height: 15),
-                    
+
                     // Jam Bangun
                     _buildTimeSelector(
-                      "Jam Bangun", 
-                      Icons.wb_sunny, 
-                      wakeUpTime, 
+                      "Jam Bangun",
+                      Icons.wb_sunny,
+                      wakeUpTime,
                       () => _selectTime(context, true),
                     ),
-                    
+
                     const SizedBox(height: 15),
-                    
+
                     // Jam Tidur
                     _buildTimeSelector(
-                      "Jam Tidur", 
-                      Icons.nightlight_round, 
-                      sleepTime, 
+                      "Jam Tidur",
+                      Icons.nightlight_round,
+                      sleepTime,
                       () => _selectTime(context, false),
                     ),
 
@@ -232,16 +231,16 @@ class _EditProfileState extends State<EditProfile> {
                       children: [
                         Expanded(
                           child: _buildButton(
-                            "Batal", 
-                            Colors.grey, 
+                            "Batal",
+                            Colors.grey,
                             () => Navigator.pop(context),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _buildButton(
-                            "Simpan", 
-                            Color(0xFF00A6FB), 
+                            "Simpan",
+                            Color(0xFF00A6FB),
                             _saveProfile,
                           ),
                         ),
@@ -259,12 +258,21 @@ class _EditProfileState extends State<EditProfile> {
       TextEditingController controller, String label, IconData icon,
       {bool isNumber = false}) {
     return TextField(
+      cursorColor: const Color(0xFF00A6FB),
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Color(0xFF00A6FB)),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
     );
   }
@@ -295,7 +303,8 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   // Widget untuk Pemilih Waktu
-  Widget _buildTimeSelector(String label, IconData icon, TimeOfDay? time, VoidCallback onTap) {
+  Widget _buildTimeSelector(
+      String label, IconData icon, TimeOfDay? time, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: InputDecorator(
@@ -307,10 +316,9 @@ class _EditProfileState extends State<EditProfile> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(time == null 
-              ? 'Belum diatur' 
-              : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'
-            ),
+            Text(time == null
+                ? 'Belum diatur'
+                : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'),
             const Icon(Icons.arrow_drop_down),
           ],
         ),
@@ -334,7 +342,6 @@ class _EditProfileState extends State<EditProfile> {
       ),
     );
   }
-
 
 // Fungsi untuk menampilkan Overlay Error
   void _showOverlayError(String message) {

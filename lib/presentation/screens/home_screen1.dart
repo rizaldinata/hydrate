@@ -471,7 +471,7 @@ class HomeScreensState extends State<HomeScreens>
     String twoDigits(int n) => n.toString().padLeft(2, '0');
     String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
     String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-    return "${twoDigits(duration.inHours)}:$twoDigitMinutes:$twoDigitSeconds";
+    return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
   // Show snack bar to indicate added water
@@ -883,8 +883,9 @@ class HomeScreensState extends State<HomeScreens>
                         gradient: LinearGradient(
                           colors: _remainingTime > Duration.zero
                               ? [
-                                  Color(0xFF38DBC9),
-                                  Color(0xFF38DBC9),
+                                  Color(0xFF2AD1D1),
+                                  Color(0xFF2AD1D1),
+                                  // Color(0xFF15C3DC),
                                 ] // Gradasi Biru ke Merah
                               : [
                                   Color(0xFF4EE9BD),
@@ -898,7 +899,7 @@ class HomeScreensState extends State<HomeScreens>
                       alignment: Alignment.center,
                       child: Text(
                         _remainingTime > Duration.zero
-                            ? "Hydrasi selanjutnya ${_formatTime(_remainingTime)}"
+                            ? "Hidrasi selanjutnya ${_formatTime(_remainingTime)}"
                             : "SAATNYA MINUM!",
                         textAlign: TextAlign.center,
                         style: const TextStyle(

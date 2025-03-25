@@ -165,7 +165,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 227, 242, 253),
+      backgroundColor: Colors.white,
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
@@ -223,7 +223,7 @@ class ProfileScreenState extends State<ProfileScreen> {
 
                                   // Informasi Profil
                                   _profileInfo(Icons.person, "Jenis Kelamin", jenisKelamin ?? 'Laki-laki'),
-                                  _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
+                                  _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toInt() ?? '0'} kg"),
                                   _profileInfo(Icons.wb_sunny, "Jam Bangun", jamBangun ?? 'Belum diatur'),
                                   _profileInfo(Icons.nightlight_round, "Jam Tidur", jamTidur ?? 'Belum diatur'),
 
@@ -235,6 +235,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                     child: ElevatedButton(
                                         onPressed: () => _showEditProfile(context),
                                         style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
                                               borderRadius: BorderRadius.circular(25),
                                             ),
