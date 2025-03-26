@@ -8,6 +8,7 @@ import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 // Import event bus
 import 'package:hydrate/core/utils/app_event_bus.dart';
+import 'package:lottie/lottie.dart';
 
 class StatisticScreen extends StatefulWidget {
   const StatisticScreen({Key? key}) : super(key: key);
@@ -234,11 +235,8 @@ class StatisticScreenState extends State<StatisticScreen> {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.water_drop_outlined,
-              size: 80, 
-              color: _primaryColor,
-            ),
+            child: Lottie.asset('assets/loading.json',
+                    width: 200, height: 200),
           ),
           const SizedBox(height: 24),
           Text(

@@ -12,6 +12,7 @@ import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
+import 'package:audioplayers/audioplayers.dart';
 // Import event bus
 import 'package:hydrate/core/utils/app_event_bus.dart';
 
@@ -26,6 +27,7 @@ class HomeScreens extends StatefulWidget {
 
 class HomeScreensState extends State<HomeScreens>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+  late AudioPlayer _audioPlayer;
   late final HomeController _controller;
   final PageController _pageController = PageController();
   late HydrationCalculator _hydrationCalculator;
@@ -73,7 +75,7 @@ class HomeScreensState extends State<HomeScreens>
     _controller.initAnimation(this);
     _pageController.addListener(() => setState(() {}));
     _loadCountdownState();
-
+    _audioPlayer = AudioPlayer();
     // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event.type == 'refresh_home' || event.type == 'refresh_all') {
@@ -81,6 +83,32 @@ class HomeScreensState extends State<HomeScreens>
       }
     });
   }
+    @override
+  void dispose() {
+    // Dispose AudioPlayer when widget is disposed
+    _audioPlayer.dispose();
+    _countdownTimer?.cancel();
+    _eventSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+ Future<void> _playDrinkingSound() async {
+  try {
+    print("Attempting to play drinking sound...");
+    // Reset the player to ensure it can play again
+    await _audioPlayer.stop();
+    print("AudioPlayer stopped successfully");
+    
+    // Play the sound
+    await _audioPlayer.play(AssetSource('sounds/drinking_water.mp3'));
+    print("Sound playing started successfully");
+  } catch (e) {
+    print("Error playing sound: $e");
+    // Add more detailed error info
+    print("Error details: ${e.toString()}");
+  }
+}
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -340,13 +368,16 @@ class HomeScreensState extends State<HomeScreens>
     }
   }
 
-  // animasi gelas
+    // Modify _animateGlass method to play sound
   void _animateGlass(double amount) async {
     if (idPengguna == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User tidak teridentifikasi!")));
       return;
     }
+    
+    // Play drinking sound effect
+    _playDrinkingSound();
 
     try {
       await _riwayatHidrasiController.tambahRiwayatHidrasi(
@@ -658,6 +689,8 @@ class HomeScreensState extends State<HomeScreens>
                           );
                           return;
                         }
+                          // Play drinking sound effect
+                        _playDrinkingSound();
 
                         setState(() {
                           selectedWater = tempSelectedWater;

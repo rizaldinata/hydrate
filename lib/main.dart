@@ -9,6 +9,8 @@ import 'package:hydrate/presentation/screens/profile_screen.dart';
 import 'package:hydrate/presentation/screens/statistic_screen.dart';
 import 'dart:async';
 
+import 'package:lottie/lottie.dart';
+
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
@@ -36,7 +38,12 @@ class MyApp extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
-              body: Center(child: CircularProgressIndicator()),
+              backgroundColor: const Color(0xFFE8F7FF),
+              body: Center(
+                // child: CircularProgressIndicator()
+                child: Lottie.asset('assets/loading.json',
+                    width: 200, height: 200),
+              ),
             );
           }
           return snapshot.data == true ? MainScreen() : InfoProduct();
