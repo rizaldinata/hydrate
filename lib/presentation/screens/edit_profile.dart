@@ -424,7 +424,7 @@ class _EditProfileState extends State<EditProfile> {
 
   // Fungsi untuk menampilkan Overlay Sukses
   void _showOverlaySuccess(String message) {
-    _showOverlay(message, Colors.green);
+    _showOverlay(message, Colors.white.withOpacity(0.90));
   }
 
   // Fungsi umum untuk menampilkan overlay
@@ -455,7 +455,7 @@ class _EditProfileState extends State<EditProfile> {
               child: Text(
                 message,
                 style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFF2F2E41),
                     fontSize: 16,
                     fontWeight: FontWeight.bold),
               ),

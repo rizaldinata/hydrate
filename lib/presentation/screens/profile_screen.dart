@@ -313,7 +313,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                         "Edit Profile",
                                         style: TextStyle(
                                           color: Color(0xFF2F2E41),
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                           fontSize: 16,
                                         ),
                                       ),
