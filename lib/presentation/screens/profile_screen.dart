@@ -184,7 +184,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                           // Kontainer Profil
                           Container(
                             width: double.infinity,
-                            height: 480,
+                            height: screenHeight * 0.58,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,

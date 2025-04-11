@@ -41,10 +41,10 @@ class StatisticScreenState extends State<StatisticScreen> {
   void initState() {
     super.initState();
     // Set status bar color to match app theme
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: _primaryColor,
-      statusBarIconBrightness: Brightness.light,
-    ));
+    // SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    //   statusBarColor: _primaryColor,
+    //   statusBarIconBrightness: Brightness.light,
+    // ));
     _initData();
     
     // Subscribe ke event bus untuk refresh data

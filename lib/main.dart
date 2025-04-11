@@ -13,6 +13,7 @@ import 'package:lottie/lottie.dart';
 
 void main(List<String> args) {
   WidgetsFlutterBinding.ensureInitialized();
+  
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
     runApp(MyApp());
