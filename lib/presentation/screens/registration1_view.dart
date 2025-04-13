@@ -17,14 +17,16 @@ class _RegistrationDataState extends State<RegistrationData> {
 
   // Validasi input
   bool _isFormValid() {
+    final weight = double.tryParse(controllerWeight.text);
     return controllerName.text.isNotEmpty &&
         selectedGender.isNotEmpty &&
-        controllerWeight.text.isNotEmpty &&
-        double.tryParse(controllerWeight.text) != null;
+        weight != null &&
+        weight >= 1 &&
+        weight <= 300;
   }
 
   // Fungsi untuk menampilkan modal peringatan
-  Future<void> _showWarningDialog() async {
+  Future<void> _showWarningDialog(String message) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -54,7 +56,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      "Harap lengkapi semua data terlebih dahulu!",
+                      message,
                       style: GoogleFonts.inter(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -382,23 +384,28 @@ class _RegistrationDataState extends State<RegistrationData> {
                         padding: EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: () {
-                        if (_isFormValid()) {
-                          double? weight = double.tryParse(controllerWeight.text);
+                        String name = controllerName.text.trim();
+                        String weightText = controllerWeight.text.trim();
+                        double? weight = double.tryParse(weightText);
 
-                          if (weight != null) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RegistrationTime(
-                                  name: controllerName.text,
-                                  gender: selectedGender, // Menggunakan format yang konsisten dengan database
-                                  weight: weight,
-                                ),
-                              ),
-                            );
-                          }
+                        if (name.isEmpty || weightText.isEmpty) {
+                          _showWarningDialog("Nama dan berat badan tidak boleh kosong.");
+                        } else if (weight == null) {
+                          _showWarningDialog("Masukkan berat badan yang valid");
+                        } else if (weight < 1 || weight > 300) {
+                          _showWarningDialog("Berat badan harus antara 1 kg hingga 300 kg.");
                         } else {
-                          _showWarningDialog();
+                          // Semua valid, lanjut ke halaman berikutnya
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => RegistrationTime(
+                                name: name,
+                                gender: selectedGender,
+                                weight: weight,
+                              ),
+                            ),
+                          );
                         }
                       },
                       child: Text(

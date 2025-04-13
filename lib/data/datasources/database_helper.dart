@@ -43,7 +43,7 @@ class DatabaseHelper {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               fk_id_pengguna INTEGER NOT NULL,
               jenis_kelamin TEXT NOT NULL,
-              berat_badan REAL NOT NULL,
+              berat_badan REAL NOT NULL CHECK (berat_badan >= 1 AND berat_badan <= 300),
               jam_bangun TEXT NOT NULL,
               jam_tidur TEXT NOT NULL,
               FOREIGN KEY (fk_id_pengguna) REFERENCES pengguna (id) ON DELETE CASCADE
@@ -104,12 +104,11 @@ class DatabaseHelper {
   Future<void> updateTargetHidrasiSchema() async {
     try {
       final db = await database;
-      
+
       final columns = await db.rawQuery("PRAGMA table_info(target_hidrasi)");
-      
-      bool hasPersentaseColumn = columns.any((column) => 
-        column['name'] == 'persentase_hidrasi'
-      );
+
+      bool hasPersentaseColumn =
+          columns.any((column) => column['name'] == 'persentase_hidrasi');
 
       if (!hasPersentaseColumn) {
         await db.execute('''
