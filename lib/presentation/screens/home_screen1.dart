@@ -808,12 +808,12 @@ class HomeScreensState extends State<HomeScreens>
                       ),
                     ),
                   ),
-                  const Text(
-                    "Ayo selesaikan pencapaianmu hari ini!",
+                  Text(
+                    currentIntake >= target ? "Pencapaianmu hari ini telah selesai" : "Ayo selesaikan pencapaianmu hari ini",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black54,
+                      color: currentIntake >= target ? Color(0xFF2AD1D1) : Colors.black54,
                     ),
                   ),
                 ],
