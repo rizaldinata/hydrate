@@ -63,6 +63,7 @@ class HomeScreensState extends State<HomeScreens>
     print("Refreshing HomeScreen data...");
     _loadUserData();
     _loadCountdownState();
+    _loadTodayIntake();
   }
 
   @override
@@ -83,7 +84,8 @@ class HomeScreensState extends State<HomeScreens>
       }
     });
   }
-    @override
+
+  @override
   void dispose() {
     // Dispose AudioPlayer when widget is disposed
     _audioPlayer.dispose();
@@ -93,22 +95,22 @@ class HomeScreensState extends State<HomeScreens>
     super.dispose();
   }
 
- Future<void> _playDrinkingSound() async {
-  try {
-    print("Attempting to play drinking sound...");
-    // Reset the player to ensure it can play again
-    await _audioPlayer.stop();
-    print("AudioPlayer stopped successfully");
-    
-    // Play the sound
-    await _audioPlayer.play(AssetSource('sounds/drinking_water.mp3'));
-    print("Sound playing started successfully");
-  } catch (e) {
-    print("Error playing sound: $e");
-    // Add more detailed error info
-    print("Error details: ${e.toString()}");
+  Future<void> _playDrinkingSound() async {
+    try {
+      print("Attempting to play drinking sound...");
+      // Reset the player to ensure it can play again
+      await _audioPlayer.stop();
+      print("AudioPlayer stopped successfully");
+
+      // Play the sound
+      await _audioPlayer.play(AssetSource('sounds/drinking_water.mp3'));
+      print("Sound playing started successfully");
+    } catch (e) {
+      print("Error playing sound: $e");
+      // Add more detailed error info
+      print("Error details: ${e.toString()}");
+    }
   }
-}
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -368,14 +370,14 @@ class HomeScreensState extends State<HomeScreens>
     }
   }
 
-    // Modify _animateGlass method to play sound
+  // Modify _animateGlass method to play sound
   void _animateGlass(double amount) async {
     if (idPengguna == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("User tidak teridentifikasi!")));
       return;
     }
-    
+
     // Play drinking sound effect
     _playDrinkingSound();
 
@@ -416,7 +418,7 @@ class HomeScreensState extends State<HomeScreens>
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
       });
     }
-    
+
     _animateGlassMovement(amount);
     _startCountdown();
     _showAddedWaterPopup(context, amount);
@@ -587,76 +589,77 @@ class HomeScreensState extends State<HomeScreens>
                   ),
                   SizedBox(height: 20),
                   Stack(
-  alignment: Alignment.center,
-  children: [
-    SizedBox(
-      height: 200,
-      child: ListWheelScrollView.useDelegate(
-        itemExtent: 50,
-        perspective: 0.005,
-        diameterRatio: 1.5,
-        physics: FixedExtentScrollPhysics(),
-        controller: FixedExtentScrollController(
-          initialItem: (selectedWater ~/ 50) - 1,
-        ),
-        onSelectedItemChanged: (index) {
-          setModalState(() {
-            tempSelectedWater = (index + 1) * 50;
-          });
-        },
-        childDelegate: ListWheelChildBuilderDelegate(
-          childCount: 20,
-          builder: (context, index) {
-            int waterValue = (index + 1) * 50;
-            return Center(
-              child: Text(
-                "$waterValue",
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: tempSelectedWater == waterValue
-                      ? const Color(0xFF00A6FB)
-                      : Colors.grey,
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    ),
-    IgnorePointer( // biar transparan untuk gesture
-      child: Container(
-        height: 50,
-        width: MediaQuery.of(context).size.width - 40,
-        decoration: BoxDecoration(
-          color: const Color(0xFF00A6FB).withOpacity(0.15),
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    ),
-    IgnorePointer( // biar transparan juga
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          SvgPicture.asset(
-            'assets/images/glass2.svg',
-            width: 32,
-            height: 32,
-          ),
-          Text(
-            "mL",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF2F2E41),
-            ),
-          ),
-        ],
-      ),
-    ),
-  ],
-),
-
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: ListWheelScrollView.useDelegate(
+                          itemExtent: 50,
+                          perspective: 0.005,
+                          diameterRatio: 1.5,
+                          physics: FixedExtentScrollPhysics(),
+                          controller: FixedExtentScrollController(
+                            initialItem: (selectedWater ~/ 50) - 1,
+                          ),
+                          onSelectedItemChanged: (index) {
+                            setModalState(() {
+                              tempSelectedWater = (index + 1) * 50;
+                            });
+                          },
+                          childDelegate: ListWheelChildBuilderDelegate(
+                            childCount: 20,
+                            builder: (context, index) {
+                              int waterValue = (index + 1) * 50;
+                              return Center(
+                                child: Text(
+                                  "$waterValue",
+                                  style: TextStyle(
+                                    fontSize: 40,
+                                    fontWeight: FontWeight.bold,
+                                    color: tempSelectedWater == waterValue
+                                        ? const Color(0xFF00A6FB)
+                                        : Colors.grey,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                      IgnorePointer(
+                        // biar transparan untuk gesture
+                        child: Container(
+                          height: 50,
+                          width: MediaQuery.of(context).size.width - 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00A6FB).withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      IgnorePointer(
+                        // biar transparan juga
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            SvgPicture.asset(
+                              'assets/images/glass2.svg',
+                              width: 32,
+                              height: 32,
+                            ),
+                            Text(
+                              "mL",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF2F2E41),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: 40),
                   SizedBox(
                     width: MediaQuery.of(context).size.width - 100,
@@ -670,7 +673,7 @@ class HomeScreensState extends State<HomeScreens>
                           );
                           return;
                         }
-                          // Play drinking sound effect
+                        // Play drinking sound effect
                         _playDrinkingSound();
 
                         setState(() {
