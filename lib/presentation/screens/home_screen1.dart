@@ -416,17 +416,8 @@ class HomeScreensState extends State<HomeScreens>
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
       });
     }
-
-    setState(() {
-      _glassOffsets[amount] = -40;
-    });
-
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        _glassOffsets[amount] = 0;
-      });
-    });
-
+    
+    _animateGlassMovement(amount);
     _startCountdown();
     _showAddedWaterPopup(context, amount);
   }
@@ -434,29 +425,14 @@ class HomeScreensState extends State<HomeScreens>
 // Fungsi animasi gelas (dipisahkan dari fungsi utama agar tidak mengganggu setState)
   void _animateGlassMovement(double amount) {
     setState(() {
-      _glassOffsets[amount] = -40;
+      _glassOffsets[amount] = -10;
     });
 
-    Future.delayed(const Duration(milliseconds: 300), () {
+    Future.delayed(const Duration(milliseconds: 1000), () {
       setState(() {
         _glassOffsets[amount] = 0;
       });
     });
-  }
-
-  // Function to add water intake (tidak lagi digunakan langsung, hanya sebagai fallback)
-  void _addWater(double amount) {
-    if (target <= 0) {
-      print("Target is not set or invalid");
-      return;
-    }
-
-    setState(() {
-      currentIntake += amount;
-      _valueNotifier.value = min(100, (currentIntake / target) * 100);
-    });
-    _startCountdown();
-    _showAddedWaterPopup(context, amount);
   }
 
   // Start countdown timer
@@ -611,71 +587,76 @@ class HomeScreensState extends State<HomeScreens>
                   ),
                   SizedBox(height: 20),
                   Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        height: 200,
-                        child: ListWheelScrollView.useDelegate(
-                          itemExtent: 50,
-                          perspective: 0.005,
-                          diameterRatio: 1.5,
-                          physics: FixedExtentScrollPhysics(),
-                          controller: FixedExtentScrollController(
-                            initialItem: (selectedWater ~/ 50) - 1,
-                          ),
-                          onSelectedItemChanged: (index) {
-                            setModalState(() {
-                              tempSelectedWater = (index + 1) * 50;
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            childCount: 20,
-                            builder: (context, index) {
-                              int waterValue = (index + 1) * 50;
-                              return Center(
-                                child: Text(
-                                  "$waterValue",
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                    color: tempSelectedWater == waterValue
-                                        ? const Color(0xFF00A6FB)
-                                        : Colors.grey,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      Container(
-                        height: 50,
-                        width: MediaQuery.of(context).size.width - 40,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF00A6FB).withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          SvgPicture.asset(
-                            'assets/images/glass2.svg',
-                            width: 32,
-                            height: 32,
-                          ),
-                          Text(
-                            "mL",
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2F2E41),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+  alignment: Alignment.center,
+  children: [
+    SizedBox(
+      height: 200,
+      child: ListWheelScrollView.useDelegate(
+        itemExtent: 50,
+        perspective: 0.005,
+        diameterRatio: 1.5,
+        physics: FixedExtentScrollPhysics(),
+        controller: FixedExtentScrollController(
+          initialItem: (selectedWater ~/ 50) - 1,
+        ),
+        onSelectedItemChanged: (index) {
+          setModalState(() {
+            tempSelectedWater = (index + 1) * 50;
+          });
+        },
+        childDelegate: ListWheelChildBuilderDelegate(
+          childCount: 20,
+          builder: (context, index) {
+            int waterValue = (index + 1) * 50;
+            return Center(
+              child: Text(
+                "$waterValue",
+                style: TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  color: tempSelectedWater == waterValue
+                      ? const Color(0xFF00A6FB)
+                      : Colors.grey,
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+    IgnorePointer( // biar transparan untuk gesture
+      child: Container(
+        height: 50,
+        width: MediaQuery.of(context).size.width - 40,
+        decoration: BoxDecoration(
+          color: const Color(0xFF00A6FB).withOpacity(0.15),
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
+    ),
+    IgnorePointer( // biar transparan juga
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          SvgPicture.asset(
+            'assets/images/glass2.svg',
+            width: 32,
+            height: 32,
+          ),
+          Text(
+            "mL",
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2F2E41),
+            ),
+          ),
+        ],
+      ),
+    ),
+  ],
+),
+
                   SizedBox(height: 40),
                   SizedBox(
                     width: MediaQuery.of(context).size.width - 100,
