@@ -158,8 +158,8 @@ class HomeScreensState extends State<HomeScreens>
       final now = DateTime.now().millisecondsSinceEpoch;
       final endTimeMillis = now + _remainingTime.inMilliseconds;
       await prefs.setInt(_endTimeKey, endTimeMillis);
-      print(
-          "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
+      // print(
+      //     "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
     }
   }
 
@@ -451,8 +451,8 @@ class HomeScreensState extends State<HomeScreens>
     // Save immediately to SharedPreferences
     SharedPreferences.getInstance().then((prefs) {
       prefs.setInt(_endTimeKey, endTimeMillis);
-      print(
-          "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
+      // print(
+      //     "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
     });
 
     // Start the counter
