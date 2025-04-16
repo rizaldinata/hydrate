@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
-import 'package:hydrate/data/models/pengguna_model.dart';
+// import 'package:hydrate/data/models/pengguna_model.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
@@ -49,7 +50,7 @@ class HomeScreensState extends State<HomeScreens>
   Duration _remainingTime = Duration.zero;
 
   // Konstanta untuk timer
-  static const int _countdownDurationInSeconds = 3600; // 1 jam
+  static const int _countdownDurationInSeconds = 10; // 1 jam
   static const String _endTimeKey = 'countdown_end_time';
 
   Map<double, double> _glassOffsets = {};
@@ -70,6 +71,8 @@ class HomeScreensState extends State<HomeScreens>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // inisialisasi notifikasi
+    NotificationController.initializeLocalNotifications();
     _loadUserData();
     _controller = HomeController();
     _penggunaController = PenggunaController();
@@ -438,7 +441,7 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   // Start countdown timer
-  void _startCountdown() {
+    void _startCountdown() {
     _countdownTimer?.cancel();
     setState(() {
       _remainingTime = const Duration(seconds: _countdownDurationInSeconds);
@@ -462,6 +465,7 @@ class HomeScreensState extends State<HomeScreens>
           _remainingTime -= const Duration(seconds: 1);
         } else {
           timer.cancel();
+          NotificationController.createNewNotification();
         }
       });
     });
