@@ -1,11 +1,45 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-  Future<void> _playDrinkingSound() async {
-    late AudioPlayer _audioPlayer;
+class addWaterWidget extends StatelessWidget {
+  addWaterWidget({super.key});
 
+  late AudioPlayer _audioPlayer;
+  int? idPengguna;
+  StreamSubscription? _eventSubscription;
+
+  @override
+  // void initState() {
+  //   super.initState();
+  //   // WidgetsBinding.instance.addObserver(this);
+  //   // _loadUserData();
+  //   // _controller.initAnimation(this);
+  //   _audioPlayer = AudioPlayer();
+  //   // Subscribe ke event bus untuk refresh data
+  //   _eventSubscription = _eventBus.stream.listen((event) {
+  //     if (event.type == 'refresh_home' || event.type == 'refresh_all') {
+  //       refresh();
+  //     }
+  //   });
+  // }
+
+  @override
+  // void dispose() {
+  //   // Dispose AudioPlayer when widget is disposed
+  //   _audioPlayer.dispose();
+  //   WidgetsBinding.instance.removeObserver(this);
+  //   super.dispose();
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+
+  Future<void> _playDrinkingSound() async {
     try {
       print("Attempting to play drinking sound...");
       // Reset the player to ensure it can play again
@@ -22,187 +56,138 @@ import 'package:flutter_svg/flutter_svg.dart';
     }
   }
 
-class AddWaterModal {
-  int selectedWater = 150;
-  int? idPengguna;
+  // Update fungsi _loadTodayIntake() untuk menggunakan persentase dari database
+  Future<void> _loadTodayIntake() async {
+    if (idPengguna == null) return;
 
-  void show(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        int tempSelectedWater = selectedWater;
+    try {
+      final targetHarian = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(idPengguna!, todayDate);
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              height: 420,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Pilih Ukuran Air",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const Divider(color: Colors.blue, thickness: 1, height: 20),
-                  const SizedBox(height: 20),
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        height: 200,
-                        child: ListWheelScrollView.useDelegate(
-                          itemExtent: 50,
-                          perspective: 0.005,
-                          diameterRatio: 1.5,
-                          physics: const FixedExtentScrollPhysics(),
-                          controller: FixedExtentScrollController(
-                            initialItem: (selectedWater ~/ 50) - 1,
-                          ),
-                          onSelectedItemChanged: (index) {
-                            setModalState(() {
-                              tempSelectedWater = (index + 1) * 50;
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            childCount: 20,
-                            builder: (context, index) {
-                              int waterValue = (index + 1) * 50;
-                              return Center(
-                                child: Text(
-                                  "$waterValue",
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                    color: tempSelectedWater == waterValue
-                                        ? const Color(0xFF00A6FB)
-                                        : Colors.grey,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      IgnorePointer(
-                        child: Container(
-                          height: 50,
-                          width: MediaQuery.of(context).size.width - 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00A6FB).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      IgnorePointer(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/images/glass2.svg',
-                              width: 32,
-                              height: 32,
-                            ),
-                            const Text(
-                              "mL",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2F2E41),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width - 100,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (idPengguna == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("User tidak teridentifikasi!"),
-                            ),
-                          );
-                          return;
-                        }
+      if (targetHarian != null) {
+        double targetHidrasi = targetHarian['target_hidrasi'] ?? 0.0;
+        double totalHidrasi = targetHarian['total_hidrasi_harian'] ?? 0.0;
+        double persentaseHidrasi = targetHarian['persentase_hidrasi'] ?? 0.0;
 
-                        _playDrinkingSound();
+        setState(() {
+          target = targetHidrasi;
+          currentIntake = totalHidrasi;
+          _valueNotifier.value = persentaseHidrasi;
+        });
 
-                        setState(() {
-                          selectedWater = tempSelectedWater;
-                        });
+        print(
+            "Data hidrasi dimuat: $totalHidrasi mL dari target $targetHidrasi mL (${persentaseHidrasi.toStringAsFixed(1)}%)");
 
-                        try {
-                          await _riwayatHidrasiController.tambahRiwayatHidrasi(
-                            fkIdPengguna: idPengguna!,
-                            jumlahHidrasi: selectedWater.toDouble(),
-                          );
+        if (totalHidrasi > 0 && _remainingTime.inSeconds <= 0) {
+          _startCountdown();
+        }
+      } else {
+        await _checkAndCreateTodayTarget();
 
-                          double newTotalIntake = currentIntake + selectedWater;
-                          await _targetHidrasiRepository.updateTotalHidrasi(
-                              idPengguna!, todayDate, newTotalIntake);
+        final riwayatHariIni = await _riwayatHidrasiController
+            .getRiwayatHidrasiHariIni(idPengguna!);
 
-                          final targetHarian = await _targetHidrasiRepository
-                              .getTargetHidrasiHarian(idPengguna!, todayDate);
+        double totalIntake = 0;
+        for (var riwayat in riwayatHariIni) {
+          totalIntake += riwayat.jumlahHidrasi;
+        }
 
-                          if (targetHarian != null) {
-                            double persentase =
-                                targetHarian['persentase_hidrasi'] ?? 0.0;
-                            setState(() {
-                              currentIntake = newTotalIntake;
-                              _valueNotifier.value = persentase;
-                            });
-                          } else {
-                            setState(() {
-                              currentIntake = newTotalIntake;
-                              _valueNotifier.value =
-                                  min(100, (currentIntake / target) * 100);
-                            });
-                          }
-                        } catch (e) {
-                          print("Error saat menambah air: $e");
-                          setState(() {
-                            currentIntake += selectedWater;
-                            _valueNotifier.value =
-                                min(100, (currentIntake / target) * 100);
-                          });
-                        }
+        if (totalIntake > 0) {
+          await _targetHidrasiRepository.updateTotalHidrasi(
+              idPengguna!, todayDate, totalIntake);
 
-                        _startCountdown();
-                        _showAddedWaterPopup(context, selectedWater.toDouble());
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        "Pilih",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+          final updatedTarget = await _targetHidrasiRepository
+              .getTargetHidrasiHarian(idPengguna!, todayDate);
+
+          if (updatedTarget != null) {
+            setState(() {
+              currentIntake = totalIntake;
+              _valueNotifier.value = updatedTarget['persentase_hidrasi'] ?? 0.0;
+            });
+          } else {
+            setState(() {
+              currentIntake = totalIntake;
+              _valueNotifier.value = min(100, (currentIntake / target) * 100);
+            });
+          }
+
+          if (_remainingTime.inSeconds <= 0) {
+            _startCountdown();
+          }
+        }
+      }
+    } catch (e) {
+      print("Error saat memuat intake hari ini: $e");
+
+      try {
+        await _hydrationCalculator.initializeData(idPengguna!);
+        final targetHidrasi =
+            _hydrationCalculator.calculateDailyWaterIntake() * 1000;
+
+        setState(() {
+          target = targetHidrasi;
+          _valueNotifier.value = min(100, (currentIntake / target) * 100);
+        });
+
+        print("Menggunakan target hidrasi fallback: $targetHidrasi mL");
+      } catch (e2) {
+        print("Error saat menghitung target hidrasi (fallback): $e2");
+      }
+    }
+  }
+
+  // Modify _animateGlass method to play sound
+  void _animateGlass(double amount) async {
+    if (idPengguna == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User tidak teridentifikasi!")));
+      return;
+    }
+
+    // Play drinking sound effect
+    _playDrinkingSound();
+
+    try {
+      await _riwayatHidrasiController.tambahRiwayatHidrasi(
+        fkIdPengguna: idPengguna!,
+        jumlahHidrasi: amount,
+      );
+
+      double newTotalIntake = currentIntake + amount;
+      await _targetHidrasiRepository.updateTotalHidrasi(
+          idPengguna!, todayDate, newTotalIntake);
+
+      final targetHarian = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(idPengguna!, todayDate);
+
+      if (targetHarian != null) {
+        double persentase = targetHarian['persentase_hidrasi'] ?? 0.0;
+        setState(() {
+          currentIntake = newTotalIntake;
+          _valueNotifier.value = persentase;
+        });
+        print("Persentase hidrasi diperbarui dari database: $persentase%");
+      } else {
+        setState(() {
+          currentIntake = newTotalIntake;
+          _valueNotifier.value = min(100, (currentIntake / target) * 100);
+        });
+      }
+
+      // Notifikasi halaman lain tentang perubahan data hidrasi
+      _eventBus.fire('refresh_statistics');
+    } catch (e) {
+      print("Gagal menyimpan riwayat: $e");
+
+      setState(() {
+        currentIntake += amount;
+        _valueNotifier.value = min(100, (currentIntake / target) * 100);
+      });
+    }
+
+    _animateGlassMovement(amount);
+    _startCountdown();
+    _showAddedWaterPopup(context, amount);
   }
 }
+
