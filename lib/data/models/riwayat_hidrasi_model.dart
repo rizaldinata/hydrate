@@ -5,6 +5,7 @@ class RiwayatHidrasi {
   final String? tanggalHidrasi;
   final String? waktuHidrasi;
   final String? timestamp;
+  final DateTime? createdAt;
 
   RiwayatHidrasi({
     this.id,
@@ -13,6 +14,7 @@ class RiwayatHidrasi {
     this.tanggalHidrasi,
     this.waktuHidrasi,
     this.timestamp,
+    this.createdAt
   });
 
   Map<String, dynamic> toMap() {
@@ -23,6 +25,7 @@ class RiwayatHidrasi {
       'tanggal_hidrasi': tanggalHidrasi,
       'waktu_hidrasi': waktuHidrasi,
       'timestamp': timestamp,
+      'createdAt' : createdAt,
     };
   }
 
@@ -34,6 +37,13 @@ class RiwayatHidrasi {
       tanggalHidrasi: map['tanggal_hidrasi'],
       waktuHidrasi: map['waktu_hidrasi'],
       timestamp: map['timestamp'],
+      createdAt: map['created_at'] != null 
+          ? DateTime.parse(map['created_at']) 
+          : null,
     );
+  }
+  @override
+  String toString() {
+    return 'RiwayatHidrasi{id: $id, waktu: $waktuHidrasi, createdAt: $createdAt}';
   }
 }

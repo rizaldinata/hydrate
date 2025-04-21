@@ -15,7 +15,7 @@ class RiwayatHidrasiRepository {
       // Dapatkan waktu saat ini dalam WIB (UTC+7)
       final now = DateTime.now().toUtc().add(Duration(hours: 7));
       final tanggalHariIni = DateFormat('yyyy-MM-dd').format(now);
-      final waktuSekarang = DateFormat('HH:mm').format(now);
+      final waktuSekarang = DateFormat('HH:mm:ss').format(now);;
 
       print("Menambahkan riwayat hidrasi dengan jumlah: $jumlahHidrasi pada $tanggalHariIni $waktuSekarang WIB");
 

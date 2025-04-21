@@ -37,6 +37,10 @@ class StatisticScreenState extends State<StatisticScreen> {
   // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
+  
+  // Overlay variables
+  OverlayEntry? _overlayEntry;
+  bool _isOverlayShown = false;
 
   @override
   void initState() {
@@ -146,6 +150,137 @@ class StatisticScreenState extends State<StatisticScreen> {
     );
     if (picked != null && picked != selectedDate) {
       _changeDate(picked);
+    }
+  }
+
+  // Method untuk menampilkan overlay notification
+  void _showOverlayNotification({
+    required String message,
+    String? actionLabel,
+    VoidCallback? onAction,
+    Duration duration = const Duration(seconds: 4),
+    bool isSuccess = false,
+    bool showAction = true,
+  }) {
+    // Jika overlay sudah ditampilkan, hapus terlebih dahulu
+    _hideOverlay();
+    
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 360;
+    
+    // Create the overlay entry
+    _overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 16 + MediaQuery.of(context).padding.top, // Allow some space for status bar
+          left: screenWidth * 0.05,
+          right: screenWidth * 0.05,
+          child: Material(
+            color: Colors.transparent,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(0, -50 * (1 - value)),
+                  child: Opacity(
+                    opacity: value,
+                    child: child,
+                  ),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 12 : 16,
+                  vertical: isSmallScreen ? 10 : 14,
+                ),
+                decoration: BoxDecoration(
+                  color: isSuccess ? Colors.green.shade600 : _primaryColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isSuccess ? Colors.green.shade600 : _primaryColor).withOpacity(0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(isSmallScreen ? 4 : 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isSuccess ? Icons.check : Icons.info_outline,
+                        color: Colors.white,
+                        size: isSmallScreen ? 16 : 18,
+                      ),
+                    ),
+                    SizedBox(width: isSmallScreen ? 8 : 12),
+                    Expanded(
+                      child: Text(
+                        message,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: isSmallScreen ? 13 : 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (showAction && actionLabel != null && onAction != null)
+                      TextButton(
+                        onPressed: () {
+                          _hideOverlay();
+                          onAction();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 8 : 12,
+                            vertical: isSmallScreen ? 4 : 6,
+                          ),
+                          foregroundColor: Colors.white,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text(
+                          actionLabel,
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 12 : 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    
+    // Show the overlay entry
+    Overlay.of(context).insert(_overlayEntry!);
+    _isOverlayShown = true;
+    
+    // Auto-hide after duration
+    Future.delayed(duration, () {
+      _hideOverlay();
+    });
+  }
+
+  // Method untuk menghilangkan overlay
+  void _hideOverlay() {
+    if (_isOverlayShown && _overlayEntry != null) {
+      _overlayEntry!.remove();
+      _overlayEntry = null;
+      _isOverlayShown = false;
     }
   }
 
@@ -267,387 +402,349 @@ class StatisticScreenState extends State<StatisticScreen> {
     );
   }
 
-// Enhanced Water Intake Item with Attractive Dismissible UI// Responsive dismissible water intake item
-Widget _buildWaterIntakeItem(RiwayatHidrasi item) {
-  final String time = item.waktuHidrasi ?? "00:00";
-  final double screenWidth = MediaQuery.of(context).size.width;
-  final bool isSmallScreen = screenWidth < 360;
-  
-  return Dismissible(
-    key: Key(item.id.toString()),
-    background: Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04, // 4% of screen width
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.redAccent.shade200,
-            Colors.red.shade800,
-          ],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
+  // Responsive dismissible water intake item
+  Widget _buildWaterIntakeItem(RiwayatHidrasi item) {
+    final String time = item.waktuHidrasi ?? "00:00:00";
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 360;
+    
+    return Dismissible(
+      key: Key(item.id.toString()),
+      background: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04, // 4% of screen width
+          vertical: 8,
         ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.redAccent.shade200,
+              Colors.red.shade800,
+            ],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
-        ],
-      ),
-      alignment: Alignment.centerRight,
-      padding: EdgeInsets.only(right: screenWidth * 0.06), // 6% of screen width
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          Text(
-            "Hapus",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: isSmallScreen ? 14 : 16,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
             ),
-          ),
-          SizedBox(width: isSmallScreen ? 4 : 8),
-          Icon(
-            Icons.delete_outline_rounded,
-            color: Colors.white,
-            size: isSmallScreen ? 22 : 26,
-          ),
-        ],
-      ),
-    ),
-    direction: DismissDirection.endToStart,
-    confirmDismiss: (direction) async {
-      return await showGeneralDialog(
-        context: context,
-        barrierDismissible: true,
-        barrierLabel: "Dismiss",
-        barrierColor: Colors.black54,
-        transitionDuration: const Duration(milliseconds: 200),
-        pageBuilder: (context, anim1, anim2) {
-          final double dialogWidth = screenWidth * 0.85;
-          final double maxDialogWidth = 450;
-          
-          return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            elevation: 8,
-            contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
-            insetPadding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.05, // 5% of screen width
-              vertical: 24,
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
-                ),
-                const SizedBox(width: 12),
-                const Text("Konfirmasi Hapus"),
-              ],
-            ),
-            content: Container(
-              constraints: BoxConstraints(
-                maxWidth: min(dialogWidth, maxDialogWidth),
+          ],
+        ),
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: screenWidth * 0.06), // 6% of screen width
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Text(
+              "Hapus",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: isSmallScreen ? 14 : 16,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            SizedBox(width: isSmallScreen ? 4 : 8),
+            Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.white,
+              size: isSmallScreen ? 22 : 26,
+            ),
+          ],
+        ),
+      ),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        return await showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel: "Dismiss",
+          barrierColor: Colors.black54,
+          transitionDuration: const Duration(milliseconds: 200),
+          pageBuilder: (context, anim1, anim2) {
+            final double dialogWidth = screenWidth * 0.85;
+            final double maxDialogWidth = 450;
+            
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              elevation: 8,
+              contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.05, // 5% of screen width
+                vertical: 24,
+              ),
+              title: Row(
                 children: [
-                  Text(
-                    "Anda yakin ingin menghapus catatan hidrasi ${item.jumlahHidrasi.toInt()} mL ini?",
-                    style: TextStyle(fontSize: isSmallScreen ? 14 : 16, color: _textPrimaryColor),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.delete_outline_rounded, color: Colors.red),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    "Tindakan ini tidak dapat dibatalkan.",
-                    style: TextStyle(fontSize: isSmallScreen ? 12 : 14, color: _textSecondaryColor),
+                  const SizedBox(width: 12),
+                  const Text("Konfirmasi Hapus"),
+                ],
+              ),
+              content: Container(
+                constraints: BoxConstraints(
+                  maxWidth: min(dialogWidth, maxDialogWidth),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Anda yakin ingin menghapus catatan hidrasi ${item.jumlahHidrasi.toInt()} mL ini?",
+                      style: TextStyle(fontSize: isSmallScreen ? 14 : 16, color: _textPrimaryColor),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Tindakan ini tidak dapat dibatalkan.",
+                      style: TextStyle(fontSize: isSmallScreen ? 12 : 14, color: _textSecondaryColor),
+                    ),
+                  ],
+                ),
+              ),
+              actionsAlignment: MainAxisAlignment.spaceEvenly,
+              actionsPadding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, // 4% of screen width
+                vertical: 12,
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.grey.shade100,
+                    foregroundColor: _textSecondaryColor,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.05, // 5% of screen width
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: Text(
+                    "BATAL", 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.05, // 5% of screen width
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: Text(
+                    "HAPUS", 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          transitionBuilder: (context, anim1, anim2, child) {
+            return ScaleTransition(
+              scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+              child: FadeTransition(
+                opacity: CurvedAnimation(parent: anim1, curve: Curves.easeOut),
+                child: child,
+              ),
+            );
+          },
+        );
+      },
+      onDismissed: (direction) {
+        // Remove item from UI only
+        setState(() {
+          waterHistory.remove(item);
+        });
+        
+        // Tampilkan overlay notification
+        _showOverlayNotification(
+          message: "Catatan hidrasi telah dihapus",
+          actionLabel: "BATALKAN",
+          onAction: () {
+            // Restore the item to the list
+            setState(() {
+              waterHistory = _controller.sortRiwayatByWaktuDescending([...waterHistory, item]);
+            });
+            
+            _showOverlayNotification(
+              message: "Catatan telah dipulihkan",
+              duration: const Duration(seconds: 1),
+              isSuccess: true,
+              showAction: false,
+            );
+          },
+          isSuccess: true,
+        );
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(
+          horizontal: screenWidth * 0.04, // 4% of screen width
+          vertical: 8,
+        ),
+        decoration: BoxDecoration(
+          color: _surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _primaryColor.withOpacity(0.08),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color: _primaryColor.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            splashColor: _primaryColor.withOpacity(0.1),
+            highlightColor: _primaryColor.withOpacity(0.05),
+            onTap: () {
+            },
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.04, // 4% of screen width
+                vertical: 16,
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+                    decoration: BoxDecoration(
+                      color: _primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: SvgPicture.asset(
+                      'assets/images/glass.svg',
+                      width: isSmallScreen ? 24 : 32,
+                      height: isSmallScreen ? 24 : 32,
+                      colorFilter: ColorFilter.mode(_primaryColor, BlendMode.srcIn),
+                    ),
+                  ),
+
+                  SizedBox(width: screenWidth * 0.03), // 3% of screen width
+
+                  // Water Amount with responsive layout
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              "${item.jumlahHidrasi.toInt()} mL",
+                              style: TextStyle(
+                                fontSize: isSmallScreen ? 16 : 18,
+                                fontWeight: FontWeight.w700,
+                                color: _textPrimaryColor,
+                              ),
+                            ),
+                            SizedBox(width: isSmallScreen ? 4 : 8),
+                            // Responsive visual indicator
+                            LayoutBuilder(builder: (context, constraints) {
+                              // Calculate number of dots based on container width
+                              final int maxDots = isSmallScreen ? 3 : 5;
+                              final int dots = min(
+                                (item.jumlahHidrasi / 100).clamp(1, maxDots).toInt(),
+                                maxDots
+                              );
+                              
+                              return Row(
+                                children: List.generate(
+                                  dots,
+                                  (index) => Container(
+                                    margin: const EdgeInsets.only(right: 2),
+                                    width: isSmallScreen ? 4 : 6,
+                                    height: isSmallScreen ? 4 : 6,
+                                    decoration: BoxDecoration(
+                                      color: _primaryColor,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                        Text(
+                          "Konsumsi Air",
+                          style: TextStyle(
+                            fontSize: isSmallScreen ? 10 : 12,
+                            color: _textSecondaryColor,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        
+                        // Responsive time badge
+                        SizedBox(height: isSmallScreen ? 4 : 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 6 : 8,
+                            vertical: isSmallScreen ? 2 : 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _primaryColor.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.access_time_rounded,
+                                size: isSmallScreen ? 12 : 14,
+                                color: _primaryColor,
+                              ),
+                              SizedBox(width: isSmallScreen ? 2 : 4),
+                              Text(
+                                time,
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 11 : 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: _primaryColor,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Hint icon for swipe action
+                  Icon(
+                    Icons.chevron_left,
+                    color: _textSecondaryColor.withOpacity(0.5),
+                    size: isSmallScreen ? 18 : 24,
                   ),
                 ],
               ),
             ),
-            actionsAlignment: MainAxisAlignment.spaceEvenly,
-            actionsPadding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04, // 4% of screen width
-              vertical: 12,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.grey.shade100,
-                  foregroundColor: _textSecondaryColor,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.05, // 5% of screen width
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                child: Text(
-                  "BATAL", 
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isSmallScreen ? 12 : 14,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.05, // 5% of screen width
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                ),
-                child: Text(
-                  "HAPUS", 
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: isSmallScreen ? 12 : 14,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-        transitionBuilder: (context, anim1, anim2, child) {
-          return ScaleTransition(
-            scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
-            child: FadeTransition(
-              opacity: CurvedAnimation(parent: anim1, curve: Curves.easeOut),
-              child: child,
-            ),
-          );
-        },
-      );
-    },
-    onDismissed: (direction) {
-      // Remove item from UI only
-      setState(() {
-        waterHistory.remove(item);
-      });
-      
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(isSmallScreen ? 4 : 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.check, color: Colors.white, size: isSmallScreen ? 16 : 18),
-              ),
-              SizedBox(width: isSmallScreen ? 8 : 12),
-              Flexible(
-                child: Text(
-                  "Catatan hidrasi telah dihapus",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: isSmallScreen ? 13 : 14,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          action: SnackBarAction(
-            label: "BATALKAN",
-            textColor: Colors.white,
-            onPressed: () {
-              // Restore the item to the list
-              setState(() {
-                waterHistory.add(item);
-                // Re-sort the list if needed
-                waterHistory.sort((a, b) => 
-                  (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
-              });
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text("Catatan telah dipulihkan"),
-                  duration: const Duration(seconds: 1),
-                  backgroundColor: _primaryColor,
-                  behavior: SnackBarBehavior.floating,
-                )
-              );
-            },
-          ),
-          backgroundColor: Colors.green.shade600,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          margin: EdgeInsets.symmetric(
-            horizontal: screenWidth * 0.03, // 3% of screen width
-            vertical: 8,
-          ),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    },
-    child: Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04, // 4% of screen width
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        color: _surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: _primaryColor.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          splashColor: _primaryColor.withOpacity(0.1),
-          highlightColor: _primaryColor.withOpacity(0.05),
-          onTap: () {
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04, // 4% of screen width
-              vertical: 16,
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
-                  decoration: BoxDecoration(
-                    color: _primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/images/glass.svg',
-                    width: isSmallScreen ? 24 : 32,
-                    height: isSmallScreen ? 24 : 32,
-                    colorFilter: ColorFilter.mode(_primaryColor, BlendMode.srcIn),
-                  ),
-                ),
-
-                SizedBox(width: screenWidth * 0.03), // 3% of screen width
-
-                // Water Amount with responsive layout
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            "${item.jumlahHidrasi.toInt()} mL",
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 16 : 18,
-                              fontWeight: FontWeight.w700,
-                              color: _textPrimaryColor,
-                            ),
-                          ),
-                          SizedBox(width: isSmallScreen ? 4 : 8),
-                          // Responsive visual indicator
-                          LayoutBuilder(builder: (context, constraints) {
-                            // Calculate number of dots based on container width
-                            final int maxDots = isSmallScreen ? 3 : 5;
-                            final int dots = min(
-                              (item.jumlahHidrasi / 100).clamp(1, maxDots).toInt(),
-                              maxDots
-                            );
-                            
-                            return Row(
-                              children: List.generate(
-                                dots,
-                                (index) => Container(
-                                  margin: const EdgeInsets.only(right: 2),
-                                  width: isSmallScreen ? 4 : 6,
-                                  height: isSmallScreen ? 4 : 6,
-                                  decoration: BoxDecoration(
-                                    color: _primaryColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ],
-                      ),
-                      Text(
-                        "Konsumsi Air",
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 10 : 12,
-                          color: _textSecondaryColor,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      
-                      // Responsive time badge
-                      SizedBox(height: isSmallScreen ? 4 : 8),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmallScreen ? 6 : 8,
-                          vertical: isSmallScreen ? 2 : 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _primaryColor.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: isSmallScreen ? 12 : 14,
-                              color: _primaryColor,
-                            ),
-                            SizedBox(width: isSmallScreen ? 2 : 4),
-                            Text(
-                              time,
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 11 : 13,
-                                fontWeight: FontWeight.w500,
-                                color: _primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Hint icon for swipe action
-                Icon(
-                  Icons.chevron_left,
-                  color: _textSecondaryColor.withOpacity(0.5),
-                  size: isSmallScreen ? 18 : 24,
-                ),
-              ],
-            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -717,6 +814,7 @@ Widget _buildWaterIntakeItem(RiwayatHidrasi item) {
 
   @override
   void dispose() {
+    _hideOverlay(); // Pastikan overlay dihapus saat widget dihapus
     _eventSubscription?.cancel(); // Batalkan subscription saat widget dihapus
     super.dispose();
   }

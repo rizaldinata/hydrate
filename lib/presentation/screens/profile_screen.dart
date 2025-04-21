@@ -6,7 +6,6 @@ import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/edit_profile.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
-// Import event bus
 import 'package:hydrate/core/utils/app_event_bus.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -32,8 +31,7 @@ class ProfileScreenState extends State<ProfileScreen> {
   String _errorMessage = '';
 
   // Deklarasi Controller
-  final ProfilPenggunaController _profilPenggunaController =
-      ProfilPenggunaController();
+  final ProfilPenggunaController _profilPenggunaController = ProfilPenggunaController();
 
   // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
@@ -41,21 +39,6 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   // function editprofile
   Future<void> _showEditProfile(BuildContext context) async {
-    // final session = SessionManager();
-    // final userId = await session.getUserId();
-
-    // if (userId == null) return;
-
-    // final pengguna = await PenggunaRepository().getPenggunaById(userId);
-    // if (pengguna == null) return;
-
-    // await showDialog<bool>(
-    //   context: context,
-    //   builder: (context) => EditProfile(
-    //     userId: userId,
-    //     initialNama: pengguna.nama,
-    //     initialJenisKelamin: jenisKelamin ?? 'Male',
-    //     initialBeratBadan: beratBadan ?? 60.0,
     if (idPengguna == null) {
       _showSnackBar("Tidak dapat mengedit profil. ID pengguna tidak tersedia.");
       return;
@@ -75,8 +58,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     ).then((success) {
       if (success == true) {
         _loadUserData(); // Refresh data lokal
-        widget.onProfileUpdated
-            ?.call(); // Callback untuk memberitahu parent widget
+        widget.onProfileUpdated?.call(); // Callback untuk memberitahu parent widget
 
         // Trigger refresh pada halaman lain
         _eventBus.fire('refresh_all');
@@ -114,31 +96,20 @@ class ProfileScreenState extends State<ProfileScreen> {
       final userId = await session.getUserId();
 
       if (userId != null) {
-        // final pengguna = await PenggunaRepository().getPenggunaById((userId));
-        // final profil =
-        //     await _profilPenggunaController.getProfilPengguna((userId));
         setState(() => idPengguna = userId);
 
         final pengguna = await PenggunaRepository().getPenggunaById(userId);
-        final profil =
-            await _profilPenggunaController.getProfilPengguna(userId);
+        final profil = await _profilPenggunaController.getProfilPengguna(userId);
 
         if (pengguna != null) {
           setState(() {
             namaPengguna = pengguna.nama;
-            // if (profil.jenisKelamin == "Female" || profil.jenisKelamin == "Perempuan") {
-            //   jenisKelamin = "Perempuan";
-            // } else {
-            //   jenisKelamin = "Laki-laki";
-            // }
-            // jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan" ? profil.jenisKelamin : "Laki-laki";
           });
         }
 
         if (profil != null) {
           setState(() {
-            jenisKelamin = profil.jenisKelamin == "Laki-laki" ||
-                    profil.jenisKelamin == "Perempuan"
+            jenisKelamin = profil.jenisKelamin == "Laki-laki" || profil.jenisKelamin == "Perempuan"
                 ? profil.jenisKelamin
                 : "Laki-laki";
             beratBadan = profil.beratBadan;
@@ -165,200 +136,222 @@ class ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
+    // Get device metrics for responsive layout
+    final Size size = MediaQuery.of(context).size;
+    final double screenWidth = size.width;
+    final double screenHeight = size.height;
+    final double paddingTop = MediaQuery.of(context).padding.top;
+    
+    // Adjust profile container height based on screen size
+    final double profileContainerHeight = screenHeight * 0.58;
+    
+    // Adjust padding and spacing based on screen size
+    final double horizontalPadding = screenWidth * 0.05;
+    final double verticalPadding = screenHeight * 0.02;
+    
+    // Adjust font sizes based on screen width
+    final double titleFontSize = screenWidth * 0.04;
+    final double nameFontSize = screenWidth * 0.045;
+    final double infoFontSize = screenWidth * 0.038;
+    
+    // Adjust profile image size
+    final double profileImageSize = screenWidth * 0.2;
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8F7FF),
       body: _isLoading 
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage.isNotEmpty
-              ? Center(
-                  child: Text(_errorMessage,
-                      style: const TextStyle(color: Colors.red)))
-              : Stack(
-                  children: [
-                    SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          // Kontainer Profil
-                          Container(
-                            width: double.infinity,
-                            height: screenHeight * 0.58,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFF2AD1D1), // Biru muda lebih terang
-                                  Colors.blueAccent, // Biru lebih tua
-                                ],
-                              ),
-                              borderRadius: BorderRadius.only(
-                                bottomLeft: Radius.circular(25),
-                                bottomRight: Radius.circular(25),
-                              ),
-                              boxShadow: [
-                                // Shadow di bawah untuk efek timbul
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(
-                                      0.2), // Bayangan gelap di bawah
-                                  offset: Offset(4, 4),
-                                  blurRadius: 10,
-                                ),
-                                // Highlight di atas untuk efek cahaya
-                                BoxShadow(
-                                  color: Colors.white
-                                      .withOpacity(0.5), // Cahaya di atas
-                                  offset: Offset(-4, -4),
-                                  blurRadius: 10,
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                top: screenHeight * 0.05,
-                                left: 20,
-                                right: 20,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Foto Profil dengan Efek Neumorphism
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                        top: screenHeight * 0.02,
-                                        bottom: screenHeight * 0.015),
-                                    child: Center(
-                                      child: Container(
-                                        padding: EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: Colors
-                                              .white, // Warna background profil
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.black.withOpacity(0.2),
-                                              offset: Offset(4, 4),
-                                              blurRadius: 8,
-                                            ),
-                                            BoxShadow(
-                                              color:
-                                                  Colors.white.withOpacity(0.6),
-                                              offset: Offset(-4, -4),
-                                              blurRadius: 8,
-                                            ),
-                                          ],
-                                        ),
-                                        child: SvgPicture.asset(
-                                          'assets/images/profile.svg',
-                                          width: screenWidth * 0.2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  Transform.translate(
-                                    offset: Offset(0, screenHeight * -0.005),
-                                    child: Center(
-                                      child: Text(
-                                        namaPengguna ?? 'Belum diatur',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 18,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: screenHeight * 0.01),
-                                  
-                                  // Informasi Profil dengan Neumorphism Card
-                                  _profileInfo(Icons.person, "Jenis Kelamin",
-                                      jenisKelamin ?? 'Laki-laki'),
-                                  _profileInfo(
-                                      Icons.fitness_center,
-                                      "Berat badan",
-                                      "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg"),
-                                  // _profileInfo(Icons.fitness_center, "Berat badan", "${beratBadan?.toInt() ?? '0'} kg"),
-                                  _profileInfo(Icons.wb_sunny, "Jam Bangun",
-                                      jamBangun ?? 'Belum diatur'),
-                                  _profileInfo(Icons.nightlight_round,
-                                      "Jam Tidur", jamTidur ?? 'Belum diatur'),
-
-                                  SizedBox(height: screenHeight * 0.01),
-
-                                  // Tombol Edit Profile dengan Efek Neumorphism
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
-                                    child: ElevatedButton(
-                                      onPressed: () =>
-                                          _showEditProfile(context),
-                                      style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(25),
-                                        ),
-                                        elevation:
-                                            5, // Tambahan efek timbul untuk button
-                                        backgroundColor: Colors.white,
-                                        shadowColor:
-                                            Colors.black.withOpacity(0.2),
-                                        minimumSize: Size(screenWidth * 0.9,
-                                            screenHeight * 0.05),
-                                      ),
-                                      child: const Text(
-                                        "Edit Profile",
-                                        style: TextStyle(
-                                          color: Color(0xFF2F2E41),
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+              ? Center(child: Text(_errorMessage, style: const TextStyle(color: Colors.red)))
+              : SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // Kontainer Profil dengan ukuran responsif
+                      Container(
+                        width: double.infinity,
+                        height: profileContainerHeight,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF2AD1D1),
+                              Colors.blueAccent,
+                            ],
                           ),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(25),
+                            bottomRight: Radius.circular(25),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              offset: Offset(4, 4),
+                              blurRadius: 10,
+                            ),
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.5),
+                              offset: Offset(-4, -4),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            top: paddingTop + verticalPadding,
+                            left: horizontalPadding,
+                            right: horizontalPadding,
+                            bottom: verticalPadding,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: screenHeight * 0.01),
+                              
+                              // Foto Profil dengan ukuran responsif
+                              Center(
+                                child: Container(
+                                  padding: EdgeInsets.all(screenWidth * 0.025),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        offset: Offset(4, 4),
+                                        blurRadius: 8,
+                                      ),
+                                      BoxShadow(
+                                        color: Colors.white.withOpacity(0.6),
+                                        offset: Offset(-4, -4),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: SvgPicture.asset(
+                                    'assets/images/profile.svg',
+                                    width: profileImageSize,
+                                    height: profileImageSize,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
 
-                          // Widget lain bisa ditambahkan di sini
-                        ],
+                              SizedBox(height: screenHeight * 0.02),
+                              
+                              // Nama pengguna dengan ukuran font responsif
+                              Center(
+                                child: Text(
+                                  namaPengguna ?? 'Belum diatur',
+                                  style: GoogleFonts.inter(
+                                    fontSize: nameFontSize,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              
+                              SizedBox(height: screenHeight * 0.02),
+                              
+                              // Informasi profil dengan spacing responsif
+                              _profileInfo(
+                                Icons.person, 
+                                "Jenis Kelamin",
+                                jenisKelamin ?? 'Laki-laki',
+                                screenWidth,
+                                infoFontSize
+                              ),
+                              _profileInfo(
+                                Icons.fitness_center, 
+                                "Berat badan",
+                                "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg",
+                                screenWidth,
+                                infoFontSize
+                              ),
+                              _profileInfo(
+                                Icons.wb_sunny, 
+                                "Jam Bangun",
+                                jamBangun ?? 'Belum diatur',
+                                screenWidth,
+                                infoFontSize
+                              ),
+                              _profileInfo(
+                                Icons.nightlight_round, 
+                                "Jam Tidur", 
+                                jamTidur ?? 'Belum diatur',
+                                screenWidth,
+                                infoFontSize
+                              ),
+
+                              Spacer(),
+                              
+                              // Tombol Edit Profile dengan ukuran responsif
+                              Center(
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: horizontalPadding,
+                                    vertical: verticalPadding * 0.5,
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () => _showEditProfile(context),
+                                    style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      elevation: 5,
+                                      backgroundColor: Colors.white,
+                                      shadowColor: Colors.black.withOpacity(0.2),
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: screenHeight * 0.015,
+                                      ),
+                                      minimumSize: Size(
+                                        screenWidth * 0.8,
+                                        screenHeight * 0.05,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      "Edit Profile",
+                                      style: TextStyle(
+                                        color: Color(0xFF2F2E41),
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: titleFontSize,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: screenHeight * 0.01),
+                            ],
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      // Tambahan widget di bawah container profil bisa ditambahkan di sini
+                    ],
+                  ),
                 ),
-      // Tambahkan refresh indicator
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: refresh,
-      //   mini: true,
-      //   backgroundColor: Colors.white,
-      //   child: const Icon(Icons.refresh, color: Color(0xFF00A6FB)),
-      // ),
     );
   }
 
-  // Widget untuk informasi profil
-  Widget _profileInfo(IconData icon, String title, String value) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double screenHeight = MediaQuery.of(context).size.height;
-
+  // Widget untuk informasi profil dengan parameter responsif
+  Widget _profileInfo(IconData icon, String title, String value, double screenWidth, double fontSize) {
     return Padding(
       padding: EdgeInsets.symmetric(
-          horizontal: screenWidth * 0.02, vertical: screenHeight * 0.015),
+        vertical: 8.0,
+        horizontal: screenWidth * 0.02,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(icon, color: Colors.white),
-              const SizedBox(width: 10),
+              Icon(icon, color: Colors.white, size: screenWidth * 0.05),
+              SizedBox(width: screenWidth * 0.025),
               Text(
                 title,
                 style: GoogleFonts.inter(
-                  fontSize: 16,
+                  fontSize: fontSize,
                   color: Colors.white,
                 ),
               ),
@@ -367,7 +360,7 @@ class ProfileScreenState extends State<ProfileScreen> {
           Text(
             value,
             style: GoogleFonts.inter(
-              fontSize: 16,
+              fontSize: fontSize,
               color: Colors.white,
               fontWeight: FontWeight.bold,
             ),
