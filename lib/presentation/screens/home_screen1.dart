@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
-// import 'package:hydrate/data/models/pengguna_model.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
@@ -375,70 +374,64 @@ class HomeScreensState extends State<HomeScreens>
 
   // Modify _animateGlass method to play sound
   void _animateGlass(double amount) async {
-    if (idPengguna == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("User tidak teridentifikasi!")));
-      return;
-    }
-
-    // Play drinking sound effect
-    _playDrinkingSound();
-
-    try {
-      await _riwayatHidrasiController.tambahRiwayatHidrasi(
-        fkIdPengguna: idPengguna!,
-        jumlahHidrasi: amount,
-      );
-
-      double newTotalIntake = currentIntake + amount;
-      await _targetHidrasiRepository.updateTotalHidrasi(
-          idPengguna!, todayDate, newTotalIntake);
-
-      final targetHarian = await _targetHidrasiRepository
-          .getTargetHidrasiHarian(idPengguna!, todayDate);
-
-      if (targetHarian != null) {
-        double persentase = targetHarian['persentase_hidrasi'] ?? 0.0;
-        setState(() {
-          currentIntake = newTotalIntake;
-          _valueNotifier.value = persentase;
-        });
-        print("Persentase hidrasi diperbarui dari database: $persentase%");
-      } else {
-        setState(() {
-          currentIntake = newTotalIntake;
-          _valueNotifier.value = min(100, (currentIntake / target) * 100);
-        });
-      }
-
-      // Notifikasi halaman lain tentang perubahan data hidrasi
-      _eventBus.fire('refresh_statistics');
-    } catch (e) {
-      print("Gagal menyimpan riwayat: $e");
-
-      setState(() {
-        currentIntake += amount;
-        _valueNotifier.value = min(100, (currentIntake / target) * 100);
-      });
-    }
-
-    _animateGlassMovement(amount);
-    _startCountdown();
-    _showAddedWaterPopup(context, amount);
+  if (idPengguna == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("User tidak teridentifikasi!")),
+    );
+    return;
   }
 
-// Fungsi animasi gelas (dipisahkan dari fungsi utama agar tidak mengganggu setState)
-  void _animateGlassMovement(double amount) {
+  _playDrinkingSound();
+
+  double newTotalIntake = currentIntake + amount;
+
+  try {
+    await _riwayatHidrasiController.tambahRiwayatHidrasi(
+      fkIdPengguna: idPengguna!,
+      jumlahHidrasi: amount,
+    );
+
+    await _targetHidrasiRepository.updateTotalHidrasi(
+      idPengguna!,
+      todayDate,
+      newTotalIntake,
+    );
+
+    final targetHarian = await _targetHidrasiRepository
+        .getTargetHidrasiHarian(idPengguna!, todayDate);
+
     setState(() {
-      _glassOffsets[amount] = -10;
+      currentIntake = newTotalIntake;
+      _valueNotifier.value = targetHarian != null
+          ? targetHarian['persentase_hidrasi'] ?? 0.0
+          : min(100, (currentIntake / target) * 100);
     });
 
-    Future.delayed(const Duration(milliseconds: 1000), () {
-      setState(() {
-        _glassOffsets[amount] = 0;
-      });
+    if (targetHarian != null) {
+      print("Persentase hidrasi diperbarui dari database: ${_valueNotifier.value}%");
+    }
+
+    _eventBus.fire('refresh_statistics');
+  } catch (e) {
+    print("Gagal menyimpan riwayat: $e");
+    setState(() {
+      currentIntake += amount;
+      _valueNotifier.value = min(100, (currentIntake / target) * 100);
     });
   }
+
+  _animateGlassMovement(amount);
+  _startCountdown();
+  _showAddedWaterPopup(context, amount);
+}
+
+void _animateGlassMovement(double amount) {
+  setState(() => _glassOffsets[amount] = -10);
+  Future.delayed(const Duration(milliseconds: 1000), () {
+    setState(() => _glassOffsets[amount] = 0);
+  });
+}
+
 
   // Start countdown timer
     void _startCountdown() {
