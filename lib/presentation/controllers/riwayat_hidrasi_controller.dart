@@ -25,14 +25,8 @@ class RiwayatHidrasiController {
 
   // Fungsi untuk mengambil riwayat hidrasi berdasarkan tanggal tertentu
   Future<List<RiwayatHidrasi>> getRiwayatHidrasiByTanggal(int idPengguna, DateTime tanggal) async {
-    // Pastikan tanggal dalam zona waktu WIB
-    final DateTime wibTanggal = tanggal.toUtc().add(Duration(hours: 7));
-    final String formattedDate = DateFormat('yyyy-MM-dd').format(wibTanggal);
-    print("[DEBUG Controller] Memuat data untuk tanggal: $formattedDate, userId: $idPengguna");
-    
-    final result = await _repository.getRiwayatHidrasiByTanggal(idPengguna, formattedDate);
-    print("[DEBUG Controller] Jumlah data ditemukan: ${result.length}");
-    return result;
+    final formattedDate = DateFormat('yyyy-MM-dd').format(tanggal);
+    return await _repository.getRiwayatHidrasiByTanggal(idPengguna, formattedDate);
   }
 
   // Fungsi untuk menghitung total hidrasi pada hari ini
@@ -50,5 +44,22 @@ class RiwayatHidrasiController {
   // tampilin semua riwayat hidrasi
   Future<List<RiwayatHidrasi>> getRiwayatHidrasi(int idPengguna) async {
     return await _repository.getRiwayatHidrasi(idPengguna);
+  }
+
+  List<RiwayatHidrasi> sortRiwayatByWaktuDescending(List<RiwayatHidrasi> list) {
+    list.sort((a, b) {
+      final timeA = timeToSeconds(a.waktuHidrasi ?? "00:00");
+      final timeB = timeToSeconds(b.waktuHidrasi ?? "00:00");
+      return timeB.compareTo(timeA); // Descending order
+    });
+    return list;
+  }
+
+  int timeToSeconds(String time) {
+    final parts = time.split(':');
+    final hours = int.tryParse(parts[0]) ?? 0;
+    final minutes = int.tryParse(parts[1]) ?? 0;
+    final seconds = (parts.length > 2) ? int.tryParse(parts[2]) ?? 0 : 0;
+    return hours * 3600 + minutes * 60 + seconds;
   }
 }

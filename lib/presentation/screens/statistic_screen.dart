@@ -404,7 +404,7 @@ class StatisticScreenState extends State<StatisticScreen> {
 
   // Responsive dismissible water intake item
   Widget _buildWaterIntakeItem(RiwayatHidrasi item) {
-    final String time = item.waktuHidrasi ?? "00:00";
+    final String time = item.waktuHidrasi ?? "00:00:00";
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
     
@@ -581,10 +581,7 @@ class StatisticScreenState extends State<StatisticScreen> {
           onAction: () {
             // Restore the item to the list
             setState(() {
-              waterHistory.add(item);
-              // Re-sort the list if needed
-              waterHistory.sort((a, b) => 
-                (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
+              waterHistory = _controller.sortRiwayatByWaktuDescending([...waterHistory, item]);
             });
             
             _showOverlayNotification(
