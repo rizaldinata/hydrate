@@ -34,7 +34,7 @@ class HomeScreensState extends State<HomeScreens>
   double target = 0;
   double currentIntake = 0;
   final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
-  int selectedWater = 150;
+  int selectedWater = 250;
   late final PenggunaController _penggunaController;
   int? idPengguna;
   String? namaPengguna;
@@ -45,6 +45,7 @@ class HomeScreensState extends State<HomeScreens>
   String todayDate = DateFormat('yyyy-MM-dd')
       .format(DateTime.now().toUtc().add(const Duration(hours: 7)));
 
+  DateTime? _endTime;
   Timer? _countdownTimer;
   Duration _remainingTime = Duration.zero;
 
@@ -131,25 +132,62 @@ class HomeScreensState extends State<HomeScreens>
     _loadUserData();
   }
 
+  void _startTimer() {
+    _countdownTimer?.cancel();
+
+    _countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_remainingTime > Duration.zero) {
+          _remainingTime -= Duration(seconds: 1);
+        } else {
+          timer.cancel();
+          NotificationController.createNewNotification();
+        }
+      });
+    });
+  }
+
+  void _startCountdownIfNotRunning() async {
+    if (_countdownTimer != null && _countdownTimer!.isActive) return;
+
+    final now = DateTime.now();
+    _endTime = now.add(Duration(seconds: _countdownDurationInSeconds));
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setInt(_endTimeKey, _endTime!.millisecondsSinceEpoch);
+
+    _remainingTime = Duration(seconds: _countdownDurationInSeconds);
+    _startTimer();
+  }
+
   // Load timer state based on absolute end time
   Future<void> _loadCountdownState() async {
     final prefs = await SharedPreferences.getInstance();
     final endTimeMillis = prefs.getInt(_endTimeKey);
 
     if (endTimeMillis != null) {
-      final now = DateTime.now().millisecondsSinceEpoch;
-      final remainingMillis = endTimeMillis - now;
+      // final now = DateTime.now().millisecondsSinceEpoch;
+      // final remainingMillis = endTimeMillis - now;
 
-      if (remainingMillis > 0) {
-        setState(() {
-          _remainingTime = Duration(milliseconds: remainingMillis);
-        });
-        _startCountdownFromCurrentState();
+      _endTime = DateTime.fromMillisecondsSinceEpoch(endTimeMillis);
+      final now = DateTime.now();
+
+      if (_endTime!.isAfter(now)) {
+        _remainingTime = _endTime!.difference(now);
+        _startTimer(); // lanjutkan timer
       } else {
-        setState(() {
-          _remainingTime = Duration.zero;
-        });
+        _remainingTime = Duration.zero;
       }
+
+      // if (remainingMillis > 0) {
+      //   setState(() {
+      //     _remainingTime = Duration(milliseconds: remainingMillis);
+      //   });
+      //   _startCountdownFromCurrentState();
+      // } else {
+      //   setState(() {
+      //     _remainingTime = Duration.zero;
+      //   });
+      // }
     }
   }
 
@@ -374,94 +412,97 @@ class HomeScreensState extends State<HomeScreens>
 
   // Modify _animateGlass method to play sound
   void _animateGlass(double amount) async {
-  if (idPengguna == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("User tidak teridentifikasi!")),
-    );
-    return;
-  }
-
-  _playDrinkingSound();
-
-  double newTotalIntake = currentIntake + amount;
-
-  try {
-    await _riwayatHidrasiController.tambahRiwayatHidrasi(
-      fkIdPengguna: idPengguna!,
-      jumlahHidrasi: amount,
-    );
-
-    await _targetHidrasiRepository.updateTotalHidrasi(
-      idPengguna!,
-      todayDate,
-      newTotalIntake,
-    );
-
-    final targetHarian = await _targetHidrasiRepository
-        .getTargetHidrasiHarian(idPengguna!, todayDate);
-
-    setState(() {
-      currentIntake = newTotalIntake;
-      _valueNotifier.value = targetHarian != null
-          ? targetHarian['persentase_hidrasi'] ?? 0.0
-          : min(100, (currentIntake / target) * 100);
-    });
-
-    if (targetHarian != null) {
-      print("Persentase hidrasi diperbarui dari database: ${_valueNotifier.value}%");
+    if (idPengguna == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("User tidak teridentifikasi!")),
+      );
+      return;
     }
 
-    _eventBus.fire('refresh_statistics');
-  } catch (e) {
-    print("Gagal menyimpan riwayat: $e");
-    setState(() {
-      currentIntake += amount;
-      _valueNotifier.value = min(100, (currentIntake / target) * 100);
+    _playDrinkingSound();
+
+    double newTotalIntake = currentIntake + amount;
+
+    try {
+      await _riwayatHidrasiController.tambahRiwayatHidrasi(
+        fkIdPengguna: idPengguna!,
+        jumlahHidrasi: amount,
+      );
+
+      await _targetHidrasiRepository.updateTotalHidrasi(
+        idPengguna!,
+        todayDate,
+        newTotalIntake,
+      );
+
+      final targetHarian = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(idPengguna!, todayDate);
+
+      setState(() {
+        currentIntake = newTotalIntake;
+        _valueNotifier.value = targetHarian != null
+            ? targetHarian['persentase_hidrasi'] ?? 0.0
+            : min(100, (currentIntake / target) * 100);
+      });
+
+      if (targetHarian != null) {
+        print(
+            "Persentase hidrasi diperbarui dari database: ${_valueNotifier.value}%");
+      }
+
+      _eventBus.fire('refresh_statistics');
+    } catch (e) {
+      print("Gagal menyimpan riwayat: $e");
+      setState(() {
+        currentIntake += amount;
+        _valueNotifier.value = min(100, (currentIntake / target) * 100);
+      });
+    }
+
+    _startCountdownIfNotRunning();
+    _animateGlassMovement(amount);
+    _startCountdown();
+    _showAddedWaterPopup(context, amount);
+  }
+
+  void _animateGlassMovement(double amount) {
+    setState(() => _glassOffsets[amount] = -10);
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      setState(() => _glassOffsets[amount] = 0);
     });
   }
 
-  _animateGlassMovement(amount);
-  _startCountdown();
-  _showAddedWaterPopup(context, amount);
-}
-
-void _animateGlassMovement(double amount) {
-  setState(() => _glassOffsets[amount] = -10);
-  Future.delayed(const Duration(milliseconds: 1000), () {
-    setState(() => _glassOffsets[amount] = 0);
-  });
-}
-
-
   // Start countdown timer
-    void _startCountdown() {
+  void _startCountdown() {
     _countdownTimer?.cancel();
     setState(() {
       _remainingTime = const Duration(seconds: _countdownDurationInSeconds);
     });
 
-    // Save absolute end time
+    // Save absolute end time (opsional, jika ingin restore countdown saat app dibuka ulang)
     final now = DateTime.now().millisecondsSinceEpoch;
     final endTimeMillis = now + _remainingTime.inMilliseconds;
 
-    // Save immediately to SharedPreferences
     SharedPreferences.getInstance().then((prefs) {
       prefs.setInt(_endTimeKey, endTimeMillis);
-      // print(
-      //     "Timer end time saved: ${DateTime.fromMillisecondsSinceEpoch(endTimeMillis)}");
     });
 
-    // Start the counter
+    // Mulai countdown di UI
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_remainingTime > Duration.zero) {
           _remainingTime -= const Duration(seconds: 1);
         } else {
           timer.cancel();
-          NotificationController.createNewNotification();
+          // Jangan pakai createNewNotification() langsung
+          // Karena kita sudah menjadwalkan sebelumnya
         }
       });
     });
+
+    // 🟡 Gantikan notifikasi langsung dengan scheduled notification:
+    NotificationController.scheduleNotificationInSeconds(
+        _countdownDurationInSeconds);
   }
 
   // Function to format time for countdown
@@ -570,6 +611,10 @@ void _animateGlassMovement(double amount) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
               height: 420,
               padding: EdgeInsets.all(16),
               child: Column(
@@ -806,11 +851,15 @@ void _animateGlassMovement(double amount) {
                     ),
                   ),
                   Text(
-                    currentIntake >= target ? "Pencapaianmu hari ini telah selesai" : "Ayo selesaikan pencapaianmu hari ini",
+                    currentIntake >= target
+                        ? "Pencapaianmu hari ini telah selesai"
+                        : "Ayo selesaikan pencapaianmu hari ini",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: currentIntake >= target ? Color(0xFF2AD1D1) : Colors.black54,
+                      color: currentIntake >= target
+                          ? Color(0xFF2AD1D1)
+                          : Colors.black54,
                     ),
                   ),
                 ],
@@ -935,14 +984,14 @@ void _animateGlassMovement(double amount) {
                       ],
                     ),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _buildDrinkOption(
-                            'assets/images/glass/100.svg', 100, 28),
+                            'assets/images/glass/100ml_glass.svg', 100),
                         _buildDrinkOption(
-                            'assets/images/glass/150.svg', 150, 24),
+                            'assets/images/glass/150ml_glass.svg', 150),
                         _buildDrinkOption(
-                            'assets/images/glass/200.svg', 200, 24),
+                            'assets/images/glass/200ml_glass.svg', 200),
                         GestureDetector(
                           onTap: () => _showAddWaterModal(context),
                           child: Container(
@@ -977,7 +1026,7 @@ void _animateGlassMovement(double amount) {
     );
   }
 
-  Widget _buildDrinkOption(String gambar, double amount, double size) {
+  Widget _buildDrinkOption(String gambar, double amount) {
     return Column(
       mainAxisSize: MainAxisSize.min, // Supaya ukuran sesuai isi
       children: [
@@ -990,7 +1039,7 @@ void _animateGlassMovement(double amount) {
             child: SvgPicture.asset(
               gambar,
               fit: BoxFit.scaleDown,
-              width: size,
+              height: 50,
             ),
           ),
         ),

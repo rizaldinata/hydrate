@@ -22,7 +22,6 @@ class NotificationController {
         debug: true);
   }
 
-  ///     NOTIFICATION EVENTS LISTENER
   ///  Notifications events are only delivered after call this method
   static Future<void> startListeningNotificationEvents() async {
     AwesomeNotifications()
@@ -68,6 +67,28 @@ class NotificationController {
               actionType: ActionType.DismissAction)
         ]);
   }
+
+  static Future<void> scheduleNotificationInSeconds(int seconds) async {
+  await AwesomeNotifications().createNotification(
+    schedule: NotificationInterval(
+      interval: Duration(seconds: seconds),
+      timeZone: await AwesomeNotifications().getLocalTimeZoneIdentifier(),
+      repeats: false,
+      preciseAlarm: true, // untuk memastikan keakuratan waktu
+    ),
+    content: NotificationContent(
+      id: -1,
+      channelKey: 'alerts',
+      title: 'Waktunya Minum!',
+      body: 'Countdown selesai. Jangan lupa minum ya!',
+      notificationLayout: NotificationLayout.Default,
+    ),
+    actionButtons: [
+      NotificationActionButton(key: 'OPEN', label: 'Buka'),
+    ],
+  );
+}
+
 
   // static Future<void> scheduleNotification({
   //   required String title,
