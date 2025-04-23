@@ -68,26 +68,26 @@ class NotificationController {
         ]);
   }
 
-//   static Future<void> scheduleNotificationInSeconds(int seconds) async {
-//   await AwesomeNotifications().createNotification(
-//     schedule: NotificationInterval(
-//       interval: Duration(seconds: seconds),
-//       timeZone: await AwesomeNotifications().getLocalTimeZoneIdentifier(),
-//       repeats: false,
-//       preciseAlarm: true, // untuk memastikan keakuratan waktu
-//     ),
-//     content: NotificationContent(
-//       id: -1,
-//       channelKey: 'alerts',
-//       title: 'Waktunya Minum!',
-//       body: 'Countdown selesai. Jangan lupa minum ya!',
-//       notificationLayout: NotificationLayout.Default,
-//     ),
-//     actionButtons: [
-//       NotificationActionButton(key: 'OPEN', label: 'Buka'),
-//     ],
-//   );
-// }
+  static Future<void> scheduleNotificationInSeconds(int seconds) async {
+  await AwesomeNotifications().createNotification(
+    schedule: NotificationInterval(
+      interval: Duration(seconds: seconds),
+      timeZone: await AwesomeNotifications().getLocalTimeZoneIdentifier(),
+      repeats: false,
+      preciseAlarm: true, // untuk memastikan keakuratan waktu
+    ),
+    content: NotificationContent(
+      id: -1,
+      channelKey: 'alerts',
+      title: 'Waktunya Minum!',
+      body: 'Countdown selesai. Jangan lupa minum ya!',
+      notificationLayout: NotificationLayout.Default,
+    ),
+    actionButtons: [
+      NotificationActionButton(key: 'OPEN', label: 'Buka'),
+    ],
+  );
+}
 
 
   // static Future<void> scheduleNotification({

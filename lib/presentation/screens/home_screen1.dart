@@ -147,17 +147,17 @@ class HomeScreensState extends State<HomeScreens>
     });
   }
 
-  void _startCountdownIfNotRunning() async {
-    if (_countdownTimer != null && _countdownTimer!.isActive) return;
+  // void _startCountdownIfNotRunning() async {
+  //   if (_countdownTimer != null && _countdownTimer!.isActive) return;
 
-    final now = DateTime.now();
-    _endTime = now.add(Duration(seconds: _countdownDurationInSeconds));
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setInt(_endTimeKey, _endTime!.millisecondsSinceEpoch);
+  //   final now = DateTime.now();
+  //   _endTime = now.add(Duration(seconds: _countdownDurationInSeconds));
+  //   final prefs = await SharedPreferences.getInstance();
+  //   prefs.setInt(_endTimeKey, _endTime!.millisecondsSinceEpoch);
 
-    _remainingTime = Duration(seconds: _countdownDurationInSeconds);
-    _startTimer();
-  }
+  //   _remainingTime = Duration(seconds: _countdownDurationInSeconds);
+  //   _startTimer();
+  // }
 
   // Load timer state based on absolute end time
   Future<void> _loadCountdownState() async {
@@ -459,7 +459,7 @@ class HomeScreensState extends State<HomeScreens>
       });
     }
 
-    _startCountdownIfNotRunning();
+    // _startCountdownIfNotRunning();
     _animateGlassMovement(amount);
     _startCountdown();
     _showAddedWaterPopup(context, amount);
@@ -495,14 +495,11 @@ class HomeScreensState extends State<HomeScreens>
         } else {
           timer.cancel();
           // Jangan pakai createNewNotification() langsung
-          // Karena kita sudah menjadwalkan sebelumnya
+          // 🟡 Gantikan notifikasi langsung dengan scheduled notification:
+          NotificationController.createNewNotification();
         }
       });
     });
-
-    // 🟡 Gantikan notifikasi langsung dengan scheduled notification:
-    NotificationController.scheduleNotificationInSeconds(
-        _countdownDurationInSeconds);
   }
 
   // Function to format time for countdown
