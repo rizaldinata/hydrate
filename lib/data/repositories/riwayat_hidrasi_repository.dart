@@ -73,4 +73,33 @@ class RiwayatHidrasiRepository {
       return [];
     }
   }
+
+  // Menghapus Riwayat Hidrasi
+  Future<double?> hapusRiwayatBerdasarkanId(int idRiwayat) async {
+    final db = await _dbHelper.database;
+
+    final List<Map<String, dynamic>> result = await db.query(
+      'riwayat_hidrasi',
+      columns: ['jumlah_hidrasi'],
+      where: 'id = ?',
+      whereArgs: [idRiwayat],
+    );
+
+    if (result.isEmpty) return null;
+
+    final double jumlah = result.first['jumlah_hidrasi'];
+
+    print("Jumlah hidrasi yang akan dihapus: $jumlah");
+
+    final deleteResult = await db.delete(
+      'riwayat_hidrasi',
+      where: 'id = ?',
+      whereArgs: [idRiwayat],
+    );
+
+    // Menampilkan hasil penghapusan
+    print("Jumlah data yang dihapus: $deleteResult");
+
+    return jumlah;
+  }
 }

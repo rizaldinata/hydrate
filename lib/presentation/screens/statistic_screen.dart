@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
@@ -27,6 +28,7 @@ class StatisticScreenState extends State<StatisticScreen> {
   List<RiwayatHidrasi> waterHistory = [];
   DateTime selectedDate = DateTime.now();
   final RiwayatHidrasiController _controller = RiwayatHidrasiController();
+  final TargetHidrasiController targetHidrasiController = TargetHidrasiController();
   bool isLoading = true;
   int? userId;
   String? errorMessage;
@@ -523,6 +525,14 @@ class StatisticScreenState extends State<StatisticScreen> {
         );
 
         _undoTimer = Timer(const Duration(seconds: 4), () {
+          if (_lastDeletedItem != null) {
+            _controller.hapusRiwayatDanKurangiTarget(
+              idRiwayat: _lastDeletedItem!.id ?? 0, 
+              idPengguna: _lastDeletedItem!.fkIdPengguna ?? 0,
+              tanggalHidrasi: _lastDeletedItem!.tanggalHidrasi ?? "", 
+              targetController: targetHidrasiController,
+            );
+          }
           _lastDeletedItem = null;
         });
       },

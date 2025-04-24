@@ -1,3 +1,4 @@
+import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/riwayat_hidrasi_model.dart';
 import '../../data/repositories/riwayat_hidrasi_repository.dart';
@@ -46,6 +47,21 @@ class RiwayatHidrasiController {
     return await _repository.getRiwayatHidrasi(idPengguna);
   }
 
+  // Hapus Riwayat Hidrasi
+  Future<void> hapusRiwayatDanKurangiTarget({
+    required int idRiwayat,
+    required int idPengguna,
+    required String tanggalHidrasi,
+    required TargetHidrasiController targetController,
+  }) async {
+    final jumlah = await _repository.hapusRiwayatBerdasarkanId(idRiwayat);
+    if (jumlah != null) {
+      print('Menghapus riwayat hidrasi dengan ID: $idRiwayat');
+      await targetController.kurangiHidrasi(idPengguna, jumlah);
+    }
+  }
+
+  // Function Sort Riwayat
   List<RiwayatHidrasi> sortRiwayatByWaktuDescending(List<RiwayatHidrasi> list) {
     list.sort((a, b) {
       final timeA = timeToSeconds(a.waktuHidrasi ?? "00:00");
@@ -55,6 +71,7 @@ class RiwayatHidrasiController {
     return list;
   }
 
+  // Function Mengubah waktu ke second
   int timeToSeconds(String time) {
     final parts = time.split(':');
     final hours = int.tryParse(parts[0]) ?? 0;

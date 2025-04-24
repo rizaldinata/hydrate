@@ -60,4 +60,11 @@ class TargetHidrasiController {
     final String formattedDate = DateFormat('yyyy-MM-dd').format(tanggal);
     return await _repository.getTargetHidrasi(idPengguna, formattedDate);
   }
+
+  // Mengurangi target hidrasi harian
+  Future<void> kurangiHidrasi(int idPengguna, double jumlahHidrasi) async {
+    final double totalSaatIni = await getTotalHidrasiHariIni(idPengguna);
+    final double totalBaru = totalSaatIni - jumlahHidrasi;
+    await updateTotalHidrasi(idPengguna, totalBaru);
+  }
 }
