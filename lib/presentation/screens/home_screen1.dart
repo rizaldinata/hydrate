@@ -117,6 +117,7 @@ class HomeScreensState extends State<HomeScreens>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _loadUserData();
       _loadCountdownState(); // Reload countdown timer when app resumes
@@ -330,7 +331,7 @@ class HomeScreensState extends State<HomeScreens>
     }
   }
 
-  // Update fungsi _loadTodayIntake() untuk menggunakan persentase dari database
+// Update fungsi _loadTodayIntake() untuk menggunakan persentase dari database secara konsisten
   Future<void> _loadTodayIntake() async {
     if (idPengguna == null) return;
 
@@ -356,8 +357,10 @@ class HomeScreensState extends State<HomeScreens>
           _startCountdown();
         }
       } else {
+        // If no target exists for today, create one first
         await _checkAndCreateTodayTarget();
 
+        // Check for any existing hydration records for today
         final riwayatHariIni = await _riwayatHidrasiController
             .getRiwayatHidrasiHariIni(idPengguna!);
 
@@ -366,51 +369,85 @@ class HomeScreensState extends State<HomeScreens>
           totalIntake += riwayat.jumlahHidrasi;
         }
 
+        // If there are records, update the total in the database
         if (totalIntake > 0) {
           await _targetHidrasiRepository.updateTotalHidrasi(
               idPengguna!, todayDate, totalIntake);
 
+          // Always get fresh data from database after updating
           final updatedTarget = await _targetHidrasiRepository
               .getTargetHidrasiHarian(idPengguna!, todayDate);
 
           if (updatedTarget != null) {
             setState(() {
-              currentIntake = totalIntake;
+              currentIntake =
+                  updatedTarget['total_hidrasi_harian'] ?? totalIntake;
               _valueNotifier.value = updatedTarget['persentase_hidrasi'] ?? 0.0;
+              target = updatedTarget['target_hidrasi'] ?? target;
             });
+
+            print(
+                "Data hidrasi diperbarui: $currentIntake mL dari target $target mL (${_valueNotifier.value.toStringAsFixed(1)}%)");
           } else {
+            // This should rarely happen as we just created/updated the record
+            print("Warning: Target hidrasi not found after update");
             setState(() {
               currentIntake = totalIntake;
-              _valueNotifier.value = min(100, (currentIntake / target) * 100);
             });
+
+            // Try one more time to get data from database
+            await _loadTodayIntake();
           }
 
           if (_remainingTime.inSeconds <= 0) {
             _startCountdown();
           }
+        } else {
+          // No records yet today, just set the UI with zero intake
+          setState(() {
+            currentIntake = 0;
+            _valueNotifier.value = 0;
+          });
+
+          print("Tidak ada riwayat hidrasi hari ini. Target: $target mL");
         }
       }
     } catch (e) {
       print("Error saat memuat intake hari ini: $e");
 
       try {
+        // In case of database error, calculate a temporary target
         await _hydrationCalculator.initializeData(idPengguna!);
         final targetHidrasi =
             _hydrationCalculator.calculateDailyWaterIntake() * 1000;
 
-        setState(() {
-          target = targetHidrasi;
-          _valueNotifier.value = min(100, (currentIntake / target) * 100);
-        });
+        // Get any saved data from database even if there was an error earlier
+        final targetHarian = await _targetHidrasiRepository
+            .getTargetHidrasiHarian(idPengguna!, todayDate);
 
-        print("Menggunakan target hidrasi fallback: $targetHidrasi mL");
+        if (targetHarian != null) {
+          // If we can get data, use it
+          setState(() {
+            target = targetHarian['target_hidrasi'] ?? targetHidrasi;
+            currentIntake = targetHarian['total_hidrasi_harian'] ?? 0.0;
+            _valueNotifier.value = targetHarian['persentase_hidrasi'] ?? 0.0;
+          });
+        } else {
+          // Last resort fallback
+          setState(() {
+            target = targetHidrasi;
+            // Don't calculate percentage here, keep at 0 or previous value
+          });
+        }
+
+        print("Menggunakan target hidrasi fallback: $target mL");
       } catch (e2) {
         print("Error saat menghitung target hidrasi (fallback): $e2");
       }
     }
   }
 
-  // Modify _animateGlass method to play sound
+  // Modify _animateGlass method to play sound// Improved version of _animateGlass method to ensure consistent database updates and UI
   void _animateGlass(double amount) async {
     if (idPengguna == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -421,47 +458,78 @@ class HomeScreensState extends State<HomeScreens>
 
     _playDrinkingSound();
 
-    double newTotalIntake = currentIntake + amount;
-
     try {
+      // Add to history first
       await _riwayatHidrasiController.tambahRiwayatHidrasi(
         fkIdPengguna: idPengguna!,
         jumlahHidrasi: amount,
       );
 
+      // Calculate new total (for local reference only)
+      double newTotalIntake = currentIntake + amount;
+
+      // Update total in database
       await _targetHidrasiRepository.updateTotalHidrasi(
         idPengguna!,
         todayDate,
         newTotalIntake,
       );
 
+      // Get fresh data from database including percentage
       final targetHarian = await _targetHidrasiRepository
           .getTargetHidrasiHarian(idPengguna!, todayDate);
 
-      setState(() {
-        currentIntake = newTotalIntake;
-        _valueNotifier.value = targetHarian != null
-            ? targetHarian['persentase_hidrasi'] ?? 0.0
-            : min(100, (currentIntake / target) * 100);
-      });
-
       if (targetHarian != null) {
+        setState(() {
+          // Always use values from database for consistency
+          currentIntake =
+              targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
+          _valueNotifier.value = targetHarian['persentase_hidrasi'] ?? 0.0;
+          target = targetHarian['target_hidrasi'] ?? target;
+        });
+
         print(
             "Persentase hidrasi diperbarui dari database: ${_valueNotifier.value}%");
+      } else {
+        // Fallback if database query fails
+        print("Warning: Failed to get updated data from database");
+        setState(() {
+          currentIntake = newTotalIntake;
+          // Keep using the previous value notifier value as fallback
+        });
+
+        // Try to refresh from database one more time
+        await _loadTodayIntake();
       }
 
+      // Notify other components to refresh
       _eventBus.fire('refresh_statistics');
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
+
+      // Only update UI locally if database operations failed
       setState(() {
         currentIntake += amount;
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
       });
+
+      // Show error to user
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              "Gagal menyimpan data: ${e.toString().substring(0, min(50, e.toString().length))}..."),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
 
-    // _startCountdownIfNotRunning();
+    // Animate the glass UI
     _animateGlassMovement(amount);
+
+    // Start the countdown timer
     _startCountdown();
+
+    // Show success popup
     _showAddedWaterPopup(context, amount);
   }
 
@@ -707,12 +775,11 @@ class HomeScreensState extends State<HomeScreens>
                         if (idPengguna == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("User tidak teridentifikasi!"),
-                            ),
+                                content: Text("User tidak teridentifikasi!")),
                           );
                           return;
                         }
-                        // Play drinking sound effect
+
                         _playDrinkingSound();
 
                         setState(() {
@@ -720,46 +787,34 @@ class HomeScreensState extends State<HomeScreens>
                         });
 
                         try {
-                          // Simpan riwayat hidrasi
+                          // Save hydration record
                           await _riwayatHidrasiController.tambahRiwayatHidrasi(
                             fkIdPengguna: idPengguna!,
                             jumlahHidrasi: selectedWater.toDouble(),
                           );
 
-                          // Perbarui total hidrasi di tabel target_hidrasi
+                          // Update total in target_hidrasi
                           double newTotalIntake = currentIntake + selectedWater;
                           await _targetHidrasiRepository.updateTotalHidrasi(
                               idPengguna!, todayDate, newTotalIntake);
 
-                          // Dapatkan persentase terbaru dari database
+                          // Always get fresh data from database
                           final targetHarian = await _targetHidrasiRepository
                               .getTargetHidrasiHarian(idPengguna!, todayDate);
 
-                          if (targetHarian != null) {
-                            // Gunakan persentase yang disimpan di database
-                            double persentase =
-                                targetHarian['persentase_hidrasi'] ?? 0.0;
-                            setState(() {
-                              currentIntake = newTotalIntake;
-                              _valueNotifier.value = persentase;
-                            });
-                            print(
-                                "Modal: Persentase hidrasi diperbarui dari database: $persentase%");
-                          } else {
-                            setState(() {
-                              currentIntake = newTotalIntake;
+                          setState(() {
+                            if (targetHarian != null) {
+                              currentIntake =
+                                  targetHarian['total_hidrasi_harian'] ??
+                                      newTotalIntake;
                               _valueNotifier.value =
-                                  min(100, (currentIntake / target) * 100);
-                            });
-                          }
+                                  targetHarian['persentase_hidrasi'] ?? 0.0;
+                            } else {
+                              currentIntake = newTotalIntake;
+                            }
+                          });
                         } catch (e) {
                           print("Error saat menambah air: $e");
-                          // Fallback jika gagal mengakses database
-                          setState(() {
-                            currentIntake += selectedWater;
-                            _valueNotifier.value =
-                                min(100, (currentIntake / target) * 100);
-                          });
                         }
 
                         _startCountdown();
