@@ -13,6 +13,7 @@ import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:confetti/confetti.dart';
 // Import event bus
 import 'package:hydrate/core/utils/app_event_bus.dart';
 
@@ -33,6 +34,7 @@ class HomeScreensState extends State<HomeScreens>
   late HydrationCalculator _hydrationCalculator;
   double target = 0;
   double currentIntake = 0;
+  double previousIntake = 0;
   final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
   int selectedWater = 250;
   late final PenggunaController _penggunaController;
@@ -465,6 +467,8 @@ class HomeScreensState extends State<HomeScreens>
         jumlahHidrasi: amount,
       );
 
+      previousIntake = currentIntake;
+
       // Calculate new total (for local reference only)
       double newTotalIntake = currentIntake + amount;
 
@@ -482,6 +486,7 @@ class HomeScreensState extends State<HomeScreens>
       if (targetHarian != null) {
         setState(() {
           // Always use values from database for consistency
+          previousIntake = currentIntake;
           currentIntake =
               targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
           _valueNotifier.value = targetHarian['persentase_hidrasi'] ?? 0.0;
@@ -494,6 +499,7 @@ class HomeScreensState extends State<HomeScreens>
         // Fallback if database query fails
         print("Warning: Failed to get updated data from database");
         setState(() {
+          previousIntake = currentIntake;
           currentIntake = newTotalIntake;
           // Keep using the previous value notifier value as fallback
         });
@@ -509,6 +515,7 @@ class HomeScreensState extends State<HomeScreens>
 
       // Only update UI locally if database operations failed
       setState(() {
+        previousIntake = currentIntake;
         currentIntake += amount;
         _valueNotifier.value = min(100, (currentIntake / target) * 100);
       });
@@ -531,6 +538,8 @@ class HomeScreensState extends State<HomeScreens>
 
     // Show success popup
     _showAddedWaterPopup(context, amount);
+    //show alert
+    checkTargetAndShowAlert(context);
   }
 
   void _animateGlassMovement(double amount) {
@@ -794,6 +803,7 @@ class HomeScreensState extends State<HomeScreens>
                           );
 
                           // Update total in target_hidrasi
+                          previousIntake = currentIntake;
                           double newTotalIntake = currentIntake + selectedWater;
                           await _targetHidrasiRepository.updateTotalHidrasi(
                               idPengguna!, todayDate, newTotalIntake);
@@ -804,12 +814,14 @@ class HomeScreensState extends State<HomeScreens>
 
                           setState(() {
                             if (targetHarian != null) {
+                              previousIntake = currentIntake;
                               currentIntake =
                                   targetHarian['total_hidrasi_harian'] ??
                                       newTotalIntake;
                               _valueNotifier.value =
                                   targetHarian['persentase_hidrasi'] ?? 0.0;
                             } else {
+                              previousIntake = currentIntake;
                               currentIntake = newTotalIntake;
                             }
                           });
@@ -820,6 +832,8 @@ class HomeScreensState extends State<HomeScreens>
                         _startCountdown();
                         _showAddedWaterPopup(context, selectedWater.toDouble());
                         Navigator.pop(context);
+                        //show alert
+                        checkTargetAndShowAlert(context);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
@@ -845,6 +859,112 @@ class HomeScreensState extends State<HomeScreens>
         );
       },
     );
+  }
+
+  //? fungsi alert untuk ucapan selamat
+  bool hasShownCongrats = false;
+  void checkTargetAndShowAlert(BuildContext context) {
+    if (previousIntake < target) {
+      hasShownCongrats = false;
+    }
+    if (currentIntake >= target && !hasShownCongrats) {
+      hasShownCongrats = true;
+
+      final confettiController =
+          ConfettiController(duration: const Duration(seconds: 3));
+      confettiController.play();
+
+      showGeneralDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierLabel: "Congrats",
+        transitionDuration: const Duration(milliseconds: 500),
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Confetti fireworks 🎇
+                ConfettiWidget(
+                  confettiController: confettiController,
+                  blastDirectionality: BlastDirectionality.explosive,
+                  shouldLoop: false,
+                  emissionFrequency: 0.05,
+                  numberOfParticles: 25,
+                  colors: const [
+                    Colors.blue,
+                    Colors.pink,
+                    Colors.orange,
+                    Colors.green
+                  ],
+                ),
+
+                // Animated Alert Dialog with zoom in
+                ScaleTransition(
+                  scale: CurvedAnimation(
+                    parent: animation,
+                    curve: Curves.easeOutBack,
+                  ),
+                  child: AlertDialog(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    backgroundColor: Colors.white,
+                    title: Column(
+                      children: const [
+                        Icon(Icons.emoji_events, color: Colors.amber, size: 60),
+                        SizedBox(height: 10),
+                        Text(
+                          'Selamat! 🎉',
+                          style: TextStyle(
+                              fontSize: 22, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                    content: const Text(
+                      'Kamu sudah mencapai target harianmu!',
+                      style: TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    actions: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            confettiController.dispose();
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: const Text(
+                            'Mantap!',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+        transitionBuilder: (context, animation, secondaryAnimation, child) {
+          return ScaleTransition(
+            scale: CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutBack,
+            ),
+            child: child,
+          );
+        },
+      );
+    }
   }
 
   // Fungsi untuk overflow nama
