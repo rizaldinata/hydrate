@@ -50,6 +50,7 @@ class HomeScreensState extends State<HomeScreens>
   DateTime? _endTime;
   Timer? _countdownTimer;
   Duration _remainingTime = Duration.zero;
+  bool _isCountdownActive = false;
 
   // Konstanta untuk timer
   static const int _countdownDurationInSeconds = 10; // 1 jam
@@ -166,31 +167,55 @@ class HomeScreensState extends State<HomeScreens>
   Future<void> _loadCountdownState() async {
     final prefs = await SharedPreferences.getInstance();
     final endTimeMillis = prefs.getInt(_endTimeKey);
+    final hasStartedTimer = prefs.getBool('timer_has_started') ?? false;
+
+    if (!hasStartedTimer) {
+      // Timer has never been started, keep everything at zero
+      setState(() {
+        _remainingTime = Duration.zero;
+        _isCountdownActive = false;
+      });
+      return;
+    }
 
     if (endTimeMillis != null) {
-      // final now = DateTime.now().millisecondsSinceEpoch;
-      // final remainingMillis = endTimeMillis - now;
-
       _endTime = DateTime.fromMillisecondsSinceEpoch(endTimeMillis);
       final now = DateTime.now();
 
       if (_endTime!.isAfter(now)) {
-        _remainingTime = _endTime!.difference(now);
-        _startTimer(); // lanjutkan timer
+        // Timer still running
+        setState(() {
+          _remainingTime = _endTime!.difference(now);
+          _isCountdownActive = true;
+        });
+        _startTimer(); // Only start if it should be running
       } else {
-        _remainingTime = Duration.zero;
+        // Timer expired
+        setState(() {
+          _remainingTime = Duration.zero;
+          _isCountdownActive = false;
+        });
       }
+    } else {
+      // No saved timer, but check if user has had water today
+      final targetHarian = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(idPengguna!, todayDate);
 
-      // if (remainingMillis > 0) {
-      //   setState(() {
-      //     _remainingTime = Duration(milliseconds: remainingMillis);
-      //   });
-      //   _startCountdownFromCurrentState();
-      // } else {
-      //   setState(() {
-      //     _remainingTime = Duration.zero;
-      //   });
-      // }
+      if (targetHarian != null &&
+          (targetHarian['total_hidrasi_harian'] ?? 0) > 0) {
+        // User has had water but timer expired, show "SAATNYA MINUM!"
+        setState(() {
+          _remainingTime = Duration.zero;
+          _isCountdownActive =
+              false; // Don't run timer, but show "SAATNYA MINUM!"
+        });
+      } else {
+        // No water yet today, don't show any timer
+        setState(() {
+          _remainingTime = Duration.zero;
+          _isCountdownActive = false;
+        });
+      }
     }
   }
 
@@ -355,8 +380,40 @@ class HomeScreensState extends State<HomeScreens>
         print(
             "Data hidrasi dimuat: $totalHidrasi mL dari target $targetHidrasi mL (${persentaseHidrasi.toStringAsFixed(1)}%)");
 
-        if (totalHidrasi > 0 && _remainingTime.inSeconds <= 0) {
-          _startCountdown();
+        // Only check if there should be a "SAATNYA MINUM!" message
+        if (totalHidrasi > 0) {
+          SharedPreferences.getInstance().then((prefs) {
+            final hasStartedTimer = prefs.getBool('timer_has_started') ?? false;
+            if (!hasStartedTimer) {
+              // Set flag to true since user has had water today
+              prefs.setBool('timer_has_started', true);
+            }
+          });
+
+          // Check if timer is already running
+          final endTimeMillis = await SharedPreferences.getInstance()
+              .then((prefs) => prefs.getInt(_endTimeKey));
+
+          if (endTimeMillis != null) {
+            final endTime = DateTime.fromMillisecondsSinceEpoch(endTimeMillis);
+            if (endTime.isAfter(DateTime.now())) {
+              // Timer is still running, load it normally
+              _loadCountdownState();
+            } else {
+              // Timer has expired, show "SAATNYA MINUM!"
+              setState(() {
+                _remainingTime = Duration.zero;
+                _isCountdownActive =
+                    true; // This will make UI show "SAATNYA MINUM!"
+              });
+            }
+          } else {
+            // No timer but user has had water, show "SAATNYA MINUM!"
+            setState(() {
+              _remainingTime = Duration.zero;
+              _isCountdownActive = true;
+            });
+          }
         }
       } else {
         // If no target exists for today, create one first
@@ -554,6 +611,7 @@ class HomeScreensState extends State<HomeScreens>
     _countdownTimer?.cancel();
     setState(() {
       _remainingTime = const Duration(seconds: _countdownDurationInSeconds);
+      _isCountdownActive = true;
     });
 
     // Save absolute end time (opsional, jika ingin restore countdown saat app dibuka ulang)
@@ -562,7 +620,10 @@ class HomeScreensState extends State<HomeScreens>
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.setInt(_endTimeKey, endTimeMillis);
+      prefs.setBool('timer_has_started', true);
     });
+
+    _startTimer();
 
     // Mulai countdown di UI
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -1128,9 +1189,11 @@ class HomeScreensState extends State<HomeScreens>
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        _remainingTime > Duration.zero
+                        (_isCountdownActive && _remainingTime.inSeconds > 0)
                             ? "Hidrasi selanjutnya ${_formatTime(_remainingTime)}"
-                            : "SAATNYA MINUM!",
+                            : (_isCountdownActive || currentIntake > 0)
+                                ? "SAATNYA MINUM!"
+                                : "SAATNYA MINUM!",
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 18,
