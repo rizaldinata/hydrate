@@ -53,7 +53,7 @@ class HomeScreensState extends State<HomeScreens>
   bool _isCountdownActive = false;
 
   // Konstanta untuk timer
-  static const int _countdownDurationInSeconds = 10; // 1 jam
+  static const int _countdownDurationInSeconds = 3600; // 1 jam
   static const String _endTimeKey = 'countdown_end_time';
 
   Map<double, double> _glassOffsets = {};
@@ -1075,7 +1075,7 @@ class HomeScreensState extends State<HomeScreens>
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
-                      "Hai, $namaPengguna",
+                      "Hai, ${truncateName(namaPengguna ?? '', 20)}",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
