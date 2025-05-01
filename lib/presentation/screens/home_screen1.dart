@@ -1046,13 +1046,13 @@ class HomeScreensState extends State<HomeScreens>
                   ),
                   Text(
                     currentIntake >= target
-                        ? "Pencapaianmu hari ini telah selesai"
-                        : "Ayo selesaikan pencapaianmu hari ini",
+                        ? "Pencapaianmu hari ini telah selesai."
+                        : "Ayo selesaikan pencapaianmu hari ini!",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                       color: currentIntake >= target
-                          ? Color(0xFF2AD1D1)
+                          ? Color(0xFF07BAE4)
                           : Colors.black54,
                     ),
                   ),
