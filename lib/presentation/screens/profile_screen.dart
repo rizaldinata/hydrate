@@ -253,6 +253,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   Center(
                                     child: Text(
                                       namaPengguna ?? 'Belum diatur',
+                                      overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.inter(
                                         fontSize: nameFontSize,
                                         color: Colors.white,
@@ -260,6 +261,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
+
                                   ),
                                   SizedBox(height: screenHeight * 0.02),
                                   _profileInfo(

@@ -182,7 +182,7 @@ class _EditProfileState extends State<EditProfile> {
       }
     } catch (e) {
       if (mounted) {
-        _showOverlayError("Terjadi kesalahan: ${e.toString()}");
+        _showOverlayError("Berat badan tidak boleh lebih dari 300 kg. Silakan masukkan berat yang sesuai.",);
       }
     } finally {
       if (mounted) {
@@ -446,7 +446,7 @@ class _EditProfileState extends State<EditProfile> {
           child: Material(
             color: Colors.transparent,
             child: Container(
-              margin: const EdgeInsets.only(top: 50),
+              margin: const EdgeInsets.only(top: 50, left: 20, right: 20),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color,

@@ -1,5 +1,6 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
+import 'package:hydrate/presentation/widgets/notificationMassage.dart';
 
 class NotificationController {
   ///     INISIALISASI
@@ -16,8 +17,8 @@ class NotificationController {
               groupAlertBehavior: GroupAlertBehavior.Children,
               importance: NotificationImportance.High,
               defaultPrivacy: NotificationPrivacy.Private,
-              defaultColor: Colors.deepPurple,
-              ledColor: Colors.deepPurple)
+              defaultColor: Colors.blue[100],
+              ledColor: Colors.white)
         ],
         debug: true);
   }
@@ -34,10 +35,11 @@ class NotificationController {
       ReceivedAction receivedAction) async {
     // Handle action here
     print('Notification action received: ${receivedAction.actionType}');
-    
+
     // You can add custom handling for different action types here
     if (receivedAction.actionType == ActionType.SilentAction) {
-      print('Silent action received with input: "${receivedAction.buttonKeyInput}"');
+      print(
+          'Silent action received with input: "${receivedAction.buttonKeyInput}"');
     }
   }
 
@@ -53,12 +55,14 @@ class NotificationController {
         content: NotificationContent(
             id: -1, // -1 is replaced by a random number
             channelKey: 'alerts',
-            title: 'Notifikasi Baru',
-            body: "Ini adalah isi notifikasi",
-            bigPicture: 'https://storage.googleapis.com/cms-storage-bucket/d406c736e7c4c57f5f61.png',
-            largeIcon: 'https://storage.googleapis.com/cms-storage-bucket/0dbfcc7a59cd1cf16282.png',
-            notificationLayout: NotificationLayout.BigPicture,
-            payload: {'notificationId': '1234567890'}),
+            title: 'Sudah waktunya minum air',
+            body: HydrationMessages.getRandomMessage(),
+            // bigPicture: 'https://storage.googleapis.com/cms-storage-bucket/d406c736e7c4c57f5f61.png',
+            largeIcon: 'asset://assets/images/logo.png',
+            notificationLayout: NotificationLayout.BigText,
+            payload: {'notificationId': '1234567890'},
+            
+        ),
         actionButtons: [
           NotificationActionButton(key: 'REDIRECT', label: 'Buka'),
           NotificationActionButton(
@@ -68,7 +72,7 @@ class NotificationController {
         ]);
   }
 
-//   static Future<void> scheduleNotificationInSeconds(int seconds) async {
+// static Future<void> scheduleNotificationInSeconds(int seconds) async {
 //   await AwesomeNotifications().createNotification(
 //     schedule: NotificationInterval(
 //       interval: Duration(seconds: seconds),
@@ -88,7 +92,6 @@ class NotificationController {
 //     ],
 //   );
 // }
-
 
   // static Future<void> scheduleNotification({
   //   required String title,

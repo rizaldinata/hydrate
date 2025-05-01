@@ -53,10 +53,13 @@ class HomeScreensState extends State<HomeScreens>
   bool _isCountdownActive = false;
 
   // Konstanta untuk timer
-  static const int _countdownDurationInSeconds = 10; // 1 jam
+  static const int _countdownDurationInSeconds = 10;
   static const String _endTimeKey = 'countdown_end_time';
 
   Map<double, double> _glassOffsets = {};
+  // bool _canAddWater = true;
+  // final ValueNotifier<bool> _canAddWater = ValueNotifier<bool>(true);
+   bool _hasInitializedTarget = false;
 
   // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
@@ -145,7 +148,7 @@ class HomeScreensState extends State<HomeScreens>
           _remainingTime -= Duration(seconds: 1);
         } else {
           timer.cancel();
-          NotificationController.createNewNotification();
+          // NotificationController.createNewNotification();
         }
       });
     });
@@ -153,12 +156,10 @@ class HomeScreensState extends State<HomeScreens>
 
   // void _startCountdownIfNotRunning() async {
   //   if (_countdownTimer != null && _countdownTimer!.isActive) return;
-
   //   final now = DateTime.now();
   //   _endTime = now.add(Duration(seconds: _countdownDurationInSeconds));
   //   final prefs = await SharedPreferences.getInstance();
   //   prefs.setInt(_endTimeKey, _endTime!.millisecondsSinceEpoch);
-
   //   _remainingTime = Duration(seconds: _countdownDurationInSeconds);
   //   _startTimer();
   // }
@@ -232,19 +233,19 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   // Start countdown from the current remaining time
-  void _startCountdownFromCurrentState() {
-    _countdownTimer?.cancel();
-    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (_remainingTime > Duration.zero) {
-          _remainingTime -= const Duration(seconds: 1);
-          _saveCurrentTimerState();
-        } else {
-          timer.cancel();
-        }
-      });
-    });
-  }
+  // void _startCountdownFromCurrentState() {
+  //   _countdownTimer?.cancel();
+  //   _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+  //     setState(() {
+  //       if (_remainingTime > Duration.zero) {
+  //         _remainingTime -= const Duration(seconds: 1);
+  //         _saveCurrentTimerState();
+  //       } else {
+  //         timer.cancel();
+  //       }
+  //     });
+  //   });
+  // }
 
   Future<void> _loadUserData() async {
     try {
@@ -273,40 +274,23 @@ class HomeScreensState extends State<HomeScreens>
 
   // Initialize hydration target based on user data
   Future<void> _initializeTarget() async {
-    if (idPengguna == null) return;
+    if (_hasInitializedTarget || idPengguna == null) return;
+    _hasInitializedTarget = true;
 
     try {
-      // Gunakan HydrationCalculator untuk mendapatkan nilai target
       await _hydrationCalculator.initializeData(idPengguna!);
       final targetHidrasi =
           _hydrationCalculator.calculateDailyWaterIntake() * 1000;
 
       setState(() {
-        // Selalu gunakan nilai dari algoritma, jangan ada default
         target = targetHidrasi;
       });
 
-      // Cek apakah target hidrasi untuk hari ini sudah ada
       await _checkAndCreateTodayTarget();
 
-      print("Target hidrasi diinisialisasi: $target mL berdasarkan algoritma");
+      print("Target hidrasi diinisialisasi: $target mL");
     } catch (e) {
       print("Error initializing target: $e");
-
-      // Jika terjadi error, tetap coba hitung dengan nilai default dalam HydrationCalculator
-      // yang akan menggunakan berat badan default dll.
-      try {
-        final calculator = HydrationCalculator(penggunaId: idPengguna!);
-        final targetHidrasi = calculator.calculateDailyWaterIntake() * 1000;
-
-        setState(() {
-          target = targetHidrasi;
-        });
-
-        print("Target hidrasi (fallback): $target mL");
-      } catch (e2) {
-        print("Error saat menghitung target hidrasi (fallback): $e2");
-      }
     }
   }
 
@@ -518,84 +502,63 @@ class HomeScreensState extends State<HomeScreens>
     _playDrinkingSound();
 
     try {
-      // Add to history first
       await _riwayatHidrasiController.tambahRiwayatHidrasi(
         fkIdPengguna: idPengguna!,
         jumlahHidrasi: amount,
       );
 
       previousIntake = currentIntake;
-
-      // Calculate new total (for local reference only)
       double newTotalIntake = currentIntake + amount;
 
-      // Update total in database
       await _targetHidrasiRepository.updateTotalHidrasi(
-        idPengguna!,
-        todayDate,
-        newTotalIntake,
+        idPengguna!, todayDate, newTotalIntake,
       );
 
-      // Get fresh data from database including percentage
       final targetHarian = await _targetHidrasiRepository
           .getTargetHidrasiHarian(idPengguna!, todayDate);
 
       if (targetHarian != null) {
         setState(() {
-          // Always use values from database for consistency
           previousIntake = currentIntake;
-          currentIntake =
-              targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
-          _valueNotifier.value = targetHarian['persentase_hidrasi'] ?? 0.0;
+          currentIntake = targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
           target = targetHarian['target_hidrasi'] ?? target;
+          _valueNotifier.value = target > 0
+              ? min(100, (currentIntake / target) * 100)
+              : 0;
         });
-
-        print(
-            "Persentase hidrasi diperbarui dari database: ${_valueNotifier.value}%");
       } else {
-        // Fallback if database query fails
-        print("Warning: Failed to get updated data from database");
         setState(() {
           previousIntake = currentIntake;
           currentIntake = newTotalIntake;
-          // Keep using the previous value notifier value as fallback
+          _valueNotifier.value = target > 0
+              ? min(100, (currentIntake / target) * 100)
+              : 0;
         });
-
-        // Try to refresh from database one more time
-        await _loadTodayIntake();
       }
 
-      // Notify other components to refresh
       _eventBus.fire('refresh_statistics');
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
 
-      // Only update UI locally if database operations failed
       setState(() {
         previousIntake = currentIntake;
         currentIntake += amount;
-        _valueNotifier.value = min(100, (currentIntake / target) * 100);
+        _valueNotifier.value = target > 0
+            ? min(100, (currentIntake / target) * 100)
+            : 0;
       });
 
-      // Show error to user
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-              "Gagal menyimpan data: ${e.toString().substring(0, min(50, e.toString().length))}..."),
+          content: Text("Gagal menyimpan data: ${e.toString().substring(0, min(50, e.toString().length))}..."),
           backgroundColor: Colors.red,
         ),
       );
     }
 
-    // Animate the glass UI
     _animateGlassMovement(amount);
-
-    // Start the countdown timer
     _startCountdown();
-
-    // Show success popup
     _showAddedWaterPopup(context, amount);
-    //show alert
     checkTargetAndShowAlert(context);
   }
 
@@ -623,7 +586,7 @@ class HomeScreensState extends State<HomeScreens>
       prefs.setBool('timer_has_started', true);
     });
 
-    _startTimer();
+    // _startTimer();
 
     // Mulai countdown di UI
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -632,8 +595,6 @@ class HomeScreensState extends State<HomeScreens>
           _remainingTime -= const Duration(seconds: 1);
         } else {
           timer.cancel();
-          // Jangan pakai createNewNotification() langsung
-          // 🟡 Gantikan notifikasi langsung dengan scheduled notification:
           NotificationController.createNewNotification();
         }
       });
@@ -1075,7 +1036,7 @@ class HomeScreensState extends State<HomeScreens>
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.008),
                     child: Text(
-                      "Hai, $namaPengguna",
+                      "Hai, ${truncateName(namaPengguna!, 20)}",
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -1129,7 +1090,7 @@ class HomeScreensState extends State<HomeScreens>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                '${value.ceil()}%', // Tetap menampilkan maksimal 100%
+                                '${min(100, value.ceil())}%', // Tetap menampilkan maksimal 100%
                                 style: const TextStyle(
                                   color: Color(0xFF2F2E41),
                                   fontWeight: FontWeight.w300,

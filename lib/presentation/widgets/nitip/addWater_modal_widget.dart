@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
-import 'package:hydrate/presentation/screens/home_screen.dart';
+import 'package:hydrate/presentation/screens/home_screen1.dart';
 import 'package:hydrate/presentation/widgets/nitip/countDown_widget.dart';
 import 'package:hydrate/presentation/widgets/nitip/drinkSound_widget.dart';
 import 'package:hydrate/presentation/widgets/nitip/popupAddWater_widget.dart';
@@ -212,7 +212,7 @@ void _loadUserId() async {
                         Popupaddwater();
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (context) => HomeScreen()),
+                          MaterialPageRoute(builder: (context) => HomeScreens()),
                           (Route<dynamic> route) => false,
                         );
                       },

@@ -28,7 +28,8 @@ class StatisticScreenState extends State<StatisticScreen> {
   List<RiwayatHidrasi> waterHistory = [];
   DateTime selectedDate = DateTime.now();
   final RiwayatHidrasiController _controller = RiwayatHidrasiController();
-  final TargetHidrasiController targetHidrasiController = TargetHidrasiController();
+  final TargetHidrasiController targetHidrasiController =
+      TargetHidrasiController();
   bool isLoading = true;
   int? userId;
   String? errorMessage;
@@ -158,7 +159,7 @@ class StatisticScreenState extends State<StatisticScreen> {
     final snackBar = SnackBar(
       content: Text(message, style: const TextStyle(color: Colors.white)),
       duration: duration,
-      backgroundColor: isSuccess ? Colors.green.shade600 : _primaryColor,
+      backgroundColor: isSuccess ? Colors.green.shade600 : _accentColor,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(10),
@@ -345,29 +346,29 @@ class StatisticScreenState extends State<StatisticScreen> {
                               color: _textPrimaryColor,
                             ),
                           ),
-                          SizedBox(width: isSmallScreen ? 4 : 8),
-                          LayoutBuilder(builder: (context, constraints) {
-                            final int maxDots = isSmallScreen ? 3 : 5;
-                            final int dots = min(
-                                (item.jumlahHidrasi / 100)
-                                    .clamp(1, maxDots)
-                                    .toInt(),
-                                maxDots);
-                            return Row(
-                              children: List.generate(
-                                dots,
-                                (index) => Container(
-                                  margin: const EdgeInsets.only(right: 2),
-                                  width: isSmallScreen ? 4 : 6,
-                                  height: isSmallScreen ? 4 : 6,
-                                  decoration: BoxDecoration(
-                                    color: _primaryColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
+                          // SizedBox(width: isSmallScreen ? 4 : 8),
+                          // LayoutBuilder(builder: (context, constraints) {
+                          //   final int maxDots = isSmallScreen ? 3 : 5;
+                          //   final int dots = min(
+                          //       (item.jumlahHidrasi / 100)
+                          //           .clamp(1, maxDots)
+                          //           .toInt(),
+                          //       maxDots);
+                          //   return Row(
+                          //     children: List.generate(
+                          //       dots,
+                          //       (index) => Container(
+                          //         margin: const EdgeInsets.only(right: 2),
+                          //         width: isSmallScreen ? 4 : 6,
+                          //         height: isSmallScreen ? 4 : 6,
+                          //         decoration: BoxDecoration(
+                          //           color: _primaryColor,
+                          //           shape: BoxShape.circle,
+                          //         ),
+                          //       ),
+                          //     ),
+                          //   );
+                          // }),
                         ],
                       ),
                       Text(
@@ -484,17 +485,69 @@ class StatisticScreenState extends State<StatisticScreen> {
         return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text("Konfirmasi Hapus"),
-            content:
-                Text("Hapus catatan ${item.jumlahHidrasi.toInt()} mL ini?"),
+            backgroundColor: Colors.white,
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/delete.png',
+                  width: 60,
+                  height: 60,
+                ),
+                const SizedBox(height: 12), // Jarak antar icon dan title
+                // Center(
+                //   child: const Text(
+                //     "Konfirmasi Hapus",
+                //     style: TextStyle(fontWeight: FontWeight.w800,),
+                //   ),
+                // ),
+                // SizedBox(height: 12), // Jarak antar title dan content
+              ],
+            ),
+            contentTextStyle: TextStyle(
+              color: _textPrimaryColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+            content: Text(
+              "Apakah kamu yakin menghapus catatan ${item.jumlahHidrasi.toInt()} mL ini?",
+              textAlign: TextAlign.center,
+              style: TextStyle(height: 1.5),
+            ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: const Text("Batal"),
+              SizedBox(
+                width: 80,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text(
+                    "Batal",
+                    style: TextStyle(color: const Color(0xFF0F172A)),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.blueGrey,
+                    backgroundColor: Colors.grey[300],
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(16), // atur radius di sini
+                    ),
+                  ),
+                ),
               ),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: const Text("Hapus"),
+              SizedBox(
+                width: 80,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text("Hapus",
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(16), // atur radius di sini
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -527,9 +580,9 @@ class StatisticScreenState extends State<StatisticScreen> {
         _undoTimer = Timer(const Duration(seconds: 4), () {
           if (_lastDeletedItem != null) {
             _controller.hapusRiwayatDanKurangiTarget(
-              idRiwayat: _lastDeletedItem!.id ?? 0, 
+              idRiwayat: _lastDeletedItem!.id ?? 0,
               idPengguna: _lastDeletedItem!.fkIdPengguna ?? 0,
-              tanggalHidrasi: _lastDeletedItem!.tanggalHidrasi ?? "", 
+              tanggalHidrasi: _lastDeletedItem!.tanggalHidrasi ?? "",
               targetController: targetHidrasiController,
             );
           }
@@ -545,7 +598,10 @@ class StatisticScreenState extends State<StatisticScreen> {
     return Scaffold(
       backgroundColor: _backgroundColor,
       appBar: AppBar(
-        title: const Text("Riwayat Hidrasi"),
+        title: const Text(
+          "Riwayat Hidrasi",
+          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
+        ),
         backgroundColor: _primaryColor,
         centerTitle: true,
         elevation: 0,
