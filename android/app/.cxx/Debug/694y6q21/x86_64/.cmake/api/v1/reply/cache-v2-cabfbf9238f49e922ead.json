@@ -23,7 +23,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "C:\\Users\\Hilmi Afifi\\AppData\\Local\\Android\\sdk\\ndk\\27.0.12077973"
+			"value" : "C:\\Users\\rizal\\AppData\\Local\\Android\\sdk\\ndk\\27.0.12077973"
 		},
 		{
 			"name" : "ANDROID_PLATFORM",
@@ -51,7 +51,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-addr2line.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-addr2line.exe"
 		},
 		{
 			"name" : "CMAKE_ANDROID_ARCH_ABI",
@@ -75,7 +75,7 @@
 				}
 			],
 			"type" : "UNINITIALIZED",
-			"value" : "C:\\Users\\Hilmi Afifi\\AppData\\Local\\Android\\sdk\\ndk\\27.0.12077973"
+			"value" : "C:\\Users\\rizal\\AppData\\Local\\Android\\sdk\\ndk\\27.0.12077973"
 		},
 		{
 			"name" : "CMAKE_AR",
@@ -91,7 +91,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe"
 		},
 		{
 			"name" : "CMAKE_ASM_FLAGS",
@@ -199,7 +199,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/cmake/3.22.1/bin/cmake.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/cmake/3.22.1/bin/cmake.exe"
 		},
 		{
 			"name" : "CMAKE_CPACK_COMMAND",
@@ -211,7 +211,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/cmake/3.22.1/bin/cpack.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/cmake/3.22.1/bin/cpack.exe"
 		},
 		{
 			"name" : "CMAKE_CTEST_COMMAND",
@@ -223,7 +223,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/cmake/3.22.1/bin/ctest.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/cmake/3.22.1/bin/ctest.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER",
@@ -255,7 +255,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_RANLIB",
@@ -271,7 +271,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe"
 		},
 		{
 			"name" : "CMAKE_CXX_FLAGS",
@@ -399,7 +399,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ar.exe"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_RANLIB",
@@ -415,7 +415,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe"
 		},
 		{
 			"name" : "CMAKE_C_FLAGS",
@@ -527,7 +527,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-dlltool.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-dlltool.exe"
 		},
 		{
 			"name" : "CMAKE_ERROR_DEPRECATED",
@@ -767,7 +767,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/ld.lld.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/ld.lld.exe"
 		},
 		{
 			"name" : "CMAKE_MAKE_PROGRAM",
@@ -775,11 +775,11 @@
 			[
 				{
 					"name" : "HELPSTRING",
-					"value" : "make program"
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/cmake/3.22.1/bin/ninja.exe"
+			"type" : "UNINITIALIZED",
+			"value" : "C:\\Users\\rizal\\AppData\\Local\\Android\\sdk\\cmake\\3.22.1\\bin\\ninja.exe"
 		},
 		{
 			"name" : "CMAKE_MODULE_LINKER_FLAGS",
@@ -875,7 +875,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-nm.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-nm.exe"
 		},
 		{
 			"name" : "CMAKE_NUMBER_OF_MAKEFILES",
@@ -903,7 +903,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-objcopy.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-objcopy.exe"
 		},
 		{
 			"name" : "CMAKE_OBJDUMP",
@@ -919,7 +919,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-objdump.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-objdump.exe"
 		},
 		{
 			"name" : "CMAKE_PLATFORM_INFO_INITIALIZED",
@@ -983,7 +983,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-ranlib.exe"
 		},
 		{
 			"name" : "CMAKE_READELF",
@@ -999,7 +999,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-readelf.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-readelf.exe"
 		},
 		{
 			"name" : "CMAKE_ROOT",
@@ -1011,7 +1011,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/cmake/3.22.1/share/cmake-3.22"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/cmake/3.22.1/share/cmake-3.22"
 		},
 		{
 			"name" : "CMAKE_RUNTIME_OUTPUT_DIRECTORY",
@@ -1231,7 +1231,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-strip.exe"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/toolchains/llvm/prebuilt/windows-x86_64/bin/llvm-strip.exe"
 		},
 		{
 			"name" : "CMAKE_SUPPRESS_DEVELOPER_ERRORS",
@@ -1291,7 +1291,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "C:/Users/Hilmi Afifi/AppData/Local/Android/Sdk/ndk/27.0.12077973/build/cmake/android.toolchain.cmake"
+			"value" : "C:/Users/rizal/AppData/Local/Android/Sdk/ndk/27.0.12077973/build/cmake/android.toolchain.cmake"
 		},
 		{
 			"name" : "CMAKE_VERBOSE_MAKEFILE",
