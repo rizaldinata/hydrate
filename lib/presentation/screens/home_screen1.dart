@@ -53,7 +53,7 @@ class HomeScreensState extends State<HomeScreens>
   bool _isCountdownActive = false;
 
   // Konstanta untuk timer
-  static const int _countdownDurationInSeconds = 3600; // 1 jam
+  static const int _countdownDurationInSeconds = 15; // 1 jam
   static const String _endTimeKey = 'countdown_end_time';
 
   Map<double, double> _glassOffsets = {};

@@ -6,7 +6,7 @@ class NotificationController {
   ///     INISIALISASI
   static Future<void> initializeLocalNotifications() async {
     await AwesomeNotifications().initialize(
-        null,
+      'resource://drawable/logo',
         [
           NotificationChannel(
               channelKey: 'alerts',

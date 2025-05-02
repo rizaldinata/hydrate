@@ -72,10 +72,10 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
-  ios: false
-  image_path: "assets/images/logo.png"
+  ios: true
+  image_path: assets/images/logo.png
 
 flutter_native_splash:
   color: "#d4e4ed"
@@ -105,6 +105,7 @@ flutter:
     - assets/images/
     - assets/images/berhasil.svg
     - assets/images/glass/
+    - assets/images/logo.png
     - assets/images/navigasi/
     - assets/images/profile/
     - assets/sounds/
