@@ -15,10 +15,10 @@ import 'firebase_options.dart';
 import 'package:lottie/lottie.dart';
 
 void main(List<String> args) async {
+  WidgetsFlutterBinding.ensureInitialized(); 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  WidgetsFlutterBinding.ensureInitialized();
   
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
