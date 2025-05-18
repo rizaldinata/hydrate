@@ -7,6 +7,7 @@ import 'package:hydrate/presentation/screens/coba.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
 import 'package:hydrate/presentation/screens/info_product_view.dart';
 import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/presentation/screens/statistic_page_screen.dart';
 import 'package:hydrate/presentation/screens/statistic_screen.dart';
 import 'dart:async';
 
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : InfoProduct();
+          return snapshot.data == true ? StatisticPageScreen() : InfoProduct();
         },
       ),
     );
