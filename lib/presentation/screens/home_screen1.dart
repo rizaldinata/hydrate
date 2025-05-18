@@ -59,7 +59,7 @@ class HomeScreensState extends State<HomeScreens>
   Map<double, double> _glassOffsets = {};
   // bool _canAddWater = true;
   // final ValueNotifier<bool> _canAddWater = ValueNotifier<bool>(true);
-   bool _hasInitializedTarget = false;
+  bool _hasInitializedTarget = false;
 
   // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
@@ -126,9 +126,9 @@ class HomeScreensState extends State<HomeScreens>
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _loadUserData();
-      _loadCountdownState(); // Reload countdown timer when app resumes
+      _loadCountdownState();
+      setState(() {});
     } else if (state == AppLifecycleState.paused) {
-      // Ensure timer info is saved when app goes to background
       _saveCurrentTimerState();
     }
   }
@@ -511,7 +511,9 @@ class HomeScreensState extends State<HomeScreens>
       double newTotalIntake = currentIntake + amount;
 
       await _targetHidrasiRepository.updateTotalHidrasi(
-        idPengguna!, todayDate, newTotalIntake,
+        idPengguna!,
+        todayDate,
+        newTotalIntake,
       );
 
       final targetHarian = await _targetHidrasiRepository
@@ -520,19 +522,18 @@ class HomeScreensState extends State<HomeScreens>
       if (targetHarian != null) {
         setState(() {
           previousIntake = currentIntake;
-          currentIntake = targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
+          currentIntake =
+              targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
           target = targetHarian['target_hidrasi'] ?? target;
-          _valueNotifier.value = target > 0
-              ? min(100, (currentIntake / target) * 100)
-              : 0;
+          _valueNotifier.value =
+              target > 0 ? min(100, (currentIntake / target) * 100) : 0;
         });
       } else {
         setState(() {
           previousIntake = currentIntake;
           currentIntake = newTotalIntake;
-          _valueNotifier.value = target > 0
-              ? min(100, (currentIntake / target) * 100)
-              : 0;
+          _valueNotifier.value =
+              target > 0 ? min(100, (currentIntake / target) * 100) : 0;
         });
       }
 
@@ -543,14 +544,14 @@ class HomeScreensState extends State<HomeScreens>
       setState(() {
         previousIntake = currentIntake;
         currentIntake += amount;
-        _valueNotifier.value = target > 0
-            ? min(100, (currentIntake / target) * 100)
-            : 0;
+        _valueNotifier.value =
+            target > 0 ? min(100, (currentIntake / target) * 100) : 0;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Gagal menyimpan data: ${e.toString().substring(0, min(50, e.toString().length))}..."),
+          content: Text(
+              "Gagal menyimpan data: ${e.toString().substring(0, min(50, e.toString().length))}..."),
           backgroundColor: Colors.red,
         ),
       );

@@ -2,6 +2,7 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ÅêŒ”î2§ ØÝçËÖ2^
 \
 ZC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\additional_project_files.txt	ÅêŒ”î2 „òê‚é2[
@@ -26,3 +27,29 @@ R
 PC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\prefab_config.json	ÅêŒ”î2( Œòê‚é2Y
 W
 UC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\symbol_folder_index.txt	ÅêŒ”î2L òê‚é2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	î·µŠé2§ ˆŒéËÖ2^
+\
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\additional_project_files.txt	î·µŠé2 ª­ˆé2[
+Y
+WC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\android_gradle_build.json	î·µŠé2 «­ˆé2`
+^
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\android_gradle_build_mini.json	î·µŠé2ë ¬­ˆé2M
+K
+IC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\build.ninja	î·µŠé2ïÔ ™¬ˆé2Q
+O
+MC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\build.ninja.txt	î·µŠé2V
+T
+RC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\build_file_index.txt	î·µŠé2G ±­ˆé2W
+U
+SC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\compile_commands.json	î·µŠé2	[
+Y
+WC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\compile_commands.json.bin	î·µŠé2
+a
+_
+]C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\metadata_generation_command.txt	î·µŠé2’ ­­ˆé2T
+R
+PC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\prefab_config.json	î·µŠé2( ®­ˆé2Y
+W
+UC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\x86_64\symbol_folder_index.txt	î·µŠé2L °­ˆé2
+>>>>>>> bbf00a64a2ef894eadf889a6fe407959e540fc2c
