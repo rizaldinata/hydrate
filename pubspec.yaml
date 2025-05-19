@@ -33,7 +33,7 @@ dependencies:
   sqflite: ^2.3.0
   path_provider: ^2.1.1
   path: ^1.8.3
-  flutter_svg: ^2.0.9
+  flutter_svg: ^2.1.0
   shared_preferences: ^2.2.2
   bottom_picker: ^3.0.0
   lottie: ^3.3.1
@@ -110,6 +110,7 @@ flutter:
     - assets/images/navigasi/
     - assets/images/profile/
     - assets/sounds/
+    - assets/images/splash/
 
   # To add assets to your application, add an assets section, like this:
 
