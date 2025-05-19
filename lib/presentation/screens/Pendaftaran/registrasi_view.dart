@@ -2,23 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/main.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
 import 'package:hydrate/presentation/widgets/alert_widget.dart';
 
-class LoginView extends StatefulWidget {
+class RegistrationView extends StatefulWidget {
   @override
-  _LoginViewState createState() => _LoginViewState();
+  _RegistrationViewState createState() => _RegistrationViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _RegistrationViewState extends State<RegistrationView> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPass = TextEditingController();
+  TextEditingController controllerPassConfirm = TextEditingController();
   bool isFormFilled = false;
   bool _obscurePassword = true; // untuk toggle mata
 
   void _checkForm() {
     setState(() {
       isFormFilled =
-          controllerEmail.text.isNotEmpty && controllerPass.text.isNotEmpty;
+          controllerEmail.text.isNotEmpty && controllerPass.text.isNotEmpty && controllerPassConfirm.text.isNotEmpty;
     });
   }
 
@@ -28,6 +30,7 @@ class _LoginViewState extends State<LoginView> {
 
     controllerEmail.addListener(_checkForm);
     controllerPass.addListener(_checkForm);
+    controllerPassConfirm.addListener(_checkForm);
   }
 
   @override
@@ -156,6 +159,47 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
 
+                const SizedBox(height: 20),
+
+                // Input Password
+                TextField(
+                  controller: controllerPassConfirm,
+                  obscureText: _obscurePassword,
+                  cursorColor: const Color(0xFF00A6FB),
+                  decoration: InputDecoration(
+                    hintText: "Masukkan Kata Sandi",
+                    hintStyle: TextStyle(
+                        color: const Color(0xFF2F2E41).withOpacity(0.5)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: const Color(0xFF00A6FB), width: 2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide:
+                          BorderSide(color: const Color(0xFF00A6FB), width: 2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 15),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: const Color(0xFF2F2E41),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 50),
 
                 // Tombol Selanjutnya
@@ -202,14 +246,14 @@ class _LoginViewState extends State<LoginView> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MainScreen(),
+                                    builder: (context) => RegistrationData(),
                                   ),
                                 );
                               }
                             }
                           : null,
                       child: Text(
-                        "MASUK",
+                        "SELANJUTNYA",
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -254,7 +298,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        "Masuk dengan Google",
+                        "Daftar dengan Google",
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: Colors.black87,
@@ -265,15 +309,15 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Tombol Masuk
+                
+                // Tombol Selanjutnya
                 GestureDetector(
                   onTap: () {
-                    // Aksi saat tombol "Masuk" ditekan
+                    // Aksi saat tombol  Selanjutnya" ditekan
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MainScreen(),
+                        builder: (context) => RegistrationData(),
                       ),
                     );
                   },
@@ -281,7 +325,7 @@ class _LoginViewState extends State<LoginView> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Belum punya akun?",
+                        "Sudah punya akun?",
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: const Color(0xFF2F2E41),
@@ -290,7 +334,7 @@ class _LoginViewState extends State<LoginView> {
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        "Daftar Sekarang",
+                        "Masuk Sekarang",
                         style: GoogleFonts.inter(
                           fontSize: 14,
                           color: const Color(0xFF00A6FB),
