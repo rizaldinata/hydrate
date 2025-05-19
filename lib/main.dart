@@ -10,6 +10,7 @@ import 'package:hydrate/presentation/screens/Pendaftaran/splash_view.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/firstPage_view.dart';
 import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/presentation/screens/statistic_page_screen.dart';
 import 'package:hydrate/presentation/screens/statistic_screen.dart';
 import 'dart:async';
 import 'package:firebase_core/firebase_core.dart';
@@ -56,7 +57,7 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : LoginView();
+          return snapshot.data == true ? MainScreen() : StatisticPageScreen();
         },
       ),
     );

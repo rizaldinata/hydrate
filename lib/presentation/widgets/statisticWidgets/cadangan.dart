@@ -2,21 +2,21 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
-import 'package:intl/intl.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:lottie/lottie.dart';
+import 'dart:collection';
 
-class StatisticScreen extends StatefulWidget {
-  const StatisticScreen({Key? key}) : super(key: key);
+class Cadangan extends StatefulWidget {
+  const Cadangan({Key? key}) : super(key: key);
 
   @override
-  StatisticScreenState createState() => StatisticScreenState();
+  CadanganState createState() => CadanganState();
 }
 
-class StatisticScreenState extends State<StatisticScreen> {
+class CadanganState extends State<Cadangan> {
   final Color _primaryColor = const Color(0xFF00A6FB);
   final Color _accentColor = const Color(0xFF38BDF8);
   final Color _backgroundColor = const Color(0xFFE8F7FF);
@@ -25,7 +25,7 @@ class StatisticScreenState extends State<StatisticScreen> {
   final Color _surfaceColor = Colors.white;
 
   List<RiwayatHidrasi> waterHistory = [];
-  DateTime selectedDate = DateTime.now();
+  final DateTime today = DateTime.now();
   final RiwayatHidrasiController _controller = RiwayatHidrasiController();
   final TargetHidrasiController targetHidrasiController =
       TargetHidrasiController();
@@ -34,8 +34,12 @@ class StatisticScreenState extends State<StatisticScreen> {
   String? errorMessage;
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
-  RiwayatHidrasi? _lastDeletedItem;
   Timer? _undoTimer;
+  RiwayatHidrasi? _lastDeletedItem;
+  
+  // Mode seleksi
+  bool _isSelectionMode = false;
+  Set<int> _selectedItems = HashSet<int>();
 
   @override
   void initState() {
@@ -49,14 +53,7 @@ class StatisticScreenState extends State<StatisticScreen> {
   }
 
   void refresh() {
-    if (selectedDate.isAtSameMomentAs(DateTime.now())) {
-      _initData();
-    } else {
-      setState(() {
-        selectedDate = DateTime.now();
-      });
-      _initData();
-    }
+    _initData();
   }
 
   Future<void> _initData() async {
@@ -90,7 +87,7 @@ class StatisticScreenState extends State<StatisticScreen> {
 
     try {
       List<RiwayatHidrasi> history =
-          await _controller.getRiwayatHidrasiByTanggal(userId!, selectedDate);
+          await _controller.getRiwayatHidrasiByTanggal(userId!, today);
       setState(() {
         waterHistory = history;
       });
@@ -98,52 +95,6 @@ class StatisticScreenState extends State<StatisticScreen> {
       setState(() {
         errorMessage = "Kesalahan saat memuat riwayat: $e";
       });
-    }
-  }
-
-  bool _isTodayRecord(RiwayatHidrasi item) {
-    final today = DateTime.now();
-    final recordDate = DateTime.parse(item.tanggalHidrasi ?? today.toString());
-    return recordDate.year == today.year &&
-        recordDate.month == today.month &&
-        recordDate.day == today.day;
-  }
-
-  void _changeDate(DateTime newDate) {
-    setState(() {
-      selectedDate = newDate;
-      errorMessage = null;
-    });
-    _loadRiwayatHidrasi();
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            colorScheme: ColorScheme.light(
-              primary: _primaryColor,
-              secondary: _accentColor,
-              onPrimary: Colors.white,
-              onSecondary: Colors.white,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: _primaryColor,
-              ),
-            ),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != selectedDate) {
-      _changeDate(picked);
     }
   }
 
@@ -175,65 +126,260 @@ class StatisticScreenState extends State<StatisticScreen> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
-  Widget _buildDateNavigation() {
-    final bool isToday = DateFormat('yyyy-MM-dd').format(selectedDate) ==
-        DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final String dateTitle =
-        isToday ? "Hari Ini" : DateFormat('dd MMMM yyyy').format(selectedDate);
+  // Toggle seleksi item
+  void _toggleItemSelection(int id) {
+    setState(() {
+      if (_selectedItems.contains(id)) {
+        _selectedItems.remove(id);
+      } else {
+        _selectedItems.add(id);
+      }
+    });
+  }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: _surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _primaryColor.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            icon: Icon(Icons.chevron_left_rounded,
-                color: _primaryColor, size: 32),
-            onPressed: () =>
-                _changeDate(selectedDate.subtract(const Duration(days: 1))),
-          ),
-          GestureDetector(
-            onTap: () => _selectDate(context),
-            child: Text(
-              dateTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: _primaryColor,
-                letterSpacing: 0.5,
+  // Masuk ke mode seleksi - dimodifikasi untuk tidak otomatis memilih item pertama
+  void _enterSelectionMode() {
+    setState(() {
+      _isSelectionMode = true;
+      // Tidak perlu menambahkan item apapun ke _selectedItems di sini
+    });
+  }
+
+  // Keluar dari mode seleksi
+  void _exitSelectionMode() {
+    setState(() {
+      _isSelectionMode = false;
+      _selectedItems.clear();
+    });
+  }
+  
+  // Pilih semua item
+  void _selectAllItems() {
+    setState(() {
+      if (_selectedItems.length == waterHistory.length) {
+        // Jika semua item sudah dipilih, batalkan semua
+        _selectedItems.clear();
+      } else {
+        // Pilih semua item
+        _selectedItems.clear();
+        for (var item in waterHistory) {
+          if (item.id != null) {
+            _selectedItems.add(item.id!);
+          }
+        }
+      }
+    });
+  }
+
+  // Hapus item yang dipilih
+  Future<void> _deleteSelectedItems() async {
+    if (_selectedItems.isEmpty) return;
+    
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/delete.png',
+              width: 60,
+              height: 60,
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+        contentTextStyle: TextStyle(
+          color: _textPrimaryColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        content: Text(
+          _selectedItems.length == 1
+              ? "Apakah kamu yakin ingin menghapus 1 catatan hidrasi?"
+              : "Apakah kamu yakin ingin menghapus ${_selectedItems.length} catatan hidrasi?",
+          textAlign: TextAlign.center,
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          SizedBox(
+            width: 80,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.blueGrey,
+                backgroundColor: Colors.grey[300],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                "Batal",
+                style: TextStyle(color: Color(0xFF0F172A)),
               ),
             ),
           ),
-          IconButton(
-            icon: Icon(
-              Icons.chevron_right_rounded,
-              color: isToday ? Colors.grey.shade400 : _primaryColor,
-              size: 32,
+          SizedBox(
+            width: 80,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.red,
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                "Hapus",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
-            onPressed: isToday
-                ? null
-                : () => _changeDate(selectedDate.add(const Duration(days: 1))),
           ),
         ],
       ),
     );
+
+    if (confirm != true) return;
+
+    // Backup item yang akan dihapus
+    List<RiwayatHidrasi> deletedItems = [];
+    for (var item in waterHistory) {
+      if (item.id != null && _selectedItems.contains(item.id)) {
+        deletedItems.add(item);
+      }
+    }
+    
+    // Hapus dari tampilan
+    setState(() {
+      waterHistory.removeWhere((item) => 
+          item.id != null && _selectedItems.contains(item.id));
+      _selectedItems.clear();
+      // Tidak keluar dari mode seleksi setelah menghapus
+      // _isSelectionMode = false;
+    });
+
+    // Tampilkan notifikasi dengan opsi batalkan
+    _showSnackBarNotification(
+      message: deletedItems.length == 1
+          ? "1 catatan hidrasi telah dihapus"
+          : "${deletedItems.length} catatan hidrasi telah dihapus",
+      actionLabel: "BATALKAN",
+      onAction: () {
+        setState(() {
+          waterHistory.addAll(deletedItems);
+          waterHistory.sort((a, b) =>
+              (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
+        });
+        _showSnackBarNotification(
+          message: "Catatan telah dipulihkan",
+          duration: const Duration(seconds: 2),
+          isSuccess: true,
+        );
+      },
+    );
+
+    // Timer untuk menghapus data secara permanen jika tidak dibatalkan
+    _undoTimer = Timer(const Duration(seconds: 4), () {
+      if (userId != null) {
+        for (var item in deletedItems) {
+          _controller.hapusRiwayatDanKurangiTarget(
+            idRiwayat: item.id ?? 0,
+            idPengguna: userId!,
+            tanggalHidrasi: item.tanggalHidrasi ?? "",
+            targetController: targetHidrasiController,
+          );
+        }
+      }
+    });
   }
 
-  Widget _buildEmptyState() {
-    final bool isToday = DateFormat('yyyy-MM-dd').format(selectedDate) ==
-        DateFormat('yyyy-MM-dd').format(DateTime.now());
+Widget _buildTodayHeader() {
+  final String dateTitle = "Hari Ini";
 
+  return Container(
+    height: 56,
+    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    decoration: BoxDecoration(
+      color: _surfaceColor,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: _primaryColor.withOpacity(0.1),
+          blurRadius: 15,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.water_drop_rounded, color: _primaryColor, size: 24),
+              const SizedBox(width: 8),
+              // Expanded agar teks tidak overflow
+              Text(
+                _isSelectionMode ? "Pilih item" : dateTitle,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: _isSelectionMode ? Colors.orange : _primaryColor,
+                  letterSpacing: 0.5,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+          // Tombol kanan
+          if (_isSelectionMode)
+            IconButton(
+              icon: Icon(Icons.close, color: Colors.grey[600]),
+              onPressed: _exitSelectionMode,
+              tooltip: 'Tutup',
+            )
+          else if (waterHistory.isNotEmpty)
+            IconButton(
+              icon: Icon(Icons.more_vert, color: _primaryColor),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ListTile(
+                        leading: Icon(Icons.edit, color: _primaryColor),
+                        title: Text(
+                          'Pilih Item',
+                          style: TextStyle(
+                            color: _textPrimaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (waterHistory.isNotEmpty) {
+                            _enterSelectionMode();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+              tooltip: 'Menu',
+            ),
+        ],
+      ),
+    ),
+  );
+}
+
+
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -255,7 +401,7 @@ class StatisticScreenState extends State<StatisticScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            isToday ? "Ayo Minum Air!" : "Tidak Ada Riwayat",
+            "Ayo Minum Air!",
             style: TextStyle(
               fontSize: 20,
               color: _textPrimaryColor,
@@ -265,9 +411,7 @@ class StatisticScreenState extends State<StatisticScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            isToday
-                ? "Yuk catat konsumsi air mineralmu hari ini"
-                : "Tidak ada data hidrasi untuk tanggal ini",
+            "Yuk catat konsumsi air mineralmu hari ini",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -280,15 +424,16 @@ class StatisticScreenState extends State<StatisticScreen> {
     );
   }
 
-  Widget _buildItemCard(RiwayatHidrasi item, String time, bool isSmallScreen,
-      double screenWidth, bool isTodayRecord) {
+  Widget _buildItemCard(RiwayatHidrasi item, String time, bool isSmallScreen, double screenWidth) {
+    final bool isSelected = item.id != null && _selectedItems.contains(item.id);
+    
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: screenWidth * 0.04,
         vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: _surfaceColor,
+        color: isSelected ? _primaryColor.withOpacity(0.1) : _surfaceColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -298,8 +443,8 @@ class StatisticScreenState extends State<StatisticScreen> {
           ),
         ],
         border: Border.all(
-          color: _primaryColor.withOpacity(0.1),
-          width: 1,
+          color: isSelected ? _primaryColor : _primaryColor.withOpacity(0.1),
+          width: isSelected ? 2 : 1,
         ),
       ),
       child: Material(
@@ -308,7 +453,20 @@ class StatisticScreenState extends State<StatisticScreen> {
           borderRadius: BorderRadius.circular(16),
           splashColor: _primaryColor.withOpacity(0.1),
           highlightColor: _primaryColor.withOpacity(0.05),
-          onTap: () {},
+          onTap: () {
+            if (_isSelectionMode && item.id != null) {
+              _toggleItemSelection(item.id!);
+            } else if (!_isSelectionMode && item.id != null) {
+              // Panjang tekan sudah menangani mode seleksi
+            }
+          },
+          onLongPress: () {
+            if (!_isSelectionMode && item.id != null) {
+              _enterSelectionMode();
+              // Tambahkan item yang di-long press ke selected items
+              _toggleItemSelection(item.id!);
+            }
+          },
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: screenWidth * 0.04,
@@ -316,6 +474,25 @@ class StatisticScreenState extends State<StatisticScreen> {
             ),
             child: Row(
               children: [
+                // Checkbox saat mode seleksi
+                if (_isSelectionMode)
+                  Container(
+                    margin: const EdgeInsets.only(right: 12),
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected ? _primaryColor : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected ? _primaryColor : Colors.grey,
+                        width: 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Icon(Icons.check, color: Colors.white, size: 16)
+                        : null,
+                  ),
+                
                 Container(
                   padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
                   decoration: BoxDecoration(
@@ -345,29 +522,6 @@ class StatisticScreenState extends State<StatisticScreen> {
                               color: _textPrimaryColor,
                             ),
                           ),
-                          // SizedBox(width: isSmallScreen ? 4 : 8),
-                          // LayoutBuilder(builder: (context, constraints) {
-                          //   final int maxDots = isSmallScreen ? 3 : 5;
-                          //   final int dots = min(
-                          //       (item.jumlahHidrasi / 100)
-                          //           .clamp(1, maxDots)
-                          //           .toInt(),
-                          //       maxDots);
-                          //   return Row(
-                          //     children: List.generate(
-                          //       dots,
-                          //       (index) => Container(
-                          //         margin: const EdgeInsets.only(right: 2),
-                          //         width: isSmallScreen ? 4 : 6,
-                          //         height: isSmallScreen ? 4 : 6,
-                          //         decoration: BoxDecoration(
-                          //           color: _primaryColor,
-                          //           shape: BoxShape.circle,
-                          //         ),
-                          //       ),
-                          //     ),
-                          //   );
-                          // }),
                         ],
                       ),
                       Text(
@@ -411,12 +565,6 @@ class StatisticScreenState extends State<StatisticScreen> {
                     ],
                   ),
                 ),
-                if (isTodayRecord)
-                  Icon(
-                    Icons.chevron_left,
-                    color: _textSecondaryColor.withOpacity(0.5),
-                    size: isSmallScreen ? 18 : 24,
-                  ),
               ],
             ),
           ),
@@ -429,12 +577,8 @@ class StatisticScreenState extends State<StatisticScreen> {
     final String time = item.waktuHidrasi ?? "00:00";
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
-    final bool isTodayRecord = _isTodayRecord(item);
 
-    if (!isTodayRecord) {
-      return _buildItemCard(item, time, isSmallScreen, screenWidth, false);
-    }
-
+    // Tetap mempertahankan fitur swipe-to-delete namun juga menambahkan tombol hapus langsung
     return Dismissible(
       key: Key(item.id.toString()),
       background: Container(
@@ -493,14 +637,7 @@ class StatisticScreenState extends State<StatisticScreen> {
                   width: 60,
                   height: 60,
                 ),
-                const SizedBox(height: 12), // Jarak antar icon dan title
-                // Center(
-                //   child: const Text(
-                //     "Konfirmasi Hapus",
-                //     style: TextStyle(fontWeight: FontWeight.w800,),
-                //   ),
-                // ),
-                // SizedBox(height: 12), // Jarak antar title dan content
+                const SizedBox(height: 12),
               ],
             ),
             contentTextStyle: TextStyle(
@@ -511,24 +648,23 @@ class StatisticScreenState extends State<StatisticScreen> {
             content: Text(
               "Apakah kamu yakin menghapus catatan ${item.jumlahHidrasi.toInt()} mL ini?",
               textAlign: TextAlign.center,
-              style: TextStyle(height: 1.5),
+              style: const TextStyle(height: 1.5),
             ),
             actions: [
               SizedBox(
                 width: 80,
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text(
-                    "Batal",
-                    style: TextStyle(color: const Color(0xFF0F172A)),
-                  ),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.blueGrey,
                     backgroundColor: Colors.grey[300],
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(16), // atur radius di sini
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                  ),
+                  child: const Text(
+                    "Batal",
+                    style: TextStyle(color: Color(0xFF0F172A)),
                   ),
                 ),
               ),
@@ -536,15 +672,16 @@ class StatisticScreenState extends State<StatisticScreen> {
                 width: 80,
                 child: TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text("Hapus",
-                      style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.red,
                     backgroundColor: Colors.red,
                     shape: RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(16), // atur radius di sini
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                  ),
+                  child: const Text(
+                    "Hapus",
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ),
@@ -588,7 +725,7 @@ class StatisticScreenState extends State<StatisticScreen> {
           _lastDeletedItem = null;
         });
       },
-      child: _buildItemCard(item, time, isSmallScreen, screenWidth, true),
+      child: _buildItemCard(item, time, isSmallScreen, screenWidth),
     );
   }
 
@@ -596,20 +733,10 @@ class StatisticScreenState extends State<StatisticScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _backgroundColor,
-      appBar: AppBar(
-        title: const Text(
-          "Riwayat Hidrasi",
-          style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white),
-        ),
-        backgroundColor: _primaryColor,
-        centerTitle: true,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
       body: SafeArea(
         child: Column(
           children: [
-            _buildDateNavigation(),
+            _buildTodayHeader(),
             if (errorMessage != null)
               Padding(
                 padding:
@@ -633,6 +760,66 @@ class StatisticScreenState extends State<StatisticScreen> {
                               _buildWaterIntakeItem(waterHistory[index]),
                         ),
             ),
+            // Tampilkan tombol aksi seleksi meskipun tidak ada item yang dipilih
+            if (_isSelectionMode)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Tombol Pilih semua
+                    ElevatedButton.icon(
+                      icon: Icon(
+                        _selectedItems.length == waterHistory.length
+                            ? Icons.deselect
+                            : Icons.select_all,
+                        color: Colors.white,
+                      ),
+                      label: Text(
+                        _selectedItems.length == waterHistory.length
+                            ? "Batal Pilih"
+                            : "Pilih Semua",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryColor,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _selectAllItems,
+                    ),
+                    const SizedBox(width: 16),
+                    // Tombol Hapus selection - diubah untuk selalu menampilkan jumlah item yang dipilih
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.delete_outline, color: Colors.white),
+                      label: Text(
+                        _selectedItems.isEmpty
+                            ? "Hapus 0 Item"
+                            : _selectedItems.length == 1
+                                ? "Hapus 1 Item"
+                                : "Hapus ${_selectedItems.length} Item",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: _selectedItems.isEmpty ? null : _deleteSelectedItems,
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
