@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/presentation/screens/registration2_view.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registration2_view.dart';
+import 'package:hydrate/presentation/widgets/alert_widget.dart';
 
 class RegistrationData extends StatefulWidget {
   @override
@@ -11,88 +12,49 @@ class RegistrationData extends StatefulWidget {
 class _RegistrationDataState extends State<RegistrationData> {
   TextEditingController controllerName = TextEditingController();
   TextEditingController controllerWeight = TextEditingController();
+  bool isFormFilled = false;
 
   // Mengubah ke format yang konsisten dengan database
   String selectedGender = "Perempuan"; // Default gender
+  int maxCharacters = 20;
+  String remainingText = "0/20 karakter";
 
   // Validasi input
-  bool _isFormValid() {
-    final weight = double.tryParse(controllerWeight.text);
-    return controllerName.text.isNotEmpty &&
-        selectedGender.isNotEmpty &&
-        weight != null &&
-        weight >= 1 &&
-        weight <= 300;
+  // bool _isFormValid() {
+  //   final weight = double.tryParse(controllerWeight.text);
+  //   return controllerName.text.isNotEmpty &&
+  //       selectedGender.isNotEmpty &&
+  //       weight != null &&
+  //       weight >= 1 &&
+  //       weight <= 300;
+  // }
+
+  void _checkForm() {
+    setState(() {
+      isFormFilled =
+          controllerName.text.isNotEmpty && controllerWeight.text.isNotEmpty;
+    });
   }
 
-  // Fungsi untuk menampilkan modal peringatan
-  Future<void> _showWarningDialog(String message) async {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: AnimatedScale(
-            duration: Duration(milliseconds: 300),
-            scale: 1.0,
-            child: Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              elevation: 10,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.warning_amber_outlined,
-                      color: const Color(0XFFFFB830),
-                      size: 60,
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      message,
-                      style: GoogleFonts.inter(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2F2E41),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0XFFFFB830),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Text(
-                        "Kembali",
-                        style: GoogleFonts.inter(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+
+    controllerName.addListener(_checkForm);
+    controllerWeight.addListener(_checkForm);
+
+    controllerName.addListener(() {
+      setState(() {
+        int currentLength = controllerName.text.length;
+        remainingText = "$currentLength/$maxCharacters karakter";
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    controllerName.dispose();
+    super.dispose();
   }
 
   @override
@@ -163,28 +125,48 @@ class _RegistrationDataState extends State<RegistrationData> {
                 const SizedBox(height: 20),
 
                 // Input Nama Lengkap
-                TextField(
-                  controller: controllerName,
-                  cursorColor: const Color(0xFF00A6FB),
-                  decoration: InputDecoration(
-                    hintText: "Nama Lengkap",
-                    hintStyle: TextStyle(
-                        color: const Color(0xFF2F2E41).withOpacity(0.5)),
-                    filled: true,
-                    fillColor: Colors.white,
-                    enabledBorder: OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                      borderRadius: BorderRadius.circular(50),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    TextField(
+                      controller: controllerName,
+                      cursorColor: const Color(0xFF00A6FB),
+                      maxLength: maxCharacters,
+                      buildCounter: (
+                        BuildContext context, {
+                        required int currentLength,
+                        required int? maxLength,
+                        required bool isFocused,
+                      }) =>
+                          const SizedBox(), // Sembunyikan counter bawaan
+                      decoration: InputDecoration(
+                        hintText: "Nama Pengguna",
+                        hintStyle: TextStyle(
+                            color: const Color(0xFF2F2E41).withOpacity(0.5)),
+                        filled: true,
+                        fillColor: Colors.white,
+                        enabledBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Color(0xFF00A6FB), width: 2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: const BorderSide(
+                              color: Color(0xFF00A6FB), width: 2),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 15),
+                      ),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide:
-                          const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                      borderRadius: BorderRadius.circular(50),
+                    Text(
+                      remainingText,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                      ),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 15),
-                  ),
+                  ],
                 ),
 
                 const SizedBox(height: 10),
@@ -193,8 +175,9 @@ class _RegistrationDataState extends State<RegistrationData> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(50),
-                    border: Border.all(color: const Color(0xFF00A6FB), width: 2),
+                    borderRadius: BorderRadius.circular(16),
+                    border:
+                        Border.all(color: const Color(0xFF00A6FB), width: 2),
                   ),
                   child: Stack(
                     children: [
@@ -209,8 +192,8 @@ class _RegistrationDataState extends State<RegistrationData> {
                           width: MediaQuery.of(context).size.width / 2 - 20,
                           height: 50,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00A6FB),
-                            borderRadius: BorderRadius.circular(50),
+                            color: const Color(0xFF28BAFD),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                       ),
@@ -225,10 +208,11 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
                                 decoration: const BoxDecoration(
                                   borderRadius: BorderRadius.horizontal(
-                                      left: Radius.circular(50)),
+                                      left: Radius.circular(16)),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -273,10 +257,11 @@ class _RegistrationDataState extends State<RegistrationData> {
                                 });
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
                                 decoration: const BoxDecoration(
                                   borderRadius: BorderRadius.horizontal(
-                                      right: Radius.circular(50)),
+                                      right: Radius.circular(16)),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -317,7 +302,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                   ),
                 ),
 
-                const SizedBox(height: 10),
+                const SizedBox(height: 20),
 
                 // Input Berat Badan (Only numbers)
                 TextField(
@@ -336,12 +321,12 @@ class _RegistrationDataState extends State<RegistrationData> {
                     enabledBorder: OutlineInputBorder(
                       borderSide:
                           BorderSide(color: const Color(0xFF00A6FB), width: 2),
-                      borderRadius: BorderRadius.circular(50),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderSide:
                           BorderSide(color: const Color(0xFF00A6FB), width: 2),
-                      borderRadius: BorderRadius.circular(50),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 15),
@@ -357,57 +342,57 @@ class _RegistrationDataState extends State<RegistrationData> {
                     height: 55,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFF4ACCFF),
-                          Color(0xFF00A6FB),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(50),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0xFF00A6FB).withOpacity(0.25),
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
+                      gradient: isFormFilled
+                          ? const LinearGradient(
+                              colors: [
+                                Color(0xFF4ACCFF),
+                                Color(0xFF00A6FB),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isFormFilled
+                          ? null
+                          : Colors.grey[400], // warna abu-abu saat tidak aktif
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         padding: EdgeInsets.symmetric(vertical: 15),
                       ),
-                      onPressed: () {
-                        String name = controllerName.text.trim();
-                        String weightText = controllerWeight.text.trim();
-                        double? weight = double.tryParse(weightText);
+                      onPressed: isFormFilled
+                          ? () {
+                              String name = controllerName.text.trim();
+                              String weightText = controllerWeight.text.trim();
+                              double? weight = double.tryParse(weightText);
 
-                        if (name.isEmpty || weightText.isEmpty) {
-                          _showWarningDialog("Nama dan berat badan tidak boleh kosong.");
-                        } else if (weight == null) {
-                          _showWarningDialog("Masukkan berat badan yang valid");
-                        } else if (weight < 1 || weight > 300) {
-                          _showWarningDialog("Berat badan harus antara 1 kg hingga 300 kg.");
-                        } else {
-                          // Semua valid, lanjut ke halaman berikutnya
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => RegistrationTime(
-                                name: name,
-                                gender: selectedGender,
-                                weight: weight,
-                              ),
-                            ),
-                          );
-                        }
-                      },
+                              if (weight == null) {
+                                showWarningDialog(
+                                    context, "Masukkan berat badan yang valid");
+                              } else if (weight < 1 || weight > 300) {
+                                showWarningDialog(context,
+                                    "Berat badan harus antara 1 kg hingga 300 kg.");
+                              } else {
+                                // Semua valid, lanjut ke halaman berikutnya
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => RegistrationTime(
+                                      name: name,
+                                      gender: selectedGender,
+                                      weight: weight,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          : null,
                       child: Text(
                         "SELANJUTNYA",
                         style: GoogleFonts.inter(

@@ -8,7 +8,6 @@ import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:lottie/lottie.dart';
-import 'dart:math';
 
 class StatisticScreen extends StatefulWidget {
   const StatisticScreen({Key? key}) : super(key: key);

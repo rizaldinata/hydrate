@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/presentation/screens/registration1_view.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/splash_view.dart';
 
 class InfoProduct extends StatelessWidget {
   @override
@@ -14,7 +15,6 @@ class InfoProduct extends StatelessWidget {
           final double screenHeight = constraints.maxHeight;
 
           return SingleChildScrollView(
-            // ✅ Tambahkan agar bisa discroll
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
               child: Column(
@@ -57,7 +57,7 @@ class InfoProduct extends StatelessWidget {
                         enabled: false,
                         decoration: InputDecoration(
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                         ),
                       ),
@@ -72,7 +72,7 @@ class InfoProduct extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          "Mulai perjalanan sehatmu sekarang dan rasakan manfaatnya!",
+                          "Mulai perjalanan sehatmu sekarang dan rasakan manfaatnya",
                           textAlign: TextAlign.center,
                           style: GoogleFonts.inter(
                             fontSize: screenWidth * 0.035,
@@ -80,9 +80,9 @@ class InfoProduct extends StatelessWidget {
                         ),
                         SizedBox(height: screenHeight * 0.01),
                         Text(
-                          "Let’s stay hydrated!",
+                          "Ayo mulai penuhi hidrasi harianmu!",
                           style: GoogleFonts.inter(
-                            fontSize: screenWidth * 0.04,
+                            fontSize: screenWidth * 0.035,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -93,16 +93,18 @@ class InfoProduct extends StatelessWidget {
                   SizedBox(height: screenHeight * 0.03),
 
                   SizedBox(
-                    width: screenWidth * 0.8,
+                    // width: screenWidth * 0.8,
                     child: Container(
                       margin: EdgeInsets.only(bottom: 50),
+                      height: 55,
+                      width: double.infinity,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
                           colors: [Color(0xFF4ACCFF), Color(0xFF00A6FB)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
-                        borderRadius: BorderRadius.circular(50),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
                             color: Color(0xFF00A6FB).withOpacity(0.25),
@@ -116,23 +118,23 @@ class InfoProduct extends StatelessWidget {
                           backgroundColor: Colors.transparent,
                           shadowColor: Colors.transparent,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
+                            borderRadius: BorderRadius.circular(16),
                           ),
                           padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.02),
+                              vertical: screenHeight * 0.018),
                         ),
                         onPressed: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => RegistrationData()),
+                                builder: (context) => OnboardingScreen()),
                           );
                         },
                         child: Text(
-                          "MASUK",
-                          style: GoogleFonts.inter(
-                            fontSize: screenWidth * 0.045,
-                            fontWeight: FontWeight.bold,
+                          "MULAI SEKARANG",
+                          style: GoogleFonts.nunito(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
                             color: Colors.white,
                           ),
                         ),
