@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/main.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registrasi_akun.dart';
 import 'package:hydrate/presentation/widgets/alert_widget.dart';
 
 class LoginView extends StatefulWidget {
@@ -273,7 +274,7 @@ class _LoginViewState extends State<LoginView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MainScreen(),
+                        builder: (context) => RegistrationView(),
                       ),
                     );
                   },

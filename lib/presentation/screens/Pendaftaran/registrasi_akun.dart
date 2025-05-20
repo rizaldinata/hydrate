@@ -62,7 +62,7 @@ class _RegistrationViewState extends State<RegistrationView> {
 
                 // Teks "DAFTAR"
                 Text(
-                  "MASUK",
+                  "DAFTAR SEKARANG",
                   style: GoogleFonts.inter(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,

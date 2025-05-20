@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/login_view.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/registrasi_view.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registrasi_akun.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/splash_view.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : RegistrationView();
+          return snapshot.data == true ? MainScreen() : InfoProduct();
         },
       ),
     );
