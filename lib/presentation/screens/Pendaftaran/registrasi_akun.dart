@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
 import 'package:hydrate/presentation/widgets/alert_widget.dart';
+import 'package:hydrate/services/auth_services.dart';
 
 class RegistrationView extends StatefulWidget {
   @override
@@ -19,8 +20,9 @@ class _RegistrationViewState extends State<RegistrationView> {
 
   void _checkForm() {
     setState(() {
-      isFormFilled =
-          controllerEmail.text.isNotEmpty && controllerPass.text.isNotEmpty && controllerPassConfirm.text.isNotEmpty;
+      isFormFilled = controllerEmail.text.isNotEmpty &&
+          controllerPass.text.isNotEmpty &&
+          controllerPassConfirm.text.isNotEmpty;
     });
   }
 
@@ -234,26 +236,47 @@ class _RegistrationViewState extends State<RegistrationView> {
                         padding: EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: isFormFilled
-                          ? () {
+                          ? () async {
                               String email = controllerEmail.text.trim();
                               String pass = controllerPass.text.trim();
+                              String confirmPass =
+                                  controllerPassConfirm.text.trim();
 
-                              if (email == '@gmail.com') {
+                              // Cek apakah email valid menggunakan regex sederhana
+                              bool isEmailValid =
+                                  RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
+                                      .hasMatch(email);
+
+                              if (!isEmailValid) {
                                 showWarningDialog(
                                     context, "Masukkan email yang valid");
+                              } else if (pass != confirmPass) {
+                                showWarningDialog(
+                                    context, "Konfirmasi password tidak cocok");
                               } else {
-                                // Semua valid, lanjut ke halaman berikutnya
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RegistrationData(),
-                                  ),
-                                );
+                                // Jika semua validasi lolos, coba daftar ke Firebase
+                                try {
+                                  await AuthServices().signUp(
+                                    email: email,
+                                    password: pass,
+                                  );
+                                  // Jika berhasil, pindah ke halaman berikutnya
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => RegistrationData(),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  // Tampilkan error jika gagal daftar
+                                  showWarningDialog(context,
+                                      "Pendaftaran gagal: ${e.toString()}");
+                                }
                               }
                             }
                           : null,
                       child: Text(
-                        "SELANJUTNYA",
+                        "DAFTAR",
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -275,7 +298,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                 const SizedBox(height: 10),
 
                 Container(
-                  padding: const EdgeInsets.symmetric( vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -309,7 +332,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                
+
                 // Tombol Selanjutnya
                 GestureDetector(
                   onTap: () {

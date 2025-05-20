@@ -62,7 +62,7 @@ dependencies:
   fl_chart: ^1.0.0
   firebase_database: ^11.3.5
   firebase_auth: ^5.5.3
-
+  fluttertoast: ^8.2.12
 
 dev_dependencies:
   flutter_test:
