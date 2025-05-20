@@ -1,8 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/main.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registrasi_akun.dart';
 import 'package:hydrate/presentation/widgets/alert_widget.dart';
+import 'package:hydrate/services/auth_services.dart';
 
 class LoginView extends StatefulWidget {
   @override
@@ -190,23 +193,41 @@ class _LoginViewState extends State<LoginView> {
                         padding: EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: isFormFilled
-                          ? () {
+                          ? () async {
                               String email = controllerEmail.text.trim();
                               String pass = controllerPass.text.trim();
 
-                              if (email == '@gmail.com') {
+                              // Cek format email sederhana
+                              bool isEmailValid =
+                                  RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$")
+                                      .hasMatch(email);
+
+                              if (!isEmailValid) {
                                 showWarningDialog(
                                     context, "Masukkan email yang valid");
+                              } else if (pass.isEmpty) {
+                                showWarningDialog(
+                                    context, "Password tidak boleh kosong");
                               } else {
-                                // Semua valid, lanjut ke halaman berikutnya
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => MainScreen(),
-                                  ),
-                                );
+                                try {
+                                  await AuthServices()
+                                      .signIn(email: email, password: pass);
+
+                                  // Hanya dijalankan kalau login berhasil
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => MainScreen()),
+                                  );
+                                } catch (e) {
+                                    if (e is FirebaseAuthException) {
+                                      showWarningDialog(context, e.message ?? 'Terjadi kesalahan saat login');
+                                    } else {
+                                      showWarningDialog(context, 'Terjadi kesalahan tidak diketahui');
+                                    }
                               }
                             }
+                          }
                           : null,
                       child: Text(
                         "MASUK",
@@ -231,7 +252,7 @@ class _LoginViewState extends State<LoginView> {
                 const SizedBox(height: 10),
 
                 Container(
-                  padding: const EdgeInsets.symmetric( vertical: 10),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
@@ -273,7 +294,7 @@ class _LoginViewState extends State<LoginView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MainScreen(),
+                        builder: (context) => RegistrationView(),
                       ),
                     );
                   },
