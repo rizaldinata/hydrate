@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/main.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/login_view.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
 import 'package:hydrate/presentation/widgets/alert_widget.dart';
 
@@ -317,7 +318,7 @@ class _RegistrationViewState extends State<RegistrationView> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => RegistrationData(),
+                        builder: (context) => LoginView(),
                       ),
                     );
                   },
