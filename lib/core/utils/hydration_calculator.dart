@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hydrate/data/models/pengguna_model.dart';
 import 'package:hydrate/data/models/profil_pengguna_model.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
@@ -24,7 +25,7 @@ class HydrationCalculator {
   Future<void> initializeData(int penggunaId) async {
     try {
       Pengguna? penggunaData =
-          await _penggunaController.getPenggunaById(penggunaId);
+          await _penggunaController.getPenggunaByLocalId(penggunaId);
 
       ProfilPengguna? profilPenggunaData =
           await _profilPenggunaController.getProfilPengguna(penggunaId);

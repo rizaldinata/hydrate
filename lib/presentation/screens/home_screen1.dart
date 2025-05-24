@@ -253,7 +253,7 @@ class HomeScreensState extends State<HomeScreens>
       final userId = await session.getUserId();
 
       if (userId != null) {
-        final pengguna = await _penggunaController.getPenggunaById(userId);
+        final pengguna = await _penggunaController.getPenggunaByLocalId(userId);
 
         if (pengguna != null) {
           _hydrationCalculator = HydrationCalculator(penggunaId: userId);

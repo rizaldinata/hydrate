@@ -1,10 +1,11 @@
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/data/repositories/profil_pengguna_repository.dart';
 import 'package:hydrate/data/models/profil_pengguna_model.dart';
+import 'package:hydrate/services/app_services.dart';
 
 class ProfilPenggunaController {
   final ProfilPenggunaRepository _profilRepo = ProfilPenggunaRepository();
-  final PenggunaRepository _penggunaRepo = PenggunaRepository();
+  final PenggunaRepository _penggunaRepo = AppServices.instance.penggunaRepository;
 
   // Method untuk mengambil data profil
   Future<ProfilPengguna?> getProfilPengguna(int fkIdPengguna) async {

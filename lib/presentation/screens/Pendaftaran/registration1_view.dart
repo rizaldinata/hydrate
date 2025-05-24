@@ -4,10 +4,22 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/registration2_view.dart';
 import 'package:hydrate/presentation/widgets/alert_widget.dart';
 
-class RegistrationData extends StatefulWidget {
+class RegistrationData extends StatefulWidget { // Atau class Registration1View extends StatefulWidget
+  final String email; // WAJIB: Terima email dari RegistrationView
+  final String password;
+
+  const RegistrationData({ // Atau const Registration1View
+    Key? key,
+    required this.email, // Tambahkan ini
+    required this.password,
+    
+  }) : super(key: key);
+
   @override
-  _RegistrationDataState createState() => _RegistrationDataState();
+  // ignore: library_private_types_in_public_api
+  _RegistrationDataState createState() => _RegistrationDataState(); // Atau _Registration1ViewState
 }
+
 
 class _RegistrationDataState extends State<RegistrationData> {
   TextEditingController controllerName = TextEditingController();
@@ -378,19 +390,22 @@ class _RegistrationDataState extends State<RegistrationData> {
                               } else if (weight < 1 || weight > 300) {
                                 showWarningDialog(context,
                                     "Berat badan harus antara 1 kg hingga 300 kg.");
-                              } else {
-                                // Semua valid, lanjut ke halaman berikutnya
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => RegistrationTime(
-                                      name: name,
-                                      gender: selectedGender,
-                                      weight: weight,
-                                    ),
-                                  ),
-                                );
-                              }
+                              } else { // Blok setelah semua validasi di RegistrationData lolos
+  // Semua valid, lanjut ke halaman RegistrationTime
+  // dan teruskan SEMUA data yang terkumpul termasuk email.
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+     builder: (context) => RegistrationTime( // Ini adalah registration2_view.dart Anda
+          email: widget.email,       // Teruskan email dari widget
+          password: widget.password, // Teruskan password dari widget
+          name: name,
+          gender: selectedGender,
+          weight: weight,
+        ),
+    ),
+  );
+}
                             }
                           : null,
                       child: Text(

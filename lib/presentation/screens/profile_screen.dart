@@ -7,6 +7,8 @@ import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart
 import 'package:hydrate/presentation/screens/edit_profile.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
+import 'package:hydrate/services/app_services.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onProfileUpdated;
@@ -100,7 +102,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       if (userId != null) {
         setState(() => idPengguna = userId);
 
-        final pengguna = await PenggunaRepository().getPenggunaById(userId);
+        final pengguna = await AppServices.instance.penggunaRepository.getPenggunaById(userId);
         final profil =
             await _profilPenggunaController.getProfilPengguna(userId);
 
