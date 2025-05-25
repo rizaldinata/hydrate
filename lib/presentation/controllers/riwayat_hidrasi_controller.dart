@@ -1,63 +1,82 @@
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
+import 'package:hydrate/data/repositories/hydration/riwayat_hidrasi_repository.dart';
+import 'package:hydrate/data/repositories/hydration/target_hidrasi_repository.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/riwayat_hidrasi_model.dart';
-import '../../data/repositories/riwayat_hidrasi_repository.dart';
+import 'package:hydrate/locator.dart';
 
 class RiwayatHidrasiController {
-  final RiwayatHidrasiRepository _repository = RiwayatHidrasiRepository();
+  final RiwayatHidrasiRepository _repository = locator<RiwayatHidrasiRepository>();
+  final TargetHidrasiRepository _targetRepo = locator<TargetHidrasiRepository>();
 
   // tambah hidrasi dan tambah riwayat hidrasi
-  Future<int> tambahRiwayatHidrasi({
-    required int fkIdPengguna,
-    required double jumlahHidrasi,
-  }) async {
-    return await _repository.tambahRiwayatHidrasi(
-      fkIdPengguna: fkIdPengguna,
-      jumlahHidrasi: jumlahHidrasi,
+  Future<void> tambahHidrasi(int idPengguna, double jumlah) async {
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final now = DateFormat('HH:mm:ss').format(DateTime.now());
+
+    await _repository.addRiwayatHidrasi(
+      localPenggunaId: idPengguna,
+      jumlah: jumlah,
+      tanggal: today,
+      waktu: now,
     );
+    // Setelah menambah riwayat, update juga total harian di target
+    final totalHarian = await getTotalHidrasiHariIni(idPengguna);
+    await _targetRepo.updateTotalHidrasi(idPengguna, today, totalHarian);
   }
 
   // Fungsi untuk mengambil riwayat hidrasi berdasarkan tanggal hari ini
   Future<List<RiwayatHidrasi>> getRiwayatHidrasiHariIni(int idPengguna) async {
-    // Gunakan zona waktu WIB
-    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
-    return await _repository.getRiwayatHidrasiByTanggal(idPengguna, today);
+    final String today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    // Panggil metode baru yang sudah kita buat di repository
+    final maps = await _repository.getLocalRiwayatHidrasiByTanggal(idPengguna, today);
+    return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
   }
 
   // Fungsi untuk mengambil riwayat hidrasi berdasarkan tanggal tertentu
   Future<List<RiwayatHidrasi>> getRiwayatHidrasiByTanggal(int idPengguna, DateTime tanggal) async {
     final formattedDate = DateFormat('yyyy-MM-dd').format(tanggal);
-    return await _repository.getRiwayatHidrasiByTanggal(idPengguna, formattedDate);
+    final maps = await _repository.getLocalRiwayatHidrasiByTanggal(idPengguna, formattedDate);
+    return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
   }
 
   // Fungsi untuk menghitung total hidrasi pada hari ini
   Future<double> getTotalHidrasiHariIni(int idPengguna) async {
-    final List<RiwayatHidrasi> riwayatHariIni = await getRiwayatHidrasiHariIni(idPengguna);
-    
-    double total = 0.0;
-    for (var riwayat in riwayatHariIni) {
-      total += riwayat.jumlahHidrasi;
-    }
-    
-    return total;
+  final List<RiwayatHidrasi> riwayatHariIni = await getRiwayatHidrasiHariIni(idPengguna);
+  
+  double total = 0.0;
+  for (var riwayat in riwayatHariIni) {
+    total += riwayat.jumlahHidrasi;
   }
+  
+  return total;
+}
 
   // tampilin semua riwayat hidrasi
-  Future<List<RiwayatHidrasi>> getRiwayatHidrasi(int idPengguna) async {
-    return await _repository.getRiwayatHidrasi(idPengguna);
+  Future<List<RiwayatHidrasi>> getAllRiwayatHidrasi(int idPengguna) async {
+    // Gunakan nama metode yang benar
+    final maps = await _repository.getAllLocalRiwayatHidrasi(idPengguna);
+    return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
   }
 
   // Hapus Riwayat Hidrasi
-  Future<void> hapusRiwayatDanKurangiTarget({
-    required int idRiwayat,
+  Future<void> hapusRiwayatDanUpdateTotal({
+    required String riwayatSyncId, // Gunakan sync_id, bukan idRiwayat
     required int idPengguna,
-    required String tanggalHidrasi,
-    required TargetHidrasiController targetController,
+    required String tanggalHidrasi, // Tanggal dibutuhkan untuk update total
   }) async {
-    final jumlah = await _repository.hapusRiwayatBerdasarkanId(idRiwayat);
-    if (jumlah != null) {
-      print('Menghapus riwayat hidrasi dengan ID: $idRiwayat');
-      await targetController.kurangiHidrasi(idPengguna, jumlah);
+    try {
+      // Panggil metode soft delete yang benar
+      final bool berhasilHapus = await _repository.softDeleteRiwayatHidrasi(riwayatSyncId);
+
+      if (berhasilHapus) {
+        print('Riwayat hidrasi dengan sync_id: $riwayatSyncId berhasil di-soft-delete.');
+        // Hitung ulang total hidrasi untuk hari itu
+        final double totalBaru = await getTotalHidrasiHariIni(idPengguna);
+        // Update total hidrasi di target repository
+        await _targetRepo.updateTotalHidrasi(idPengguna, tanggalHidrasi, totalBaru);
+      }
+    } catch (e) {
+      print("Error saat menghapus riwayat dan mengupdate total: $e");
     }
   }
 

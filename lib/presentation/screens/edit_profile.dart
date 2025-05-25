@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 
 class EditProfile extends StatefulWidget {
@@ -32,8 +33,7 @@ class _EditProfileState extends State<EditProfile> {
   late TimeOfDay? wakeUpTime;
   late TimeOfDay? sleepTime;
 
-  final ProfilPenggunaController _controller = ProfilPenggunaController();
-  bool _isLoading = false;
+  bool _isSaving = false;
 
   final Map<String, String> genderMap = {
     "Laki-laki": "Male",
@@ -50,35 +50,21 @@ class _EditProfileState extends State<EditProfile> {
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.initialNama);
-    // weightController =
-    //     TextEditingController(text: widget.initialBeratBadan.toString());
-
-    // // Konversi "Male" / "Female" ke "Laki-laki" / "Perempuan"
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
-    //               (widget.initialJenisKelamin == "Male" ? "Laki-laki" : "Perempuan");
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
-    //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
-
-    weightController =
-        TextEditingController(text: widget.initialBeratBadan.toString());
+    weightController = TextEditingController(text: widget.initialBeratBadan.toString());
     selectedGender = widget.initialJenisKelamin;
-
-    // Parse jam bangun dan tidur jika tersedia
     wakeUpTime = _parseTimeString(widget.initialJamBangun);
     sleepTime = _parseTimeString(widget.initialJamTidur);
   }
 
   TimeOfDay? _parseTimeString(String? timeString) {
-    if (timeString == null || timeString == 'Belum diatur') return null;
-
+    if (timeString == null || timeString == 'Belum diatur' || timeString.isEmpty) return null;
     try {
       final parts = timeString.split(':');
       if (parts.length == 2) {
-        return TimeOfDay(
-            hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+        return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
       }
     } catch (e) {
-      print('Error parsing time: $e');
+      print('EditProfile: Error parsing time: $e');
     }
     return null;
   }
@@ -137,7 +123,6 @@ class _EditProfileState extends State<EditProfile> {
 
 
   void _saveProfile() async {
-    // Validasi input
     if (nameController.text.isEmpty ||
         selectedGender.isEmpty ||
         weightController.text.isEmpty) {
@@ -148,46 +133,45 @@ class _EditProfileState extends State<EditProfile> {
     final nama = nameController.text;
     final berat = double.tryParse(weightController.text) ?? 0.0;
 
-    // final success = await _controller.updateProfilDanNama(
-    //   userId: widget.userId,
-    //   nama: nama,
-    //   jenisKelamin: selectedGender,
-    //   beratBadan: berat,
-    // );
-
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
       return;
     }
 
+    final String formattedWakeUpTime = _formatTimeOfDay(wakeUpTime);
+    final String formattedSleepTime = _formatTimeOfDay(sleepTime);
+
     setState(() {
-      _isLoading = true;
+      _isSaving = true;
     });
 
+    final profilController = context.read<ProfilPenggunaController>();
+
     try {
-      final success = await _controller.updateProfilPenggunaLengkap(
-        userId: widget.userId,
+      final success = await profilController.updateUserProfile(
         nama: nama,
         jenisKelamin: selectedGender,
         beratBadan: berat,
-        jamBangun: _formatTimeOfDay(wakeUpTime),
-        jamTidur: _formatTimeOfDay(sleepTime),
+        jamBangun: formattedWakeUpTime,
+        jamTidur: formattedSleepTime,
       );
 
-      if (success && mounted) {
-        Navigator.pop(context, true);
-        _showOverlaySuccess("Profil berhasil diperbarui!");
-      } else if (mounted) {
-        _showOverlayError("Gagal memperbarui profil!");
+      if (mounted) { 
+        if (success) {
+          Navigator.pop(context, true); 
+          _showOverlaySuccess("Profil berhasil diperbarui!");
+        } else {
+          _showOverlayError(profilController.errorMessage ?? "Gagal memperbarui profil!");
+        }
       }
     } catch (e) {
       if (mounted) {
-        _showOverlayError("Berat badan tidak boleh lebih dari 300 kg. Silakan masukkan berat yang sesuai.",);
+        _showOverlayError("Terjadi kesalahan: ${e.toString()}");
       }
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isSaving = false;
         });
       }
     }
@@ -201,7 +185,7 @@ class _EditProfileState extends State<EditProfile> {
       child: Container(
         width: MediaQuery.of(context).size.width * 0.85,
         padding: const EdgeInsets.all(20),
-        child: _isLoading
+        child: _isSaving
             ? const Center(
                 child: CircularProgressIndicator(),
               )
@@ -424,7 +408,7 @@ class _EditProfileState extends State<EditProfile> {
 
   // Fungsi untuk menampilkan Overlay Sukses
   void _showOverlaySuccess(String message) {
-    _showOverlay(message, Colors.white.withOpacity(0.90));
+    _showOverlay(message, Colors.white.withValues(alpha: 0.90));
   }
 
   // Fungsi umum untuk menampilkan overlay

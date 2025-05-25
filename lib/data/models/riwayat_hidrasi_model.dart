@@ -6,6 +6,9 @@ class RiwayatHidrasi {
   final String? waktuHidrasi;
   final String? timestamp;
   final DateTime? createdAt;
+  final String? syncId; // <-- 1. TAMBAHKAN FIELD INI
+  final int? isSynced; // Untuk sinkronisasi ke Firestore
+  final int? isDeleted; // Untuk soft delete
 
   RiwayatHidrasi({
     this.id,
@@ -14,7 +17,10 @@ class RiwayatHidrasi {
     this.tanggalHidrasi,
     this.waktuHidrasi,
     this.timestamp,
-    this.createdAt
+    this.createdAt,
+    this.syncId,
+    this.isSynced,
+    this.isDeleted,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +32,9 @@ class RiwayatHidrasi {
       'waktu_hidrasi': waktuHidrasi,
       'timestamp': timestamp,
       'createdAt' : createdAt,
+      'sync_id': syncId,
+      'is_synced': isSynced,
+      'is_deleted': isDeleted,
     };
   }
 
@@ -40,7 +49,10 @@ class RiwayatHidrasi {
       createdAt: map['created_at'] != null 
           ? DateTime.parse(map['created_at']) 
           : null,
-    );
+      syncId: map['sync_id'],
+      isSynced: map['is_synced'],
+      isDeleted: map['is_deleted'],
+      );
   }
   @override
   String toString() {

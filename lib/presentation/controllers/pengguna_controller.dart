@@ -1,12 +1,12 @@
 // File: lib/presentation/controllers/pengguna_controller.dart
 
 import 'package:hydrate/data/models/pengguna_model.dart'; // Hanya jika getPenggunaByLocalId mengembalikan model ini
-import 'package:hydrate/services/app_services.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/locator.dart';
 
 class PenggunaController {
   // Mengambil instance PenggunaRepository yang sudah diinisialisasi dari AppServices
-  final PenggunaRepository _repository = AppServices.instance.penggunaRepository;
+  final PenggunaRepository _repository = locator<PenggunaRepository>();
 
   /// Metode utama untuk proses registrasi lengkap (Firebase Auth + SQLite + Firestore)
   /// yang dipanggil dari UI screen registrasi.
@@ -31,13 +31,10 @@ class PenggunaController {
         // 'email_kontak': email, // Menyimpan email di data profil juga
       };
 
-      // Gunakan password default jika tidak diberikan
-      String passwordToUse = password ?? _generateDefaultPassword(email);
-
       // Panggil method di repository untuk registrasi lengkap
       bool berhasil = await _repository.registerAndSetupUser(
         email: email,
-        password: passwordToUse,
+        password: password,
         namaPengguna: nama,
         dataProfil: dataProfilMap,
       );
@@ -161,7 +158,7 @@ class PenggunaController {
 
   /// Mengambil data pengguna yang sedang login dari SQLite berdasarkan firebase_uid.
   Future<Pengguna?> getPenggunaSaatIniDariLokal() async {
-    final currentUserUid = AppServices.instance.firebaseAuth.currentUser?.uid;
+    final currentUserUid = _repository.currentUser?.uid;
     if (currentUserUid == null) {
       print("PenggunaController: Tidak ada pengguna yang login untuk diambil datanya.");
       return null;
@@ -207,10 +204,9 @@ class PenggunaController {
     required String jamTidur,
   }) async {
     try {
-      final pengguna = await getPenggunaSaatIniDariLokal();
       final profil = await getProfilPenggunaSaatIni();
       
-      if (pengguna?.id != null && profil?['sync_id'] != null) {
+      if (profil?['sync_id'] != null) {
         Map<String, dynamic> dataUpdate = {
           'jenis_kelamin': jenisKelamin,
           'berat_badan': beratBadan,
@@ -219,7 +215,6 @@ class PenggunaController {
         };
         
         return await _repository.updateLokalDanSinkronProfil(
-          localPenggunaId: pengguna!.id!,
           profilSyncId: profil!['sync_id'],
           dataUpdateProfil: dataUpdate,
         );
@@ -233,24 +228,6 @@ class PenggunaController {
 
   /// Mengecek apakah pengguna sudah terdaftar (ada data di SQLite)
   Future<bool> isPenggunaTerdaftar() async {
-    return await _repository.isPenggunaTerdaftar();
+    return await _repository.isPenggunaTerdaftarLokal();
   }
-
-  /// Helper method untuk generate password default
-  String _generateDefaultPassword(String email) {
-    // Buat password default dari bagian pertama email + suffix
-    String emailPrefix = email.split('@')[0];
-    return "${emailPrefix}123!"; // Contoh: user@email.com -> user123!
-  }
-
-  // Metode `tambahPengguna` yang lama sudah di-comment karena tidak digunakan untuk registrasi Firebase
-  // Jika diperlukan untuk keperluan lokal saja, bisa di-uncomment dan dimodifikasi sesuai kebutuhan
-  /*
-  Future<int> tambahPenggunaLokalSaja(String nama, String jenisKelamin,
-      double beratBadan, String jamBangun, String jamTidur) async {
-    print("PenggunaController: Memanggil _repository.tambahPenggunaDanProfil (UNTUK DATA LOKAL SAJA)");
-    return await _repository.tambahPenggunaDanProfil(
-        nama, jenisKelamin, beratBadan, jamBangun, jamTidur);
-  }
-  */
 }

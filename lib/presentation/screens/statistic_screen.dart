@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
+import 'package:hydrate/locator.dart'; 
 import 'package:lottie/lottie.dart';
 
 class StatisticScreen extends StatefulWidget {
@@ -26,9 +26,8 @@ class StatisticScreenState extends State<StatisticScreen> {
 
   List<RiwayatHidrasi> waterHistory = [];
   DateTime selectedDate = DateTime.now();
-  final RiwayatHidrasiController _controller = RiwayatHidrasiController();
-  final TargetHidrasiController targetHidrasiController =
-      TargetHidrasiController();
+  final RiwayatHidrasiController _riwayatController = RiwayatHidrasiController();
+
   bool isLoading = true;
   int? userId;
   String? errorMessage;
@@ -49,7 +48,11 @@ class StatisticScreenState extends State<StatisticScreen> {
   }
 
   void refresh() {
-    if (selectedDate.isAtSameMomentAs(DateTime.now())) {
+    DateTime today = DateTime.now();
+    DateTime startOfToday = DateTime(today.year, today.month, today.day);
+    DateTime startOfSelectedDate = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    
+    if (startOfSelectedDate.isAtSameMomentAs(startOfToday)) {
       _initData();
     } else {
       setState(() {
@@ -66,7 +69,9 @@ class StatisticScreenState extends State<StatisticScreen> {
     });
 
     try {
-      userId = await SessionManager().getUserId();
+      final sessionManager = locator<SessionManager>();
+      userId = await sessionManager.getUserId();
+
       if (userId != null) {
         await _loadRiwayatHidrasi();
       } else {
@@ -90,14 +95,18 @@ class StatisticScreenState extends State<StatisticScreen> {
 
     try {
       List<RiwayatHidrasi> history =
-          await _controller.getRiwayatHidrasiByTanggal(userId!, selectedDate);
-      setState(() {
-        waterHistory = history;
-      });
+          await _riwayatController.getRiwayatHidrasiByTanggal(userId!, selectedDate);
+      if (mounted) {
+        setState(() {
+          waterHistory = _riwayatController.sortRiwayatByWaktuDescending(history);
+        });
+      }
     } catch (e) {
-      setState(() {
-        errorMessage = "Kesalahan saat memuat riwayat: $e";
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = "Kesalahan saat memuat riwayat: $e";
+        });
+      }
     }
   }
 
@@ -188,7 +197,7 @@ class StatisticScreenState extends State<StatisticScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.1),
+            color: _primaryColor.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -292,13 +301,13 @@ class StatisticScreenState extends State<StatisticScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.08),
+            color: _primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: _primaryColor.withOpacity(0.1),
+          color: _primaryColor.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -306,8 +315,8 @@ class StatisticScreenState extends State<StatisticScreen> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          splashColor: _primaryColor.withOpacity(0.1),
-          highlightColor: _primaryColor.withOpacity(0.05),
+          splashColor: _primaryColor.withValues(alpha: 0.1),
+          highlightColor: _primaryColor.withValues(alpha: 0.05),
           onTap: () {},
           child: Padding(
             padding: EdgeInsets.symmetric(
@@ -319,7 +328,7 @@ class StatisticScreenState extends State<StatisticScreen> {
                 Container(
                   padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
                   decoration: BoxDecoration(
-                    color: _primaryColor.withOpacity(0.1),
+                    color: _primaryColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(
@@ -414,7 +423,7 @@ class StatisticScreenState extends State<StatisticScreen> {
                 if (isTodayRecord)
                   Icon(
                     Icons.chevron_left,
-                    color: _textSecondaryColor.withOpacity(0.5),
+                    color: _textSecondaryColor.withValues(alpha: 0.5),
                     size: isSmallScreen ? 18 : 24,
                   ),
               ],
@@ -436,7 +445,7 @@ class StatisticScreenState extends State<StatisticScreen> {
     }
 
     return Dismissible(
-      key: Key(item.id.toString()),
+      key:  Key(item.syncId ?? item.id.toString()),
       background: Container(
         margin: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.04,
@@ -451,7 +460,7 @@ class StatisticScreenState extends State<StatisticScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.3),
+              color: Colors.red.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -563,8 +572,7 @@ class StatisticScreenState extends State<StatisticScreen> {
             if (_lastDeletedItem != null) {
               setState(() {
                 waterHistory.add(_lastDeletedItem!);
-                waterHistory.sort((a, b) =>
-                    (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
+                waterHistory = _riwayatController.sortRiwayatByWaktuDescending(waterHistory);
               });
               _lastDeletedItem = null;
               _showSnackBarNotification(
@@ -576,14 +584,22 @@ class StatisticScreenState extends State<StatisticScreen> {
           },
         );
 
-        _undoTimer = Timer(const Duration(seconds: 4), () {
+        _undoTimer = Timer(const Duration(seconds: 4), () async { // Tambahkan async
           if (_lastDeletedItem != null) {
-            _controller.hapusRiwayatDanKurangiTarget(
-              idRiwayat: _lastDeletedItem!.id ?? 0,
-              idPengguna: _lastDeletedItem!.fkIdPengguna ?? 0,
-              tanggalHidrasi: _lastDeletedItem!.tanggalHidrasi ?? "",
-              targetController: targetHidrasiController,
+            if (_lastDeletedItem!.syncId == null) {
+              print("Error: syncId tidak ditemukan untuk item yang akan dihapus.");
+              // Handle error, mungkin item ini belum pernah disinkronkan atau model tidak lengkap
+              return;
+            }
+            // ========================================================
+            //           PERUBAHAN PENTING ADA DI SINI
+            // ========================================================
+            await _riwayatController.hapusRiwayatDanUpdateTotal( // Tambahkan await
+              riwayatSyncId: _lastDeletedItem!.syncId!, // Pastikan model punya syncId
+              idPengguna: userId!, // userId sudah ada di state
+              tanggalHidrasi: _lastDeletedItem!.tanggalHidrasi ?? DateFormat('yyyy-MM-dd').format(selectedDate),
             );
+            // ========================================================
           }
           _lastDeletedItem = null;
         });

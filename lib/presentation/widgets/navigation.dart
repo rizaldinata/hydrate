@@ -111,7 +111,7 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
               animation: controller,
               builder: (context, child) {
                 return CustomPaint(
-                  painter: AppBarPainter(x: animation.value ?? position),
+                  painter: AppBarPainter(x: animation.value),
                   size: Size(
                       MediaQuery.of(context).size.width -
                           (2 * horizontalMargin),
@@ -142,7 +142,7 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
                                 Navigator.push(
                                   context, 
                                   MaterialPageRoute(
-                                    builder: (context) => ProfileScreen(
+                                    builder: (context) => ProfileScreenProvider(
                                       onProfileUpdated: () {
                                         // Ketika profile di-update, refresh semua halaman
                                         if (widget.onProfileUpdated != null) {
@@ -226,9 +226,6 @@ class AppBarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
 
     var paintCircle = Paint()
       ..color = Colors.blue

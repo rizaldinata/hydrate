@@ -59,7 +59,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     final chartPadding = width < 350 ? 8.0 : 16.0;
     
     // Calculate chart height based on container height
-    final chartHeight = height * 0.45;
+    // final chartHeight = height * 0.45;
     
     // Adjust bar width and spacing based on available width
     // Make bars narrower as we now have 7 days instead of 5
@@ -139,7 +139,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           height: 12,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [widget.accentColor, widget.accentColor.withOpacity(0.5)],
+              colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.5)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -244,7 +244,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       borderData: FlBorderData(
         show: true,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.withOpacity(0.2), width: 1),
+          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.2), width: 1),
           left: BorderSide(color: Colors.transparent),
         ),
       ),
@@ -277,9 +277,9 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       barRods: [
         BarChartRodData(
           toY: isTouched ? y + 100 : y,
-          color: isTouched ? widget.accentColor.withOpacity(0.85) : widget.accentColor,
+          color: isTouched ? widget.accentColor.withValues(alpha: 0.85) : widget.accentColor,
           gradient: LinearGradient(
-            colors: [widget.accentColor, widget.accentColor.withOpacity(0.7)],
+            colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.7)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

@@ -1,118 +1,77 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hydrate/data/models/pengguna_model.dart';
-import 'package:hydrate/data/models/profil_pengguna_model.dart';
-import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
-import '../../presentation/controllers/pengguna_controller.dart';
-
 class HydrationCalculator {
-  final PenggunaController _penggunaController = PenggunaController();
-  final ProfilPenggunaController _profilPenggunaController =
-      ProfilPenggunaController();
+  // Jadikan field ini final karena nilainya di-set sekali saat konstruksi
+  final String jenisKelamin;
+  final double beratBadan;
+  final int wakeUpTimeHour; // Simpan sebagai jam (integer)
+  final int sleepTimeHour;  // Simpan sebagai jam (integer)
 
-  late String jenisKelamin;
-  late double beratBadan;
-  late int wakeUpTime;
-  late int sleepTime;
-
-  // Konstruktor dengan penggunaId
+  // Constructor baru yang menerima semua data yang diperlukan
   HydrationCalculator({
-    required int penggunaId,
-  }) {
-    initializeData(penggunaId); // Memanggil metode publik untuk inisialisasi data pengguna
-  }
+    required String jenisKelaminInput,
+    required double beratBadanInput,
+    required String jamBangunInputStr, // Terima sebagai String "HH:MM"
+    required String jamTidurInputStr,  // Terima sebagai String "HH:MM"
+  }) : // Inisialisasi field di sini
+       jenisKelamin = jenisKelaminInput,
+       // Validasi dan set default jika berat badan tidak valid
+       beratBadan = (beratBadanInput <= 0 || beratBadanInput > 300) ? 70.0 : beratBadanInput,
+       // Parse string jam menjadi integer jam, dengan default jika parsing gagal
+       wakeUpTimeHour = _parseHourFromString(jamBangunInputStr, 6), // Default jam 6
+       sleepTimeHour = _parseHourFromString(jamTidurInputStr, 22);  // Default jam 22
+       
+       // Anda bisa menambahkan print di sini jika ingin debug nilai setelah inisialisasi
+       // print("HydrationCalculator initialized: JK=$jenisKelamin, BB=$beratBadan, Bangun=$wakeUpTimeHour, Tidur=$sleepTimeHour");
 
-  // Mengubah _initializeData menjadi metode publik
-  Future<void> initializeData(int penggunaId) async {
-    try {
-      Pengguna? penggunaData =
-          await _penggunaController.getPenggunaByLocalId(penggunaId);
 
-      ProfilPengguna? profilPenggunaData =
-          await _profilPenggunaController.getProfilPengguna(penggunaId);
-
-      // Periksa apakah penggunaData null
-      if (penggunaData == null) {
-        throw Exception("Pengguna tidak ditemukan");
-      }
-
-      // Setel nilai properti berdasarkan data pengguna
-      // Pastikan profilPenggunaData tidak null sebelum mengakses propertinya
-      jenisKelamin = profilPenggunaData?.jenisKelamin ?? 'Laki-laki'; // Default ke Laki-laki
-      beratBadan = profilPenggunaData?.beratBadan ?? 70.0; // Default 70 kg
-      
-      // Parsing jam bangun dan tidur
-      // Format jam yang diharapkan: "HH:MM"
-      String jamBangunStr = profilPenggunaData?.jamBangun ?? '';
-      String jamTidurStr = profilPenggunaData?.jamTidur ?? '';
-      
-      wakeUpTime = _parseHour(jamBangunStr, 6); // Default 6 pagi
-      sleepTime = _parseHour(jamTidurStr, 22);  // Default 10 malam
-
-      // Debugging
-      print("Jenis Kelamin: $jenisKelamin, Berat Badan: $beratBadan kg");
-      print("Jam Bangun: $wakeUpTime, Jam Tidur: $sleepTime");
-
-      // Jika beratBadan masih 0, beri peringatan
-      if (beratBadan <= 0) {
-        print("Warning: Berat badan tidak valid. Menggunakan nilai default.");
-        beratBadan = 70.0; // Set default weight if invalid
-      }
-    } catch (e) {
-      print("Error saat mengambil data pengguna: $e");
-      jenisKelamin = 'Laki-laki';
-      beratBadan = 70.0; // Default weight jika error
-      wakeUpTime = 6;
-      sleepTime = 22;
-    }
-  }
-  
-  // Helper method untuk mengekstrak jam dari string format "HH:MM"
-  int _parseHour(String timeString, int defaultValue) {
-    if (timeString == 'Belum diatur' || timeString.isEmpty) {
+  // Helper method statis untuk mengekstrak jam dari string format "HH:MM"
+  // Statis karena tidak bergantung pada instance state dari HydrationCalculator
+  static int _parseHourFromString(String? timeString, int defaultValue) {
+    if (timeString == null || timeString == 'Belum diatur' || timeString.isEmpty) {
       return defaultValue;
     }
-    
     try {
-      // Untuk format "HH:MM"
       if (timeString.contains(':')) {
         return int.parse(timeString.split(':')[0]);
       }
-      // Untuk format integer dalam string
+      // Jika formatnya hanya angka (misal "6" atau "22")
       return int.parse(timeString);
     } catch (e) {
-      print("Error parsing time: $e");
+      print("HydrationCalculator: Error parsing time string '$timeString': $e");
       return defaultValue;
     }
   }
 
   // Menghitung kebutuhan hidrasi harian dalam liter
+  // Metode ini sekarang menggunakan field dari instance
   double calculateDailyWaterIntake() {
-    if (beratBadan <= 0) {
-      print("Warning: Berat badan tidak valid. Menggunakan nilai default.");
-      beratBadan = 70.0; // Set default weight if invalid
-    }
-
-    // Gunakan format yang konsisten dengan database: "Laki-laki" dan "Perempuan"
+    // jenisKelamin dan beratBadan sudah divalidasi/default di constructor
     if (jenisKelamin == "Laki-laki") {
       return beratBadan * 35 / 1000; // 35ml per kg berat badan untuk laki-laki
-    } else {
+    } else { // Asumsi default atau "Perempuan"
       return beratBadan * 31 / 1000; // 31ml per kg berat badan untuk perempuan
     }
   }
 
   // Menghitung distribusi hidrasi sepanjang hari
+  // Metode ini sekarang menggunakan field dari instance
   Map<String, double> calculateWaterDistribution() {
     double totalIntake = calculateDailyWaterIntake();
-    int totalHours = sleepTime - wakeUpTime;
-    if (totalHours <= 0) totalHours += 24; // Jika tidur lewat tengah malam
+    int totalActiveHours = sleepTimeHour - wakeUpTimeHour;
+    
+    // Penyesuaian jika jam tidur melewati tengah malam (misal bangun jam 6, tidur jam 1)
+    if (totalActiveHours <= 0) {
+      totalActiveHours += 24; 
+    }
+    
+    if (totalActiveHours == 0) return {}; // Hindari pembagian dengan nol
 
-    double hourlyIntake = totalIntake / totalHours;
+    double hourlyIntake = totalIntake / totalActiveHours;
 
     Map<String, double> schedule = {};
-    for (int i = wakeUpTime; i < sleepTime; i++) {
-      schedule["$i:00"] = hourlyIntake;
+    for (int i = 0; i < totalActiveHours; i++) {
+      int currentHour = (wakeUpTimeHour + i) % 24; // Agar jam tetap 0-23
+      schedule["${currentHour.toString().padLeft(2, '0')}:00"] = hourlyIntake;
     }
-
     return schedule;
   }
 }

@@ -3,18 +3,18 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import 'package:hydrate/presentation/controllers/login_controller.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/registration_screen.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/widgets/login_form.dart';
+import 'package:hydrate/presentation/controllers/registration_controller.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/login_view.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/widgets/registration_form.dart';
 
-
-class LoginView extends StatelessWidget {
-  const LoginView({super.key});
+class RegistrationView extends StatelessWidget {
+  const RegistrationView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Sediakan controller untuk widget di bawahnya
     return ChangeNotifierProvider(
-      create: (context) => LoginController(),
+      create: (_) => RegistrationController(),
       child: Scaffold(
         backgroundColor: const Color(0xFFE8F7FF),
         body: SafeArea(
@@ -25,38 +25,33 @@ class LoginView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 20),
-                  // Header
-                  SvgPicture.asset(
-                    'assets/images/registrasi2.svg',
-                    width: MediaQuery.of(context).size.width * 0.7,
-                  ),
+                  SvgPicture.asset('assets/images/registrasi2.svg', width: MediaQuery.of(context).size.width * 0.7),
                   const SizedBox(height: 20),
-                  Text("MASUK", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF2F2E41))),
+                  Text("DAFTAR SEKARANG", style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xFF2F2E41))),
                   Text("Isilah sesuai dengan data diri kamu", style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF2F2E41))),
                   const SizedBox(height: 20),
                   
-                  // Form
-                  const LoginForm(), // Memanggil widget form yang sudah dipisah
+                  // Panggil widget form yang sudah terpisah
+                  const RegistrationForm(),
                   
-                  const SizedBox(height: 20),
-                  // Footer
-                  Text("Atau", style: GoogleFonts.inter(fontSize: 14, color: Color(0xFF2F2E41))),
+                  const SizedBox(height: 30),
+                  Text("Atau", style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF2F2E41))),
                   const SizedBox(height: 10),
-                  // ... Tombol Google Sign In (jika ada)
+                  // ... Tombol Google Sign In
                   const SizedBox(height: 20),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
+                      Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => const RegistrationView()),
+                        MaterialPageRoute(builder: (context) => const LoginView()),
                       );
                     },
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Belum punya akun?", style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF2F2E41), fontWeight: FontWeight.w500)),
+                        Text("Sudah punya akun?", style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF2F2E41), fontWeight: FontWeight.w500)),
                         const SizedBox(width: 5),
-                        Text("Daftar Sekarang", style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF00A6FB), fontWeight: FontWeight.bold)),
+                        Text("Masuk Sekarang", style: GoogleFonts.inter(fontSize: 14, color: const Color(0xFF00A6FB), fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),

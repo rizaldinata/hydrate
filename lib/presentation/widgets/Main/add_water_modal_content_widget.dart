@@ -4,9 +4,10 @@ import 'package:flutter_svg/svg.dart';
 class AddWaterModalContent extends StatefulWidget {
   final int selectedWater;
   final int? idPengguna;
-  final Function(int) onWaterAdded;
+  final Function(double) onWaterAdded; 
 
   const AddWaterModalContent({
+    super.key,
     required this.selectedWater,
     required this.idPengguna,
     required this.onWaterAdded,
@@ -27,7 +28,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
     super.initState();
     tempSelectedWater = widget.selectedWater;
     _scrollController = FixedExtentScrollController(
-      initialItem: (widget.selectedWater ~/ 50) - 1,
+      initialItem: (widget.selectedWater ~/ 50).clamp(0, 19) -1,
     );
   }
 
@@ -41,8 +42,6 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
   @override
   Widget build(BuildContext context) {
     bool keyboardVisible = MediaQuery.of(context).viewInsets.bottom > 0;
-
-    // Tinggi modal: normal 420, saat keyboard muncul jadi setengahnya (210)
     double modalHeight = keyboardVisible ? 210 : 420;
 
     return AnimatedContainer(
@@ -58,11 +57,9 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header with title and edit/close button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Placeholder untuk balance layout
                 SizedBox(width: 40),
                 Text(
                   "Pilih Ukuran Air",
@@ -71,30 +68,26 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
                 GestureDetector(
                   onTap: () {
                     setState(() {
-                      if (isCustomMode) {
-                        isCustomMode = false;
+                        if (isCustomMode) {
+                          isCustomMode = false;
 
-                        if (tempSelectedWater % 50 == 0 &&
-                            tempSelectedWater >= 50 &&
-                            tempSelectedWater <= 1000) {
-                          int targetIndex = (tempSelectedWater ~/ 50) - 1;
+                          if (tempSelectedWater % 50 == 0 &&
+                              tempSelectedWater >= 50 &&
+                              tempSelectedWater <= 1000) {
+                            int targetIndex = (tempSelectedWater ~/ 50).clamp(0,19) -1;
+                            if (targetIndex < 0) targetIndex = 0;
 
-                          // TUNDA scroll sampai frame berikutnya
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollController.jumpToItem(targetIndex);
-                          });
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (_scrollController.hasClients) {
+                                _scrollController.jumpToItem(targetIndex);
+                              }
+                            });
+                            customWaterController.clear();
                         } else {
-                          tempSelectedWater = 250;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollController.jumpToItem((250 ~/ 50) - 1);
-                          });
+                          isCustomMode = true;
+                          customWaterController.text =
+                              tempSelectedWater.toString();
                         }
-
-                        customWaterController.clear();
-                      } else {
-                        isCustomMode = true;
-                        customWaterController.text =
-                            tempSelectedWater.toString();
                       }
                     });
                   },
@@ -102,7 +95,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Color(0xFF00A6FB).withOpacity(0.10),
+                      color: Color(0xFF00A6FB).withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
@@ -257,14 +250,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
       tempSelectedWater = customValue;
     }
 
-    if (widget.idPengguna == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User tidak teridentifikasi!")),
-      );
-      return;
-    }
-
-    await widget.onWaterAdded(tempSelectedWater);
+    await widget.onWaterAdded(tempSelectedWater.toDouble());
   }
 
   // Widget for custom input mode dengan ukuran adaptif

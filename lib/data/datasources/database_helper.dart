@@ -233,24 +233,32 @@ class DatabaseHelper {
   }
 }
 
-  // --- RIWAYAT HIDRASI ---
-  Future<Map<String, dynamic>> insertRiwayatHidrasi(Map<String, dynamic> row, int fkPenggunaId) async {
+  Future<Map<String, dynamic>> insertRiwayatHidrasi(Map<String, dynamic> rowData, int fkPenggunaId) async {
     final db = await database;
-    String syncId = _uuid.v4();
+    final String syncId = _uuid.v4();
+
     Map<String, dynamic> dataToInsert = {
-      ...row, // jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi
+      ...rowData,
       'sync_id': syncId,
       'fk_id_pengguna': fkPenggunaId,
-      'created_at': DateTime.now().millisecondsSinceEpoch,
       'last_modified_locally': DateTime.now().millisecondsSinceEpoch,
       'is_synced': 0,
       'is_deleted': 0,
     };
-    int recordId = await db.insert('riwayat_hidrasi', dataToInsert);
-    return {...dataToInsert, 'id': recordId};
+
+    int recordId = await db.insert(
+      'riwayat_hidrasi',
+      dataToInsert,
+      conflictAlgorithm: sql.ConflictAlgorithm.replace,
+    );
+
+    return {
+      ...dataToInsert,
+      'id': recordId,
+    };
   }
 
-  Future<int> softDeleteRiwayatHidrasi(String syncId) async {
+Future<int> softDeleteRiwayatHidrasi(String syncId) async {
     final db = await database;
     return await db.update(
       'riwayat_hidrasi',

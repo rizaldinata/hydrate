@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
+import 'package:intl/intl.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
+import 'package:hydrate/locator.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:collection';
 
@@ -26,20 +26,20 @@ class CadanganState extends State<Cadangan> {
 
   List<RiwayatHidrasi> waterHistory = [];
   final DateTime today = DateTime.now();
-  final RiwayatHidrasiController _controller = RiwayatHidrasiController();
-  final TargetHidrasiController targetHidrasiController =
-      TargetHidrasiController();
+  final RiwayatHidrasiController _riwayatController = RiwayatHidrasiController();
+
   bool isLoading = true;
   int? userId;
   String? errorMessage;
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
   Timer? _undoTimer;
-  RiwayatHidrasi? _lastDeletedItem;
+
+  List<RiwayatHidrasi> _lastBatchDeletedItems = [];
   
   // Mode seleksi
   bool _isSelectionMode = false;
-  Set<int> _selectedItems = HashSet<int>();
+  Set<String> _selectedItems = HashSet<String>();
 
   @override
   void initState() {
@@ -57,44 +57,42 @@ class CadanganState extends State<Cadangan> {
   }
 
   Future<void> _initData() async {
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
+    setState(() { isLoading = true; errorMessage = null; });
     try {
-      userId = await SessionManager().getUserId();
+      final sessionManager = locator<SessionManager>();
+      userId = await sessionManager.getUserId();
       if (userId != null) {
-        await _loadRiwayatHidrasi();
+        await _loadRiwayatHidrasi(today);
       } else {
-        setState(() {
-          errorMessage = "Pengguna tidak teridentifikasi";
-        });
+        setState(() { errorMessage = "Pengguna tidak teridentifikasi"; });
       }
     } catch (e) {
-      setState(() {
-        errorMessage = "Gagal memuat data: $e";
-      });
+      setState(() { errorMessage = "Gagal memuat data: $e"; });
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      setState(() { isLoading = false; });
     }
   }
 
-  Future<void> _loadRiwayatHidrasi() async {
+  Future<void> _loadRiwayatHidrasi(DateTime dateToLoad) async {
     if (userId == null) return;
+    setState(() { isLoading = true; errorMessage = null; });
 
     try {
       List<RiwayatHidrasi> history =
-          await _controller.getRiwayatHidrasiByTanggal(userId!, today);
-      setState(() {
-        waterHistory = history;
-      });
+          await _riwayatController.getRiwayatHidrasiByTanggal(userId!, dateToLoad);
+      if (mounted) {
+        setState(() {
+          waterHistory = _riwayatController.sortRiwayatByWaktuDescending(history);
+        });
+      }
     } catch (e) {
-      setState(() {
-        errorMessage = "Kesalahan saat memuat riwayat: $e";
-      });
+      if (mounted) {
+        setState(() { errorMessage = "Kesalahan saat memuat riwayat: $e"; });
+      }
+    } finally {
+      if (mounted) {
+        setState(() { isLoading = false; });
+      }
     }
   }
 
@@ -127,44 +125,38 @@ class CadanganState extends State<Cadangan> {
   }
 
   // Toggle seleksi item
-  void _toggleItemSelection(int id) {
+  void _toggleItemSelection(String syncId) { // Ubah parameter ke String syncId
     setState(() {
-      if (_selectedItems.contains(id)) {
-        _selectedItems.remove(id);
+      if (_selectedItems.contains(syncId)) {
+        _selectedItems.remove(syncId);
       } else {
-        _selectedItems.add(id);
+        _selectedItems.add(syncId);
+      }
+      // Jika tidak ada item yang dipilih, keluar dari mode seleksi
+      if (_selectedItems.isEmpty && _isSelectionMode) {
+          _exitSelectionMode(); 
       }
     });
   }
 
-  // Masuk ke mode seleksi - dimodifikasi untuk tidak otomatis memilih item pertama
   void _enterSelectionMode() {
-    setState(() {
-      _isSelectionMode = true;
-      // Tidak perlu menambahkan item apapun ke _selectedItems di sini
-    });
+    setState(() { _isSelectionMode = true; });
   }
 
-  // Keluar dari mode seleksi
   void _exitSelectionMode() {
-    setState(() {
-      _isSelectionMode = false;
-      _selectedItems.clear();
-    });
+    setState(() { _isSelectionMode = false; _selectedItems.clear(); });
   }
   
   // Pilih semua item
   void _selectAllItems() {
     setState(() {
-      if (_selectedItems.length == waterHistory.length) {
-        // Jika semua item sudah dipilih, batalkan semua
+      if (_selectedItems.length == waterHistory.length && waterHistory.isNotEmpty) {
         _selectedItems.clear();
       } else {
-        // Pilih semua item
         _selectedItems.clear();
         for (var item in waterHistory) {
-          if (item.id != null) {
-            _selectedItems.add(item.id!);
+          if (item.syncId != null) { // Pastikan syncId ada
+            _selectedItems.add(item.syncId!);
           }
         }
       }
@@ -173,7 +165,7 @@ class CadanganState extends State<Cadangan> {
 
   // Hapus item yang dipilih
   Future<void> _deleteSelectedItems() async {
-    if (_selectedItems.isEmpty) return;
+    if (_selectedItems.isEmpty || userId == null) return;
     
     bool confirm = await showDialog(
       context: context,
@@ -239,36 +231,32 @@ class CadanganState extends State<Cadangan> {
           ),
         ],
       ),
-    );
+    ) ?? false;
 
     if (confirm != true) return;
 
-    // Backup item yang akan dihapus
-    List<RiwayatHidrasi> deletedItems = [];
-    for (var item in waterHistory) {
-      if (item.id != null && _selectedItems.contains(item.id)) {
-        deletedItems.add(item);
-      }
+    _lastBatchDeletedItems.clear();
+    for (var syncId in _selectedItems) {
+      final item = waterHistory.firstWhere((element) => element.syncId == syncId, orElse: () => RiwayatHidrasi(jumlahHidrasi: 0, fkIdPengguna: userId!)); // orElse untuk keamanan
+      if(item.syncId != null) _lastBatchDeletedItems.add(item);
     }
     
     // Hapus dari tampilan
     setState(() {
-      waterHistory.removeWhere((item) => 
-          item.id != null && _selectedItems.contains(item.id));
-      _selectedItems.clear();
-      // Tidak keluar dari mode seleksi setelah menghapus
-      // _isSelectionMode = false;
+      waterHistory.removeWhere((item) => item.syncId != null && _selectedItems.contains(item.syncId!));
+      // _selectedItems.clear(); // Jangan clear dulu, biarkan user melihat apa yang dihapus
+      // _isSelectionMode = false; // Jangan keluar dari mode seleksi dulu
     });
 
     // Tampilkan notifikasi dengan opsi batalkan
     _showSnackBarNotification(
-      message: deletedItems.length == 1
+      message: _lastBatchDeletedItems.length == 1
           ? "1 catatan hidrasi telah dihapus"
-          : "${deletedItems.length} catatan hidrasi telah dihapus",
+          : "${_lastBatchDeletedItems.length} catatan hidrasi telah dihapus",
       actionLabel: "BATALKAN",
       onAction: () {
         setState(() {
-          waterHistory.addAll(deletedItems);
+          waterHistory.addAll(_lastBatchDeletedItems);
           waterHistory.sort((a, b) =>
               (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
         });
@@ -281,98 +269,125 @@ class CadanganState extends State<Cadangan> {
     );
 
     // Timer untuk menghapus data secara permanen jika tidak dibatalkan
-    _undoTimer = Timer(const Duration(seconds: 4), () {
-      if (userId != null) {
-        for (var item in deletedItems) {
-          _controller.hapusRiwayatDanKurangiTarget(
-            idRiwayat: item.id ?? 0,
-            idPengguna: userId!,
-            tanggalHidrasi: item.tanggalHidrasi ?? "",
-            targetController: targetHidrasiController,
-          );
+    _undoTimer = Timer(const Duration(seconds: 4), () async {
+      if (_lastBatchDeletedItems.isNotEmpty) {
+        for (var itemToDelete in _lastBatchDeletedItems) {
+          if (itemToDelete.syncId != null) {
+            await _riwayatController.hapusRiwayatDanUpdateTotal( 
+              riwayatSyncId: itemToDelete.syncId!,
+              idPengguna: userId!,
+              tanggalHidrasi: itemToDelete.tanggalHidrasi ?? DateFormat('yyyy-MM-dd').format(today),
+            );
+          } 
+        }
+        _lastBatchDeletedItems.clear();
+        if(mounted) {
+             setState(() {
+                _selectedItems.clear();
+                _isSelectionMode = false;
+            });
         }
       }
     });
   }
 
-Widget _buildTodayHeader() {
-  final String dateTitle = "Hari Ini";
+Widget _buildItemCard(RiwayatHidrasi item, String time, bool isSmallScreen, double screenWidth) {
+  final String itemKey = item.syncId ?? item.id?.toString() ?? UniqueKey().toString();
+  final bool isSelected = item.syncId != null && _selectedItems.contains(item.syncId!);
 
   return Container(
+    key: ValueKey(itemKey),
     height: 56,
     margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
     decoration: BoxDecoration(
-      color: _surfaceColor,
+      color: isSelected ? _accentColor : _surfaceColor,
       borderRadius: BorderRadius.circular(16),
-      boxShadow: [
+      boxShadow: [  
         BoxShadow(
-          color: _primaryColor.withOpacity(0.1),
+          color: _primaryColor.withValues(alpha: 0.1),
           blurRadius: 15,
           offset: const Offset(0, 4),
         ),
       ],
     ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          if (_isSelectionMode && item.syncId != null) {
+            _toggleItemSelection(item.syncId!);
+          }
+        },
+        onLongPress: () {
+          if (!_isSelectionMode && item.syncId != null) {
+            _enterSelectionMode();
+            _toggleItemSelection(item.syncId!);
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.water_drop_rounded, color: _primaryColor, size: 24),
-              const SizedBox(width: 8),
-              // Expanded agar teks tidak overflow
-              Text(
-                _isSelectionMode ? "Pilih item" : dateTitle,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _isSelectionMode ? Colors.orange : _primaryColor,
-                  letterSpacing: 0.5,
-                ),
-                overflow: TextOverflow.ellipsis,
+              Row(
+                children: [
+                  Icon(Icons.water_drop_rounded, color: _primaryColor, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    _isSelectionMode
+                        ? "Pilih item"
+                        : item.jumlahHidrasi.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: _isSelectionMode ? Colors.orange : _primaryColor,
+                      letterSpacing: 0.5,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
+              if (_isSelectionMode)
+                IconButton(
+                  icon: Icon(Icons.close, color: Colors.grey[600]),
+                  onPressed: _exitSelectionMode,
+                  tooltip: 'Tutup',
+                )
+              else if (waterHistory.isNotEmpty)
+                IconButton(
+                  icon: Icon(Icons.more_vert, color: _primaryColor),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (context) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: Icon(Icons.edit, color: _primaryColor),
+                            title: Text(
+                              'Pilih Item',
+                              style: TextStyle(
+                                color: _textPrimaryColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              if (waterHistory.isNotEmpty) {
+                                _enterSelectionMode();
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  tooltip: 'Menu',
+                ),
             ],
           ),
-          // Tombol kanan
-          if (_isSelectionMode)
-            IconButton(
-              icon: Icon(Icons.close, color: Colors.grey[600]),
-              onPressed: _exitSelectionMode,
-              tooltip: 'Tutup',
-            )
-          else if (waterHistory.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.more_vert, color: _primaryColor),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.edit, color: _primaryColor),
-                        title: Text(
-                          'Pilih Item',
-                          style: TextStyle(
-                            color: _textPrimaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          if (waterHistory.isNotEmpty) {
-                            _enterSelectionMode();
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Menu',
-            ),
-        ],
+        ),
       ),
     ),
   );
@@ -389,8 +404,8 @@ Widget _buildTodayHeader() {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  _primaryColor.withOpacity(0.1),
-                  _primaryColor.withOpacity(0.2)
+                  _primaryColor.withValues(alpha: 0.1),
+                  _primaryColor.withValues(alpha: 0.2)
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -424,150 +439,82 @@ Widget _buildTodayHeader() {
     );
   }
 
-  Widget _buildItemCard(RiwayatHidrasi item, String time, bool isSmallScreen, double screenWidth) {
-    final bool isSelected = item.id != null && _selectedItems.contains(item.id);
-    
+  Widget _buildTodayHeader() {
+    final String dateTitle = "Hari Ini"; // Karena layar ini difokuskan untuk hari ini
+
     return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: screenWidth * 0.04,
-        vertical: 8,
-      ),
+      height: 56,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? _primaryColor.withOpacity(0.1) : _surfaceColor,
+        color: _surfaceColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.08),
-            blurRadius: 12,
+            color: _primaryColor.withValues(alpha: 0.1),
+            blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(
-          color: isSelected ? _primaryColor : _primaryColor.withOpacity(0.1),
-          width: isSelected ? 2 : 1,
-        ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          splashColor: _primaryColor.withOpacity(0.1),
-          highlightColor: _primaryColor.withOpacity(0.05),
-          onTap: () {
-            if (_isSelectionMode && item.id != null) {
-              _toggleItemSelection(item.id!);
-            } else if (!_isSelectionMode && item.id != null) {
-              // Panjang tekan sudah menangani mode seleksi
-            }
-          },
-          onLongPress: () {
-            if (!_isSelectionMode && item.id != null) {
-              _enterSelectionMode();
-              // Tambahkan item yang di-long press ke selected items
-              _toggleItemSelection(item.id!);
-            }
-          },
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: screenWidth * 0.04,
-              vertical: 16,
-            ),
-            child: Row(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
               children: [
-                // Checkbox saat mode seleksi
-                if (_isSelectionMode)
-                  Container(
-                    margin: const EdgeInsets.only(right: 12),
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isSelected ? _primaryColor : Colors.transparent,
-                      border: Border.all(
-                        color: isSelected ? _primaryColor : Colors.grey,
-                        width: 2,
-                      ),
-                    ),
-                    child: isSelected
-                        ? Icon(Icons.check, color: Colors.white, size: 16)
-                        : null,
+                Icon(Icons.water_drop_rounded, color: _primaryColor, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  _isSelectionMode ? "Pilih item" : dateTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _isSelectionMode ? Colors.orange : _primaryColor,
+                    letterSpacing: 0.5,
                   ),
-                
-                Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
-                  decoration: BoxDecoration(
-                    color: _primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: SvgPicture.asset(
-                    'assets/images/glass.svg',
-                    width: isSmallScreen ? 24 : 32,
-                    height: isSmallScreen ? 24 : 32,
-                    colorFilter:
-                        ColorFilter.mode(_primaryColor, BlendMode.srcIn),
-                  ),
-                ),
-                SizedBox(width: screenWidth * 0.03),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            "${item.jumlahHidrasi.toInt()} mL",
-                            style: TextStyle(
-                              fontSize: isSmallScreen ? 16 : 18,
-                              fontWeight: FontWeight.w700,
-                              color: _textPrimaryColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        "Konsumsi Air",
-                        style: TextStyle(
-                          fontSize: isSmallScreen ? 10 : 12,
-                          color: _textSecondaryColor,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      SizedBox(height: isSmallScreen ? 4 : 8),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isSmallScreen ? 6 : 8,
-                          vertical: isSmallScreen ? 2 : 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _primaryColor.withOpacity(0.05),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.access_time_rounded,
-                              size: isSmallScreen ? 12 : 14,
-                              color: _primaryColor,
-                            ),
-                            SizedBox(width: isSmallScreen ? 2 : 4),
-                            Text(
-                              time,
-                              style: TextStyle(
-                                fontSize: isSmallScreen ? 11 : 13,
-                                fontWeight: FontWeight.w500,
-                                color: _primaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
-          ),
+            if (_isSelectionMode)
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.grey[600]),
+                onPressed: _exitSelectionMode,
+                tooltip: 'Tutup',
+              )
+            else if (waterHistory.isNotEmpty)
+              IconButton(
+                icon: Icon(Icons.more_vert, color: _primaryColor),
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (context) => Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.edit, color: _primaryColor),
+                          title: Text(
+                            'Pilih Item',
+                            style: TextStyle(
+                              color: _textPrimaryColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          onTap: () {
+                            Navigator.pop(context);
+                            if (waterHistory.isNotEmpty) {
+                              _enterSelectionMode();
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                tooltip: 'Menu',
+              ),
+          ],
         ),
       ),
     );
@@ -578,9 +525,11 @@ Widget _buildTodayHeader() {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
 
+    final String itemKey = item.syncId ?? item.id?.toString() ?? UniqueKey().toString();
+
     // Tetap mempertahankan fitur swipe-to-delete namun juga menambahkan tombol hapus langsung
     return Dismissible(
-      key: Key(item.id.toString()),
+      key: Key(itemKey),
       background: Container(
         margin: EdgeInsets.symmetric(
           horizontal: screenWidth * 0.04,
@@ -595,7 +544,7 @@ Widget _buildTodayHeader() {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.red.withOpacity(0.3),
+              color: Colors.red.withValues(alpha: 0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -690,20 +639,20 @@ Widget _buildTodayHeader() {
         );
       },
       onDismissed: (direction) {
-        _lastDeletedItem = item;
+        _lastBatchDeletedItems = [item];
         setState(() => waterHistory.remove(item));
 
         _showSnackBarNotification(
           message: "Catatan hidrasi telah dihapus",
           actionLabel: "BATALKAN",
           onAction: () {
-            if (_lastDeletedItem != null) {
+            if (_lastBatchDeletedItems.isNotEmpty) {
+              final itemToRestore = _lastBatchDeletedItems.first;
               setState(() {
-                waterHistory.add(_lastDeletedItem!);
-                waterHistory.sort((a, b) =>
-                    (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
+                waterHistory.add(itemToRestore);
+                waterHistory = _riwayatController.sortRiwayatByWaktuDescending(waterHistory);
               });
-              _lastDeletedItem = null;
+              _lastBatchDeletedItems.clear();
               _showSnackBarNotification(
                 message: "Catatan telah dipulihkan",
                 duration: const Duration(seconds: 2),
@@ -713,16 +662,18 @@ Widget _buildTodayHeader() {
           },
         );
 
-        _undoTimer = Timer(const Duration(seconds: 4), () {
-          if (_lastDeletedItem != null) {
-            _controller.hapusRiwayatDanKurangiTarget(
-              idRiwayat: _lastDeletedItem!.id ?? 0,
-              idPengguna: _lastDeletedItem!.fkIdPengguna ?? 0,
-              tanggalHidrasi: _lastDeletedItem!.tanggalHidrasi ?? "",
-              targetController: targetHidrasiController,
-            );
+        _undoTimer = Timer(const Duration(seconds: 4), () async {
+          if (_lastBatchDeletedItems.isNotEmpty) {
+            final itemToDelete = _lastBatchDeletedItems.first;
+            if (itemToDelete.syncId != null && userId != null) {
+              await _riwayatController.hapusRiwayatDanUpdateTotal(
+                riwayatSyncId: itemToDelete.syncId!,
+                idPengguna: userId!,
+                tanggalHidrasi: itemToDelete.tanggalHidrasi ?? DateFormat('yyyy-MM-dd').format(today),
+              );
+            }
+            _lastBatchDeletedItems.clear();
           }
-          _lastDeletedItem = null;
         });
       },
       child: _buildItemCard(item, time, isSmallScreen, screenWidth),
