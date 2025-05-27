@@ -2,54 +2,27 @@ C/C++ Structured LogK
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txtC
 A
-<<<<<<< HEAD
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	“êŒ”î2§ ØÝçËÖ2c
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	ÒÞŠ‹ñ2§ ØÝçËÖ2c
 a
-_C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\additional_project_files.txt	“êŒ”î2 ›ê‚é2`
+_C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\additional_project_files.txt	ÒÞŠ‹ñ2 ²·îŠñ2`
 ^
-\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\android_gradle_build.json	“êŒ”î2² “›ê‚é2e
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\android_gradle_build.json	ÒÞŠ‹ñ2² ´·îŠñ2e
 c
-aC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\android_gradle_build_mini.json	“êŒ”î2 –›ê‚é2R
+aC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\android_gradle_build_mini.json	ÒÞŠ‹ñ2 ··îŠñ2R
 P
-NC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build.ninja	“êŒ”î2¬à Ê—ê‚é2V
+NC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build.ninja	ÒÞŠ‹ñ2¬à Š¶îŠñ2V
 T
-RC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build.ninja.txt	“êŒ”î2[
+RC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build.ninja.txt	ÒÞŠ‹ñ2[
 Y
-WC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build_file_index.txt	“êŒ”î2G ™›ê‚é2\
+WC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build_file_index.txt	ÒÞŠ‹ñ2G ¹·îŠñ2\
 Z
-XC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\compile_commands.json	“êŒ”î2	`
+XC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\compile_commands.json	ÒÞŠ‹ñ2	`
 ^
-\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\compile_commands.json.bin	“êŒ”î2
+\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\compile_commands.json.bin	ÒÞŠ‹ñ2
 f
 d
-bC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\metadata_generation_command.txt	“êŒ”î2Ã ˜›ê‚é2Y
+bC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\metadata_generation_command.txt	ÒÞŠ‹ñ2Ã ¸·îŠñ2Y
 W
-UC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\prefab_config.json	“êŒ”î2( ˜›ê‚é2^
+UC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\prefab_config.json	ÒÞŠ‹ñ2( ¹·îŠñ2^
 \
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\symbol_folder_index.txt	“êŒ”î2Q ™›ê‚é2
-=======
-?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	Ë·µŠé2§ ˆŒéËÖ2c
-a
-_C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\additional_project_files.txt	Ë·µŠé2 £Œˆé2`
-^
-\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\android_gradle_build.json	Ë·µŠé2š ¥Œˆé2e
-c
-aC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\android_gradle_build_mini.json	Ë·µŠé2õ §Œˆé2R
-P
-NC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build.ninja	Ë·µŠé2ˆÕ ­‹ˆé2V
-T
-RC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build.ninja.txt	Ë·µŠé2[
-Y
-WC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\build_file_index.txt	Ë·µŠé2G ©Œˆé2\
-Z
-XC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\compile_commands.json	Ë·µŠé2	`
-^
-\C:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\compile_commands.json.bin	Ë·µŠé2
-f
-d
-bC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\metadata_generation_command.txt	Ë·µŠé2« §Œˆé2Y
-W
-UC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\prefab_config.json	Ë·µŠé2( ¨Œˆé2^
-\
-ZC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\symbol_folder_index.txt	Ë·µŠé2Q ¨Œˆé2
->>>>>>> bbf00a64a2ef894eadf889a6fe407959e540fc2c
+ZC:\laragon\www\hydrate\android\app\.cxx\Debug\694y6q21\armeabi-v7a\symbol_folder_index.txt	ÒÞŠ‹ñ2Q ¹·îŠñ2

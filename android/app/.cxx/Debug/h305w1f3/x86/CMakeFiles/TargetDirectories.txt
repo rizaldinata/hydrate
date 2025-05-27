@@ -1,2 +1,0 @@
-C:/Users/r2och/OneDrive/Documents/Kuliah Semester 4/hydrate/android/app/.cxx/Debug/h305w1f3/x86/CMakeFiles/edit_cache.dir
-C:/Users/r2och/OneDrive/Documents/Kuliah Semester 4/hydrate/android/app/.cxx/Debug/h305w1f3/x86/CMakeFiles/rebuild_cache.dir

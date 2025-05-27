@@ -58,7 +58,7 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : RegistrationView();
+          return snapshot.data == true ? MainScreen() : InfoProduct();
         },
       ),
     );

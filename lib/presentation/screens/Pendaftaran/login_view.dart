@@ -13,7 +13,7 @@ class _LoginViewState extends State<LoginView> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPass = TextEditingController();
   bool isFormFilled = false;
-  bool _obscurePassword = true; // untuk toggle mata
+  bool _obscurePassword = true; 
 
   void _checkForm() {
     setState(() {
