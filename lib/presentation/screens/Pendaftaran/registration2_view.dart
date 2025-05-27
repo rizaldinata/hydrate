@@ -278,7 +278,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => MainScreen(),
+                                builder: (context) => HomeScreens(),
                               ),
                             );
                           } else {

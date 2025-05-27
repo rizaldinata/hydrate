@@ -8,10 +8,16 @@ class StatisticPageScreen extends StatefulWidget {
   const StatisticPageScreen({super.key});
 
   @override
-  State<StatisticPageScreen> createState() => _StatisticPageScreenState();
+  State<StatisticPageScreen> createState() => StatisticPageScreenState();
 }
 
-class _StatisticPageScreenState extends State<StatisticPageScreen> {
+
+class StatisticPageScreenState extends State<StatisticPageScreen> {
+
+  void refresh() {
+    print("Refreshing StatisticPageScreen");
+  }
+
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
