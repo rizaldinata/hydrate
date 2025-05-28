@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:hydrate/presentation/widgets/notificationWidgets/notificationMassage.dart';
 
 class NotificationController {
-  ///     INISIALISASI
   static Future<void> initializeLocalNotifications() async {
     await AwesomeNotifications().initialize(
       'resource://drawable/logo',
@@ -23,27 +22,22 @@ class NotificationController {
         debug: true);
   }
 
-  ///  Notifications events are only delivered after call this method
   static Future<void> startListeningNotificationEvents() async {
     AwesomeNotifications()
         .setListeners(onActionReceivedMethod: onActionReceivedMethod);
   }
 
-  ///     NOTIFICATION EVENTS
   @pragma('vm:entry-point')
   static Future<void> onActionReceivedMethod(
       ReceivedAction receivedAction) async {
-    // Handle action here
     print('Notification action received: ${receivedAction.actionType}');
 
-    // You can add custom handling for different action types here
     if (receivedAction.actionType == ActionType.SilentAction) {
       print(
           'Silent action received with input: "${receivedAction.buttonKeyInput}"');
     }
   }
 
-  ///     NOTIFICATION CREATION METHODS
   static Future<void> createNewNotification() async {
     bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
     if (!isAllowed) {
@@ -53,11 +47,10 @@ class NotificationController {
 
     await AwesomeNotifications().createNotification(
         content: NotificationContent(
-            id: -1, // -1 is replaced by a random number
+            id: -1,
             channelKey: 'alerts',
             title: 'Sudah waktunya minum air',
             body: HydrationMessages.getRandomMessage(),
-            // bigPicture: 'https://storage.googleapis.com/cms-storage-bucket/d406c736e7c4c57f5f61.png',
             largeIcon: 'asset://assets/images/logo.png',
             notificationLayout: NotificationLayout.BigText,
             payload: {'notificationId': '1234567890'},
@@ -72,73 +65,55 @@ class NotificationController {
         ]);
   }
 
-// static Future<void> scheduleNotificationInSeconds(int seconds) async {
-//   await AwesomeNotifications().createNotification(
-//     schedule: NotificationInterval(
-//       interval: Duration(seconds: seconds),
-//       timeZone: await AwesomeNotifications().getLocalTimeZoneIdentifier(),
-//       repeats: false,
-//       preciseAlarm: true, // untuk memastikan keakuratan waktu
-//     ),
-//     content: NotificationContent(
-//       id: -1,
-//       channelKey: 'alerts',
-//       title: 'Waktunya Minum!',
-//       body: 'Countdown selesai. Jangan lupa minum ya!',
-//       notificationLayout: NotificationLayout.Default,
-//     ),
-//     actionButtons: [
-//       NotificationActionButton(key: 'OPEN', label: 'Buka'),
-//     ],
-//   );
-// }
+  static Future<void> schedulePeriodicHydrationNotification({
+    required int intervalInSeconds,
+  }) async {
+    bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+    if (!isAllowed) {
+      isAllowed = await requestNotificationPermission();
+    }
+    if (!isAllowed) return;
 
-  // static Future<void> scheduleNotification({
-  //   required String title,
-  //   required String body,
-  //   required DateTime scheduleTime,
-  //   String? imageUrl,
-  //   Map<String, String>? payload,
-  // }) async {
-  //   bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
-  //   if (!isAllowed) {
-  //     isAllowed = await requestNotificationPermission();
-  //   }
-  //   if (!isAllowed) return;
+    String randomMessage = HydrationMessages.getRandomMessage(); 
 
-  //   await AwesomeNotifications().createNotification(
-  //     schedule: NotificationCalendar.fromDate(date: scheduleTime),
-  //     content: NotificationContent(
-  //       id: -1,
-  //       channelKey: 'alerts',
-  //       title: title,
-  //       body: body,
-  //       bigPicture: imageUrl,
-  //       notificationLayout: imageUrl != null ? NotificationLayout.BigPicture : NotificationLayout.Default,
-  //       payload: payload,
-  //     ),
-  //     actionButtons: [
-  //       NotificationActionButton(key: 'OPEN', label: 'Buka'),
-  //       NotificationActionButton(
-  //         key: 'DISMISS',
-  //         label: 'Tutup',
-  //         actionType: ActionType.DismissAction,
-  //       ),
-  //     ],
-  //   );
-  // }
+    await AwesomeNotifications().createNotification(
+      schedule: NotificationInterval(
+        interval: Duration(seconds: intervalInSeconds),
+        timeZone: await AwesomeNotifications().getLocalTimeZoneIdentifier(),
+        repeats: true, 
+        preciseAlarm: true,
+      ),
+      content: NotificationContent(
+        id: 100, 
+        channelKey: 'alerts',
+        title: 'Waktunya Minum Air! 💧',
+        body: randomMessage,
+        notificationLayout: NotificationLayout.Default,
+        payload: {'notificationId': 'hydration_reminder'},
+      ),
+      actionButtons: [
+        NotificationActionButton(key: 'REDIRECT', label: 'Buka Aplikasi'),
+        NotificationActionButton(
+          key: 'DISMISS',
+          label: 'Tutup',
+          actionType: ActionType.DismissAction,
+        )
+      ],
+    );
+    print("Notifikasi hidrasi dijadwalkan untuk berulang setiap $intervalInSeconds detik.");
+  }
 
-  /// Request permission to send notifications
+  static Future<void> cancelScheduledNotifications() async {
+    await AwesomeNotifications().cancelAllSchedules();
+    print("Semua notifikasi terjadwal telah dibatalkan.");
+  }
   static Future<bool> requestNotificationPermission() async {
     return await AwesomeNotifications().requestPermissionToSendNotifications();
   }
 
-  /// Reset notification badge counter
   static Future<void> resetBadgeCounter() async {
     await AwesomeNotifications().resetGlobalBadge();
   }
-
-  /// Cancel all notifications
   static Future<void> cancelAllNotifications() async {
     await AwesomeNotifications().cancelAll();
   }

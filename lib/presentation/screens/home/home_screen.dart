@@ -56,8 +56,6 @@ class HomeScreensState extends State<HomeScreens>
   bool _isButtonCooldown = false;
 
   // Konstanta untuk timer
-  static const int _countdownDurationInSeconds =
-      15; // 1 jam, contoh saja, sesuaikan
   static const String _endTimeKey = 'countdown_end_time';
 
   Map<double, double> _glassOffsets = {};
@@ -79,9 +77,9 @@ class HomeScreensState extends State<HomeScreens>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // inisialisasi notifikasi
     NotificationController.initializeLocalNotifications();
-    _targetHidrasiController = TargetHidrasiController(); // Inisialisasi
+    NotificationController.startListeningNotificationEvents();
+    _targetHidrasiController = TargetHidrasiController();
     _loadUserData();
     _controller = HomeController();
     _penggunaController = PenggunaController();
@@ -524,11 +522,20 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   void _startCountdown() {
+
+    NotificationController.cancelScheduledNotifications();
+
+    int reminderIntervalInSeconds = 65;
+
+    NotificationController.schedulePeriodicHydrationNotification(
+      intervalInSeconds: reminderIntervalInSeconds,
+    );
+
     _countdownTimer?.cancel();
     if (!mounted) return;
 
     setState(() {
-      _remainingTime = const Duration(seconds: _countdownDurationInSeconds);
+      _remainingTime = Duration(seconds: reminderIntervalInSeconds);
       _isCountdownActive = true;
     });
 
@@ -540,7 +547,7 @@ class HomeScreensState extends State<HomeScreens>
       prefs.setBool('timer_has_started', true);
     });
 
-    _startTimer(); // Call the unified timer start function
+    _startTimer();
   }
 
   String _formatTime(Duration duration) {
@@ -771,6 +778,20 @@ class HomeScreensState extends State<HomeScreens>
       return "${name.substring(0, maxLength - 3)}...";
     } else {
       return "${name.substring(0, lastSpace)}...";
+    }
+  }
+
+  Future<void> _stopReminders() async {
+    await NotificationController.cancelScheduledNotifications();
+    _countdownTimer?.cancel();
+    if(mounted) {
+      setState(() {
+        _isCountdownActive = false;
+        _remainingTime = Duration.zero;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Pengingat hidrasi telah dinonaktifkan.')),
+      );
     }
   }
 
