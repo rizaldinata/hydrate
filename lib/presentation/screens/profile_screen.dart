@@ -273,7 +273,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   _profileInfo(
                                       Icons.fitness_center,
                                       "Berat badan",
-                                      "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg",
+                                      "${beratBadan?.toInt().toString() ?? '0'} kg",
                                       screenWidth,
                                       infoFontSize),
                                   _profileInfo(

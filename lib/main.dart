@@ -60,7 +60,7 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : StatisticPageScreen();
+          return snapshot.data == true ? MainScreen() : InfoProduct();
         },
       ),
     );
