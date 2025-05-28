@@ -96,35 +96,51 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _selectTime(BuildContext context, bool isWakeUpTime) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
+      initialEntryMode: TimePickerEntryMode.input,
       initialTime: isWakeUpTime
           ? wakeUpTime ?? const TimeOfDay(hour: 6, minute: 0)
           : sleepTime ?? const TimeOfDay(hour: 22, minute: 0),
-      builder: (BuildContext context, Widget? child) {
+      builder: (BuildContext context, Widget? childWidget) { // Mengganti nama variabel child agar lebih jelas
         return Theme(
-          data: ThemeData(
-            primaryColor: const Color(0xFF00A6FB), // Warna utama biru
-            hintColor: const Color(0xFF00A6FB),
+          data: ThemeData( // ThemeData utama untuk TimePicker
+            primaryColor: const Color(0xFF00A6FB),
+            hintColor: const Color(0xFF00A6FB), // Biasanya sama dengan primaryColor atau accentColor
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF00A6FB), // Warna utama
-              onPrimary: Colors.white, // Warna teks di atas warna utama
-              onSurface: Color(0xFF2F2E41), // Warna teks utama
+              primary: Color(0xFF00A6FB), // Warna utama untuk elemen interaktif
+              onPrimary: Colors.white,   // Warna teks di atas warna utama
+              surface: Colors.white,     // Warna permukaan dialog
+              onSurface: Color(0xFF2F2E41), // Warna teks di atas permukaan
             ),
+            // Mengembalikan timePickerTheme untuk kustomisasi tampilan TimePicker
             timePickerTheme: TimePickerThemeData(
-              backgroundColor: Colors.white,
+              backgroundColor: Colors.white, // Latar belakang dialog
               hourMinuteColor: MaterialStateColor.resolveWith((states) =>
                   states.contains(MaterialState.selected)
-                      ? const Color(0xFF00A6FB)
-                      : const Color(0xFFE8F7FF)),
+                      ? const Color(0xFF00A6FB) // Warna kotak jam/menit yang dipilih
+                      : const Color(0xFFE8F7FF)), // Warna kotak jam/menit yang tidak dipilih
               hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
                   states.contains(MaterialState.selected)
+                      ? Colors.white // Warna teks jam/menit yang dipilih
+                      : const Color(0xFF2F2E41)), // Warna teks jam/menit yang tidak dipilih
+              dialHandColor: const Color(0xFF00A6FB), // Warna jarum jam
+              dialBackgroundColor: const Color(0xFFE8F7FF), // Latar belakang dial
+              dayPeriodTextColor: MaterialStateColor.resolveWith((states) =>
+                  states.contains(MaterialState.selected)
                       ? Colors.white
-                      : const Color(0xFF2F2E41)),
-              dialHandColor: const Color(0xFF00A6FB),
-              dialBackgroundColor: const Color(0xFFE8F7FF),
-              entryModeIconColor: const Color(0xFF00A6FB),
+                      : const Color(0xFF00A6FB)), // Warna teks AM/PM
+              dayPeriodColor: MaterialStateColor.resolveWith((states) =>
+                  states.contains(MaterialState.selected)
+                      ? const Color(0xFF00A6FB)
+                      : Colors.transparent), // Warna latar AM/PM
+              dayPeriodBorderSide: const BorderSide(color: Color(0xFF00A6FB), width: 1.5),
+              entryModeIconColor: const Color(0xFF00A6FB), // Warna ikon mode input (keyboard/dial)
+              helpTextStyle: const TextStyle(color: Color(0xFF00A6FB)), // Teks bantuan seperti "Select time"
+              // Kustomisasi tombol OK dan Cancel
+              cancelButtonStyle: TextButton.styleFrom(foregroundColor: const Color(0xFF00A6FB)),
+              confirmButtonStyle: TextButton.styleFrom(foregroundColor: const Color(0xFF00A6FB)),
             ),
           ),
-          child: child!,
+          child: childWidget!, // Menyediakan child yang diterima dari builder ke Theme widget
         );
       },
     );

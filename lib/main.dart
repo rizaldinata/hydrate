@@ -96,7 +96,6 @@ class MyApp extends StatelessWidget {
               ),
             );
           }
-
           if (snapshot.hasError) {
             print("[ERROR] FutureBuilder di MyApp: ${snapshot.error}");
             // Mungkin tampilkan halaman error yang lebih informatif atau coba lagi

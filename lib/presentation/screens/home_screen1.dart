@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
+import 'package:hydrate/presentation/widgets/Main/customInputWater_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
@@ -37,7 +38,6 @@ class HomeScreensState extends State<HomeScreens>
   double currentIntake = 0;
   double previousIntake = 0;
   final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
-  int selectedWater = 250;
   late final PenggunaController _penggunaController;
   late final TargetHidrasiController _targetHidrasiController; // Ditambahkan
   int? idPengguna;
@@ -627,205 +627,7 @@ class HomeScreensState extends State<HomeScreens>
     });
   }
 
-  void _showAddWaterModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        int tempSelectedWater = selectedWater;
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              height: 420,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Pilih Ukuran Air",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const Divider(
-                    color: Colors.blue,
-                    thickness: 1,
-                    height: 20,
-                  ),
-                  const SizedBox(height: 20),
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      SizedBox(
-                        height: 200,
-                        child: ListWheelScrollView.useDelegate(
-                          itemExtent: 50,
-                          perspective: 0.005,
-                          diameterRatio: 1.5,
-                          physics: const FixedExtentScrollPhysics(),
-                          controller: FixedExtentScrollController(
-                            initialItem: (selectedWater ~/ 50) -1 < 0 ? 0 : (selectedWater ~/ 50) -1 , // Ensure non-negative
-                          ),
-                          onSelectedItemChanged: (index) {
-                            setModalState(() {
-                              tempSelectedWater = (index + 1) * 50;
-                            });
-                          },
-                          childDelegate: ListWheelChildBuilderDelegate(
-                            childCount: 20, // e.g., 50ml to 1000ml
-                            builder: (context, index) {
-                              int waterValue = (index + 1) * 50;
-                              return Center(
-                                child: Text(
-                                  "$waterValue",
-                                  style: TextStyle(
-                                    fontSize: 40,
-                                    fontWeight: FontWeight.bold,
-                                    color: tempSelectedWater == waterValue
-                                        ? const Color(0xFF00A6FB)
-                                        : Colors.grey,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      IgnorePointer(
-                        child: Container(
-                          height: 50,
-                          width: MediaQuery.of(context).size.width - 40,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00A6FB).withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      IgnorePointer(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/images/glass2.svg',
-                              width: 32,
-                              height: 32,
-                              colorFilter: const ColorFilter.mode(Color(0xFF2F2E41), BlendMode.srcIn),
-                            ),
-                            const Text(
-                              "mL",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2F2E41),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width - 100,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (idPengguna == null) {
-                          if(mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text("User tidak teridentifikasi!")),
-                          );
-                          }
-                          return;
-                        }
-
-                        _playDrinkingSound();
-                        
-                        // Update local state immediately for responsiveness
-                        if(mounted) {
-                            setState(() {
-                                selectedWater = tempSelectedWater;
-                            });
-                        }
-
-
-                        try {
-                          await _riwayatHidrasiController.tambahRiwayatHidrasi(
-                            fkIdPengguna: idPengguna!,
-                            jumlahHidrasi: selectedWater.toDouble(),
-                            targetController: _targetHidrasiController, // Ditambahkan
-                          );
-                          
-                          previousIntake = currentIntake;
-                          double newTotalIntake = currentIntake + selectedWater.toDouble();
-
-                          // Optimistic UI update
-                          if(mounted) {
-                            setState(() {
-                                currentIntake = newTotalIntake;
-                                _valueNotifier.value = target > 0 ? min(100, (currentIntake / target) * 100) : 0;
-                            });
-                          }
-
-                          // Fetch fresh data to confirm
-                          await _loadTodayIntake();
-
-
-                          _eventBus.fire('refresh_statistics');
-
-                        } catch (e) {
-                          print("Error saat menambah air: $e");
-                           if(mounted) {
-                                // Revert optimistic update
-                                setState(() {
-                                    currentIntake = previousIntake;
-                                     _valueNotifier.value = target > 0 ? min(100, (currentIntake / target) * 100) : 0;
-                                });
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text("Gagal menyimpan: ${e.toString().substring(0, min(e.toString().length, 50))}"))
-                                );
-                           }
-                        }
-                        
-                        _startCountdown();
-                        if(mounted) {
-                            _showAddedWaterPopup(context, selectedWater.toDouble());
-                            Navigator.pop(context);
-                            checkTargetAndShowAlert(context);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        "Pilih",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
+  //? fungsi alert untuk ucapan selamat
   bool hasShownCongrats = false;
   void checkTargetAndShowAlert(BuildContext context) {
     if(!mounted) return;
@@ -1192,4 +994,77 @@ class HomeScreensState extends State<HomeScreens>
       ],
     );
   }
+
+  void _showAddWaterModal(BuildContext context) {
+  int selectedWater = 250;
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    isDismissible: true,
+    enableDrag: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: AddWaterModalContent(
+          selectedWater: selectedWater,
+          idPengguna: idPengguna,
+          onWaterAdded: (newSelectedWater) async {
+          _playDrinkingSound();
+
+          setState(() {
+            selectedWater = newSelectedWater;
+          });
+
+          try {
+            // Save hydration record
+            await _riwayatHidrasiController.tambahRiwayatHidrasi(
+              fkIdPengguna: idPengguna!,
+              jumlahHidrasi: selectedWater.toDouble(),
+              targetController: _targetHidrasiController,
+            );
+
+            // Update total in target_hidrasi
+            previousIntake = currentIntake;
+            double newTotalIntake = currentIntake + selectedWater;
+            await _targetHidrasiRepository.updateTotalHidrasi(
+                idPengguna!, todayDate, newTotalIntake);
+
+            // Always get fresh data from database
+            final targetHarian = await _targetHidrasiRepository
+                .getTargetHidrasiHarian(idPengguna!, todayDate);
+
+            setState(() {
+              if (targetHarian != null) {
+                previousIntake = currentIntake;
+                currentIntake =
+                    targetHarian['total_hidrasi_harian'] ??
+                        newTotalIntake;
+                _valueNotifier.value =
+                    targetHarian['persentase_hidrasi'] ?? 0.0;
+              } else {
+                previousIntake = currentIntake;
+                currentIntake = newTotalIntake;
+              }
+            });
+          } catch (e) {
+            print("Error saat menambah air: $e");
+          }
+
+          _startCountdown();
+          _showAddedWaterPopup(context, selectedWater.toDouble());
+          Navigator.pop(context);
+          //show alert
+          checkTargetAndShowAlert(context);
+        },
+        ),
+      );
+    },
+  );
+}
+
 }

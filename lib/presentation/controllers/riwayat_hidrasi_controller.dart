@@ -22,7 +22,6 @@ class RiwayatHidrasiController extends ChangeNotifier { // Tambahkan 'extends Ch
   Future<int> tambahRiwayatHidrasi({
     required int fkIdPengguna,
     required double jumlahHidrasi,
-    // TargetHidrasiController diperlukan untuk mengupdate total harian di tabel target_hidrasi
     required TargetHidrasiController targetController,
   }) async {
     final result = await _repository.tambahRiwayatHidrasi(

@@ -3,9 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
+import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
-import 'package:hydrate/presentation/screens/home_screen1.dart';
-import 'package:hydrate/presentation/screens/auth_wrapper_screen.dart'; 
+
 
 class RegistrationTime extends StatefulWidget {
   final String name;
@@ -32,6 +32,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
   TextEditingController controllerSleepTime = TextEditingController();
   TextEditingController timeController = TextEditingController();
   Map<String, dynamic> penggunaData = {};
+  bool isFinalFormFilled = false;
 
   Future<void> _selectTime(
       BuildContext context, TextEditingController controller) async {
@@ -47,11 +48,30 @@ class _RegistrationTimeState extends State<RegistrationTime> {
     }
   }
 
-  // bool _isFormValid() {
-  //   return controllerWakeUpTime.text.isNotEmpty &&
-  //       controllerSleepTime
-  //           .text.isNotEmpty; // Validasi jam bangun dan jam tidur
-  // }
+  @override
+  void initState() {
+    super.initState();
+
+    controllerWakeUpTime.addListener(_checkForm);
+    controllerSleepTime.addListener(_checkForm);
+  }
+
+  void _checkForm() {
+    setState(() {
+      isFinalFormFilled = controllerWakeUpTime.text.isNotEmpty &&
+          controllerSleepTime.text.isNotEmpty;
+    });
+  }
+
+  @override
+  void dispose() {
+    controllerWakeUpTime.removeListener(_checkForm);
+    controllerSleepTime.removeListener(_checkForm);
+    controllerWakeUpTime.dispose();
+    controllerSleepTime.dispose();
+    timeController.dispose();
+    super.dispose();
+  }
 
   // Alert dialog jika belum mengisi
   Future<void> _showWarningDialog() async {
@@ -133,7 +153,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -209,95 +229,119 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                   ),
                 ),
                 const SizedBox(height: 50),
+                // Validasi apakah form sudah diisi
 
                 // Tombol Lanjut
-                Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 50),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF4ACCFF), Color(0xFF00A6FB)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                GestureDetector(
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 50),
+                    height: 55,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: isFinalFormFilled
+                          ? const LinearGradient(
+                              colors: [Color(0xFF4ACCFF), Color(0xFF00A6FB)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: isFinalFormFilled
+                          ? null
+                          : Colors.grey[400], // warna abu-abu saat tidak aktif
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    borderRadius: BorderRadius.circular(50),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00A6FB).withOpacity(0.25),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                    ),
-                    onPressed: () async {
-                      if (controllerWakeUpTime.text.isEmpty ||
-                          controllerSleepTime.text.isEmpty) {
-                        _showWarningDialog();
-                      } else {
-                        // Ambil data dari TextField
-                        String nama = widget.name;
-                        String jenisKelamin = widget.gender;
-                        double beratBadan = widget.weight;
-                        String jamBangun = controllerWakeUpTime.text;
-                        String jamTidur = controllerSleepTime.text;
+                      onPressed: isFinalFormFilled
+                          ? () async {
+                              String nama = widget.name;
+                              String jenisKelamin = widget.gender;
+                              double beratBadan = widget.weight;
+                              String jamBangun =
+                                  controllerWakeUpTime.text.trim();
+                              String jamTidur = controllerSleepTime.text.trim();
 
-                        // Validasi input
-                        if (nama.isEmpty ||
-                            jenisKelamin.isEmpty ||
-                            beratBadan <= 0 ||
-                            jamBangun.isEmpty ||
-                            jamTidur.isEmpty) {
-                          print("Harap isi semua field!");
-                          return;
-                        }
+                              if (nama.isEmpty ||
+                                  jenisKelamin.isEmpty ||
+                                  beratBadan <= 0 ||
+                                  jamBangun.isEmpty ||
+                                  jamTidur.isEmpty) {
+                                _showWarningDialog(); // atau tampilkan dialog validasi
+                                return;
+                              }
 
-                        try {
-                          // Tambah pengguna ke database
-                          int userId = await _penggunaController.tambahPengguna(
-                            nama,
-                            jenisKelamin,
-                            beratBadan,
-                            jamBangun,
-                            jamTidur,
-                          );
+                              try {
+                                int userId =
+                                    await _penggunaController.tambahPengguna(
+                                  nama,
+                                  jenisKelamin,
+                                  beratBadan,
+                                  jamBangun,
+                                  jamTidur,
+                                );
 
-                          if (userId > 0) {
-                            print("Pengguna berhasil ditambahkan dengan ID: $userId");
-                            if (mounted) { 
-                              Navigator.of(context).pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (context) => const AuthWrapperScreen(),
-                                ),
-                                (Route<dynamic> route) => false,
-                              );
+// <<<<<<< HEAD
+                                if (userId > 0) {
+                                  print(
+                                      "Pengguna berhasil ditambahkan dengan ID: $userId");
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MainScreen(),
+                                    ),
+                                  );
+                                } else {
+                                  print("Gagal menambahkan pengguna.");
+                                }
+                              } catch (e) {
+                                print("Error saat menambahkan pengguna: $e");
+                              }
                             }
-                          } else {
-                            print("Gagal menambahkan pengguna.");
-                          }
-                        } catch (e) {
-                          print("Error saat menambahkan pengguna: $e");
-                        }
-                      }
-                    },
-                    child: Text(
-                      "DAFTAR",
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                          : null,
+                      child: Text(
+                        "DAFTAR",
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+// =======
+//                           if (userId > 0) {
+//                             print("Pengguna berhasil ditambahkan dengan ID: $userId");
+//                             if (mounted) { 
+//                               Navigator.of(context).pushAndRemoveUntil(
+//                                 MaterialPageRoute(
+//                                   builder: (context) => const AuthWrapperScreen(),
+//                                 ),
+//                                 (Route<dynamic> route) => false,
+//                               );
+//                             }
+//                           } else {
+//                             print("Gagal menambahkan pengguna.");
+//                           }
+//                         } catch (e) {
+//                           print("Error saat menambahkan pengguna: $e");
+//                         }
+//                       }
+//                     },
+//                     child: Text(
+//                       "DAFTAR",
+//                       style: GoogleFonts.inter(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.bold,
+//                         color: Colors.white,
+// >>>>>>> f39970d2774572efe9fdbbb31b98de0587bd5d9c
                       ),
                     ),
                   ),
-                ),
+                )
               ],
             ),
           ),
@@ -321,12 +365,12 @@ class _RegistrationTimeState extends State<RegistrationTime> {
               enabledBorder: OutlineInputBorder(
                 borderSide:
                     const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                borderRadius: BorderRadius.circular(50),
+                borderRadius: BorderRadius.circular(20),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide:
                     const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                borderRadius: BorderRadius.circular(50),
+                borderRadius: BorderRadius.circular(20),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
@@ -370,6 +414,7 @@ class _TimePickerInputState extends State<TimePickerInput> {
     TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.input, 
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData(
@@ -428,12 +473,12 @@ class _TimePickerInputState extends State<TimePickerInput> {
               enabledBorder: OutlineInputBorder(
                 borderSide:
                     const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                borderRadius: BorderRadius.circular(50),
+                borderRadius: BorderRadius.circular(20),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide:
                     const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                borderRadius: BorderRadius.circular(50),
+                borderRadius: BorderRadius.circular(20),
               ),
               contentPadding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
