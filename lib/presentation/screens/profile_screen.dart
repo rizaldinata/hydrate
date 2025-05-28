@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/firstPage_view.dart';
 import 'package:hydrate/presentation/screens/edit_profile.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
@@ -66,6 +67,240 @@ class ProfileScreenState extends State<ProfileScreen> {
         _eventBus.fire('refresh_all');
       }
     });
+  }
+
+  // Function untuk logout
+  Future<void> _showLogoutDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.logout, color: Colors.red, size: 24),
+              SizedBox(width: 8),
+              Text(
+                'Konfirmasi Logout',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'Apakah Anda yakin ingin keluar dari aplikasi?',
+            style: GoogleFonts.inter(fontSize: 16),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text(
+                'Batal',
+                style: GoogleFonts.inter(
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Logout',
+                style: GoogleFonts.inter(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _performLogout();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Function untuk melakukan logout
+  Future<void> _performLogout() async {
+    try {
+      // Show loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2AD1D1)),
+          ),
+        ),
+      );
+
+      // Clear session
+      final session = SessionManager();
+      await session.clearSession();
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      // Navigate to login screen
+      // Ganti dengan route login screen Anda
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => InfoProduct()),
+        (Route<dynamic> route) => false,
+      );
+
+      _showSnackBar("Berhasil logout");
+    } catch (e) {
+      Navigator.of(context).pop(); // Close loading dialog
+      _showSnackBar("Gagal logout: ${e.toString()}");
+    }
+  }
+
+  // Function untuk menampilkan rating dialog
+  void _showRatingDialog() {
+    int selectedRating = 0;
+    String reviewText = '';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.star, color: Colors.amber, size: 24),
+                  SizedBox(width: 8),
+                  Text(
+                    'Beri Rating',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Bagaimana pengalaman Anda menggunakan aplikasi ini?',
+                    style: GoogleFonts.inter(fontSize: 14),
+                  ),
+                  SizedBox(height: 16),
+                  // Rating stars
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setStateDialog(() {
+                            selectedRating = index + 1;
+                          });
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 4),
+                          child: Icon(
+                            index < selectedRating
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: Colors.amber,
+                            size: 32,
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Tulis ulasan Anda (opsional)',
+                      hintStyle: GoogleFonts.inter(color: Colors.grey[500]),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey[300]!),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Color(0xFF2AD1D1)),
+                      ),
+                    ),
+                    maxLines: 3,
+                    onChanged: (value) {
+                      reviewText = value;
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Batal',
+                    style: GoogleFonts.inter(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xFF2AD1D1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: selectedRating > 0
+                      ? () {
+                          Navigator.of(context).pop();
+                          _submitRating(selectedRating, reviewText);
+                        }
+                      : null,
+                  child: Text(
+                    'Kirim',
+                    style: GoogleFonts.inter(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Function untuk submit rating
+  void _submitRating(int rating, String review) {
+    // Implementasikan logic untuk menyimpan rating ke database/API
+    // Contoh implementasi sederhana:
+    print("Rating: $rating, Review: $review");
+    
+    _showSnackBar("Terima kasih atas rating Anda! ⭐");
+    
+    // Jika Anda memiliki API untuk menyimpan rating, panggil di sini
+    // await ApiService.submitRating(rating, review);
   }
 
   // Metode publik untuk memaksa refresh data
@@ -218,7 +453,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   SizedBox(height: screenHeight * 0.01),
-                                  // ... isi kontainer profil tetap sama
+                                  // Profile Image
                                   Center(
                                     child: Container(
                                       padding:
@@ -261,7 +496,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
-
                                   ),
                                   SizedBox(height: screenHeight * 0.02),
                                   _profileInfo(
@@ -273,7 +507,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   _profileInfo(
                                       Icons.fitness_center,
                                       "Berat badan",
-                                      "${beratBadan?.toStringAsFixed(1) ?? '0.0'} kg",
+                                      "${beratBadan?.toInt().toString() ?? '0'} kg",
                                       screenWidth,
                                       infoFontSize),
                                   _profileInfo(
@@ -331,6 +565,131 @@ class ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                         ),
+                      ),
+                    ),
+
+                    // Bagian navigasi di bawah background biru hijau
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: verticalPadding,
+                      ),
+                      child: Column(
+                        children: [
+                          // Menu Rating
+                          Container(
+                            width: double.infinity,
+                            margin: EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  offset: Offset(0, 2),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.star,
+                                  color: Colors.amber,
+                                  size: 24,
+                                ),
+                              ),
+                              title: Text(
+                                'Beri Rating',
+                                style: GoogleFonts.inter(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2F2E41),
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Berikan penilaian untuk aplikasi ini',
+                                style: GoogleFonts.inter(
+                                  fontSize: screenWidth * 0.035,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.grey[400],
+                                size: 16,
+                              ),
+                              onTap: _showRatingDialog,
+                            ),
+                          ),
+
+                          // Menu Logout
+                          Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  offset: Offset(0, 2),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: ListTile(
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              leading: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Icon(
+                                  Icons.logout,
+                                  color: Colors.red,
+                                  size: 24,
+                                ),
+                              ),
+                              title: Text(
+                                'Logout',
+                                style: GoogleFonts.inter(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2F2E41),
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Keluar dari aplikasi',
+                                style: GoogleFonts.inter(
+                                  fontSize: screenWidth * 0.035,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              trailing: Icon(
+                                Icons.arrow_forward_ios,
+                                color: Colors.grey[400],
+                                size: 16,
+                              ),
+                              onTap: _showLogoutDialog,
+                            ),
+                          ),
+
+                          // Spacer untuk memberikan ruang di bawah
+                          SizedBox(height: screenHeight * 0.02),
+                        ],
                       ),
                     ),
                   ],

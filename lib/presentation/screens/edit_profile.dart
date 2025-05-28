@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
+import 'package:flutter/services.dart';
 
 class EditProfile extends StatefulWidget {
   final String initialNama;
@@ -60,7 +61,7 @@ class _EditProfileState extends State<EditProfile> {
     //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
 
     weightController =
-        TextEditingController(text: widget.initialBeratBadan.toString());
+        TextEditingController(text: widget.initialBeratBadan.toInt().toString());
     selectedGender = widget.initialJenisKelamin;
 
     // Parse jam bangun dan tidur jika tersedia
@@ -91,6 +92,7 @@ class _EditProfileState extends State<EditProfile> {
   Future<void> _selectTime(BuildContext context, bool isWakeUpTime) async {
   final TimeOfDay? pickedTime = await showTimePicker(
     context: context,
+    initialEntryMode: TimePickerEntryMode.input, 
     initialTime: isWakeUpTime
         ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
         : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
@@ -285,19 +287,17 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   // Widget untuk input text
-  Widget _buildTextField(
-      TextEditingController controller, String label, String icon,
-      {bool isNumber = false}) {
+  Widget _buildTextField(TextEditingController controller, String label, String icon, {bool isNumber = false}) {
     return TextField(
       cursorColor: const Color(0xFF00A6FB),
       controller: controller,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
         prefixIcon: Padding(
-          padding:
-              const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
+          padding: const EdgeInsets.all(12.0),
           child: SvgPicture.asset(
             icon,
             width: 24,
@@ -306,16 +306,17 @@ class _EditProfileState extends State<EditProfile> {
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
+          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
     );
   }
+
 
   // Widget Dropdown untuk Jenis Kelamin
   Widget _buildDropdown() {

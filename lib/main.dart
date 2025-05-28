@@ -1,64 +1,75 @@
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/login_view.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/registrasi_akun.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/splash_view.dart';
-import 'package:hydrate/presentation/screens/home_screen1.dart';
 import 'package:hydrate/presentation/screens/Pendaftaran/firstPage_view.dart';
+import 'package:hydrate/presentation/screens/home_screen1.dart';
 import 'package:hydrate/presentation/screens/profile_screen.dart';
 import 'package:hydrate/presentation/screens/statistic_page_screen.dart';
-import 'package:hydrate/presentation/screens/statistic_screen.dart';
 import 'dart:async';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 
+// Lottie untuk animasi loading
 import 'package:lottie/lottie.dart';
 
-void main(List<String> args) async {
-  WidgetsFlutterBinding.ensureInitialized(); 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final Future<bool> isPenggunaTerdaftarFuture = _checkInitialUserStatus();
+
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
-    runApp(MyApp());
+    runApp(MyApp(isPenggunaTerdaftarFuture: isPenggunaTerdaftarFuture));
   });
 }
 
+Future<bool> _checkInitialUserStatus() async {
+  try {
+    final penggunaRepository = PenggunaRepository();
+    bool isRegistered = await penggunaRepository.isPenggunaTerdaftar();
+    return isRegistered;
+  } catch (e) {
+    return false; 
+  }
+}
+
 class MyApp extends StatelessWidget {
+  final Future<bool> isPenggunaTerdaftarFuture;
+
+  const MyApp({Key? key, required this.isPenggunaTerdaftarFuture}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'HYDRATE',
       theme: ThemeData(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: Color(0xFF00A6FB), // Warna kursor
+          cursorColor: Color(0xFF00A6FB), 
           selectionColor:
-              Color(0xFF00A6FB).withOpacity(0.5), // Warna seleksi teks
-          selectionHandleColor: Color(0xFF00A6FB), // Warna titik pemilih teks
+              Color(0xFF00A6FB).withOpacity(0.5), 
+          selectionHandleColor: Color(0xFF00A6FB), 
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: FutureBuilder(
-        future: PenggunaRepository().isPenggunaTerdaftar(),
-        builder: (context, snapshot) {
+      home: FutureBuilder<bool>(
+        future: isPenggunaTerdaftarFuture,
+        builder: (context, AsyncSnapshot<bool> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
               backgroundColor: const Color(0xFFE8F7FF),
               body: Center(
-                // child: CircularProgressIndicator()
                 child: Lottie.asset('assets/loading.json',
                     width: 200, height: 200),
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : InfoProduct();
+          if (snapshot.hasError) {
+            print("[ERROR] FutureBuilder di MyApp: ${snapshot.error}");
+            return InfoProduct(); 
+          }
+
+          bool isRegistered = snapshot.data ?? false;
+          return isRegistered ? MainScreen() : InfoProduct();
         },
       ),
     );
@@ -71,32 +82,28 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
-  int _selectedIndex = 1;
-  final _eventBus = AppEventBus();
+  int _selectedIndex = 1; 
+  final _eventBus = AppEventBus(); 
 
-  // Keys untuk memaksa refresh pada widget
-  final GlobalKey<StatisticScreenState> _statisticsKey = GlobalKey();
+  final GlobalKey<StatisticPageScreenState> _statisticsKey = GlobalKey();
   final GlobalKey<HomeScreensState> _homeKey = GlobalKey();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey();
 
-  // Stream subscription untuk event bus
   StreamSubscription? _eventSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    print("[INFO] MainScreen initState: Observer ditambahkan.");
 
-    // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
-      if (event.type == 'refresh_all') {
-        _refreshAllPages();
-      }
     });
   }
 
   @override
   void dispose() {
+    print("[INFO] MainScreen dispose: Observer dilepas, subscription dibatalkan.");
     WidgetsBinding.instance.removeObserver(this);
     _eventSubscription?.cancel();
     super.dispose();
@@ -104,49 +111,52 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    print("[LIFECYCLE] App lifecycle state berubah: $state");
     if (state == AppLifecycleState.resumed) {
-      // Refresh semua halaman ketika aplikasi dibuka kembali
+      print("[LIFECYCLE] Aplikasi dibuka kembali (resumed). Merefresh halaman saat ini.");
       _refreshCurrentPage();
     }
   }
 
-  // Metode untuk refresh semua halaman
-  void _refreshAllPages() {
-    _refreshPage(0);
-    _refreshPage(1);
-    _refreshPage(2);
-  }
-
-  // Metode untuk menandai bahwa halaman tertentu perlu direfresh
   void _refreshPage(int index) {
+    print("[REFRESH] Mencoba merefresh halaman dengan index: $index");
     switch (index) {
       case 0:
         if (_statisticsKey.currentState != null) {
           _statisticsKey.currentState!.refresh();
+          print("[REFRESH] Halaman Statistik direfresh.");
+        } else {
+          print("[REFRESH] Gagal merefresh Statistik: currentState is null.");
         }
         break;
       case 1:
         if (_homeKey.currentState != null) {
           _homeKey.currentState!.refresh();
+          print("[REFRESH] Halaman Home direfresh.");
+        } else {
+          print("[REFRESH] Gagal merefresh Home: currentState is null.");
         }
         break;
       case 2:
         if (_profileKey.currentState != null) {
           _profileKey.currentState!.refresh();
+          print("[REFRESH] Halaman Profile direfresh.");
+        } else {
+          print("[REFRESH] Gagal merefresh Profile: currentState is null.");
         }
         break;
     }
   }
 
-  // Metode untuk refresh halaman yang sedang aktif
   void _refreshCurrentPage() {
+    print("[REFRESH] Merefresh halaman saat ini dengan index: $_selectedIndex");
     _refreshPage(_selectedIndex);
   }
 
-  // Handler untuk perubahan halaman
   void _handlePageChanged(int index) {
-    // Jika memilih halaman yang sudah dipilih, refresh halaman tersebut
+    print("[NAVIGATION] Halaman diubah ke index: $index. Index sebelumnya: $_selectedIndex");
     if (_selectedIndex == index) {
+      print("[NAVIGATION] Index sama, merefresh halaman saat ini.");
       _refreshCurrentPage();
       return;
     }
@@ -154,59 +164,78 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     setState(() {
       _selectedIndex = index;
     });
-
-    // Refresh halaman yang baru dipilih untuk mendapatkan data terbaru
-    _refreshCurrentPage();
+    print("[NAVIGATION] State diubah, merefresh halaman baru yang dipilih.");
+    _refreshCurrentPage(); // Refresh halaman yang baru dipilih
   }
 
   Future<bool> _onWillPop() async {
-    if (_selectedIndex != 1) {
-      setState(() => _selectedIndex = 1);
-      return false;
+    print("[NAVIGATION] Tombol kembali ditekan. Index saat ini: $_selectedIndex");
+    if (_selectedIndex != 1) { // Jika bukan di halaman Home (index 1)
+      setState(() => _selectedIndex = 1); // Kembali ke halaman Home
+      print("[NAVIGATION] Kembali ke halaman Home (index 1).");
+      _refreshCurrentPage(); // Refresh halaman Home setelah kembali
+      return false; // Jangan keluar aplikasi
     }
-    return await _showExitConfirmation();
+    // Jika sudah di halaman Home, tampilkan dialog konfirmasi keluar
+    print("[NAVIGATION] Sudah di halaman Home. Menampilkan dialog konfirmasi keluar.");
+    return await _showExitConfirmationDialog() ?? false;
   }
 
-  Future<bool> _showExitConfirmation() async {
-    return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            backgroundColor: Colors.white,
-            title: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Keluar Aplikasi',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-              ],
-            ),
-            content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?',
-                style: TextStyle(fontSize: 16)),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightBlueAccent,
-                      foregroundColor: Colors.white),
-                  child: const Text('Batal')),
-              ElevatedButton(
-                  onPressed: () => SystemNavigator.pop(),
-                  style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.white),
-                      overlayColor: MaterialStateProperty.all(
-                          Colors.red.withOpacity(0.2))),
-                  child: const Text('Keluar',
-                      style: TextStyle(color: Colors.red))),
-            ],
+  Future<bool?> _showExitConfirmationDialog() async {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: Colors.white,
+        title: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Keluar Aplikasi', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?', style: TextStyle(fontSize: 16)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false), // Jangan keluar
+            style: TextButton.styleFrom(
+                backgroundColor: Colors.grey.shade200,
+                foregroundColor: Colors.black87),
+            child: const Text('Batal'),
           ),
-        ) ??
-        false;
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(true); // Konfirmasi keluar
+              SystemNavigator.pop(); // Tutup aplikasi
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                foregroundColor: Colors.white),
+            child: const Text('Keluar'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    print("[BUILD] Membangun MainScreen. Index saat ini: $_selectedIndex");
+    // Pastikan semua halaman (StatisticScreen, HomeScreens, ProfileScreen) sudah ada
+    // dan menerima GlobalKey serta memiliki metode refresh() jika diperlukan.
+    final List<Widget> _pages = [
+      StatisticPageScreen(key: _statisticsKey),
+      HomeScreens(key: _homeKey),
+      ProfileScreen(
+        key: _profileKey,
+        onProfileUpdated: () {
+          print("[EVENT] Profile diperbarui. Mengirim event 'refresh_all'.");
+          // Pastikan AppEventBus().fire() mengirim Map atau object yang dikenali oleh listener
+        },
+      ),
+    ];
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -215,43 +244,23 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
           index: _selectedIndex,
           animationCurve: Curves.easeInOut,
           animationDuration: const Duration(milliseconds: 300),
-          backgroundColor: const Color(0xFFE8F7FF),
-          color: Colors.blue,
-          onTap: (index) {
-            _handlePageChanged(index);
-          },
-          items: const [
-            Image(
-                image: AssetImage('assets/images/navigasi/stats.png'),
-                width: 25,
-                height: 25,
-                color: Colors.white),
-            Image(
-                image: AssetImage('assets/images/navigasi/home.png'),
-                width: 25,
-                height: 25,
-                color: Colors.white),
-            Image(
-                image: AssetImage('assets/images/navigasi/user.png'),
-                width: 25,
-                height: 25,
-                color: Colors.white),
+          backgroundColor: const Color(0xFFE8F7FF), // Warna background area di belakang bar
+          color: Colors.blue, // Warna CurvedNavigationBar itu sendiri
+          buttonBackgroundColor: Colors.blue, // Warna tombol aktif (jika ada efek khusus)
+          height: 60.0, // Sesuaikan tinggi jika perlu
+          items: const <Widget>[
+            Image(image: AssetImage('assets/images/navigasi/stats.png'), width: 25, height: 25, color: Colors.white),
+            Image(image: AssetImage('assets/images/navigasi/home.png'), width: 25, height: 25, color: Colors.white),
+            Image(image: AssetImage('assets/images/navigasi/user.png'), width: 25, height: 25, color: Colors.white),
           ],
+          onTap: _handlePageChanged,
         ),
         body: IndexedStack(
           index: _selectedIndex,
-          children: [
-            StatisticScreen(key: _statisticsKey),
-            HomeScreens(key: _homeKey),
-            ProfileScreen(
-                key: _profileKey,
-                onProfileUpdated: () {
-                  // Ketika profile diperbarui, refresh semua halaman
-                  _eventBus.fire('refresh_all');
-                }),
-          ],
+          children: _pages,
         ),
       ),
     );
   }
 }
+

@@ -6,6 +6,7 @@ import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
+import 'package:hydrate/presentation/screens/auth_wrapper_screen.dart'; 
 
 class RegistrationTime extends StatefulWidget {
   final String name;
@@ -287,6 +288,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                                   jamTidur,
                                 );
 
+// <<<<<<< HEAD
                                 if (userId > 0) {
                                   print(
                                       "Pengguna berhasil ditambahkan dengan ID: $userId");
@@ -311,6 +313,32 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
+// =======
+//                           if (userId > 0) {
+//                             print("Pengguna berhasil ditambahkan dengan ID: $userId");
+//                             if (mounted) { 
+//                               Navigator.of(context).pushAndRemoveUntil(
+//                                 MaterialPageRoute(
+//                                   builder: (context) => const AuthWrapperScreen(),
+//                                 ),
+//                                 (Route<dynamic> route) => false,
+//                               );
+//                             }
+//                           } else {
+//                             print("Gagal menambahkan pengguna.");
+//                           }
+//                         } catch (e) {
+//                           print("Error saat menambahkan pengguna: $e");
+//                         }
+//                       }
+//                     },
+//                     child: Text(
+//                       "DAFTAR",
+//                       style: GoogleFonts.inter(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.bold,
+//                         color: Colors.white,
+// >>>>>>> f39970d2774572efe9fdbbb31b98de0587bd5d9c
                       ),
                     ),
                   ),
@@ -387,6 +415,7 @@ class _TimePickerInputState extends State<TimePickerInput> {
     TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
+      initialEntryMode: TimePickerEntryMode.input, 
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData(
