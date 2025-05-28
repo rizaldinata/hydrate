@@ -1,12 +1,8 @@
-import 'package:flutter/material.dart'; // Ditambahkan untuk ChangeNotifier
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/data/repositories/profil_pengguna_repository.dart';
 import 'package:hydrate/data/models/profil_pengguna_model.dart';
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart'; // Tambahkan ini
 
-// Jika controller ini belum extends ChangeNotifier dan Anda ingin UI langsung
-// merespons perubahan profil, tambahkan `extends ChangeNotifier`.
-class ProfilPenggunaController extends ChangeNotifier { // Tambahkan 'extends ChangeNotifier' jika perlu
+class ProfilPenggunaController {
   final ProfilPenggunaRepository _profilRepo = ProfilPenggunaRepository();
   final PenggunaRepository _penggunaRepo = PenggunaRepository();
 
@@ -28,8 +24,6 @@ class ProfilPenggunaController extends ChangeNotifier { // Tambahkan 'extends Ch
     required double beratBadan,
     required String jamBangun,
     required String jamTidur,
-    // TargetHidrasiController diperlukan untuk memicu update target
-    required TargetHidrasiController targetController,
   }) async {
     try {
       // Update nama di tabel pengguna
@@ -44,18 +38,10 @@ class ProfilPenggunaController extends ChangeNotifier { // Tambahkan 'extends Ch
         jamTidur: jamTidur,
       );
 
-      if (result1 > 0 && result2 > 0) {
-        // Setelah profil berhasil diupdate, panggil metode untuk
-        // menghitung ulang dan memperbarui target hidrasi harian.
-        await targetController.recalculateAndUpdateDailyTargetAfterProfileChange(userId);
-        notifyListeners(); // Jika UI listen ke perubahan profil
-        return true;
-      }
-      return false; // Jika salah satu update gagal
+      return result1 > 0 && result2 > 0;
     } catch (e) {
       print("Error updating profile: $e");
-      // throw Exception('Gagal mengupdate profil: $e'); // Pertimbangkan lagi apakah perlu throw
-      return false;
+      throw Exception('Gagal mengupdate profil: $e');
     }
   }
   
@@ -65,8 +51,6 @@ class ProfilPenggunaController extends ChangeNotifier { // Tambahkan 'extends Ch
     required String nama,
     required String jenisKelamin,
     required double beratBadan,
-    // TargetHidrasiController diperlukan
-    required TargetHidrasiController targetController,
   }) async {
     try {
       // Dapatkan data jam bangun dan jam tidur yang sudah ada
@@ -81,7 +65,6 @@ class ProfilPenggunaController extends ChangeNotifier { // Tambahkan 'extends Ch
         beratBadan: beratBadan,
         jamBangun: jamBangun,
         jamTidur: jamTidur,
-        targetController: targetController, // Teruskan controller
       );
     } catch (e) {
       print("Error in updateProfilDanNama: $e");

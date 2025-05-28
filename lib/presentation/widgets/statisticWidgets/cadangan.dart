@@ -34,8 +34,7 @@ class CadanganState extends State<Cadangan> {
   String? errorMessage;
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
-  Timer? _undoTimer;
-  
+
   // Mode seleksi
   bool _isSelectionMode = false;
   final Set<int> _selectedItems = HashSet<int>();
@@ -99,12 +98,9 @@ class CadanganState extends State<Cadangan> {
 
   void _showSnackBarNotification({
     required String message,
-    String? actionLabel,
-    VoidCallback? onAction,
-    Duration duration = const Duration(seconds: 4),
+    Duration duration = const Duration(seconds: 3),
     bool isSuccess = false,
   }) {
-    _undoTimer?.cancel();
     final snackBar = SnackBar(
       content: Text(message, style: const TextStyle(color: Colors.white)),
       duration: duration,
@@ -114,13 +110,6 @@ class CadanganState extends State<Cadangan> {
         borderRadius: BorderRadius.circular(10),
       ),
       margin: const EdgeInsets.all(10),
-      action: (actionLabel != null && onAction != null)
-          ? SnackBarAction(
-              label: actionLabel,
-              textColor: Colors.white,
-              onPressed: onAction,
-            )
-          : null,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
@@ -136,11 +125,10 @@ class CadanganState extends State<Cadangan> {
     });
   }
 
-  // Masuk ke mode seleksi - dimodifikasi untuk tidak otomatis memilih item pertama
+  // Masuk ke mode seleksi
   void _enterSelectionMode() {
     setState(() {
       _isSelectionMode = true;
-      // Tidak perlu menambahkan item apapun ke _selectedItems di sini
     });
   }
 
@@ -151,15 +139,13 @@ class CadanganState extends State<Cadangan> {
       _selectedItems.clear();
     });
   }
-  
+
   // Pilih semua item
   void _selectAllItems() {
     setState(() {
       if (_selectedItems.length == waterHistory.length) {
-        // Jika semua item sudah dipilih, batalkan semua
         _selectedItems.clear();
       } else {
-        // Pilih semua item
         _selectedItems.clear();
         for (var item in waterHistory) {
           if (item.id != null) {
@@ -171,227 +157,339 @@ class CadanganState extends State<Cadangan> {
   }
 
   // Hapus item yang dipilih
- Future<void> _deleteSelectedItems() async {
-   if (_selectedItems.isEmpty) return;
-   
-   bool confirm = await showDialog(
-     context: context,
-     builder: (context) => AlertDialog(
-       backgroundColor: Colors.white,
-       title: Column(
-         mainAxisSize: MainAxisSize.min,
-         children: [
-           Image.asset(
-             'assets/images/delete.png',
-             width: 60,
-             height: 60,
-           ),
-           const SizedBox(height: 12),
-         ],
-       ),
-       contentTextStyle: TextStyle(
-         color: _textPrimaryColor,
-         fontSize: 16,
-         fontWeight: FontWeight.w500,
-       ),
-       content: Text(
-         _selectedItems.length == 1
-             ? "Apakah kamu yakin ingin menghapus 1 catatan hidrasi?"
-             : "Apakah kamu yakin ingin menghapus ${_selectedItems.length} catatan hidrasi?",
-         textAlign: TextAlign.center,
-         style: const TextStyle(height: 1.5),
-       ),
-       actions: [
-         SizedBox(
-           width: 80,
-           child: TextButton(
-             onPressed: () => Navigator.of(context).pop(false),
-             style: ElevatedButton.styleFrom(
-               foregroundColor: Colors.blueGrey,
-               backgroundColor: Colors.grey[300],
-               shape: RoundedRectangleBorder(
-                 borderRadius: BorderRadius.circular(16),
-               ),
-             ),
-             child: const Text(
-               "Batal",
-               style: TextStyle(color: Color(0xFF0F172A)),
-             ),
-           ),
-         ),
-         SizedBox(
-           width: 80,
-           child: TextButton(
-             onPressed: () => Navigator.of(context).pop(true),
-             style: ElevatedButton.styleFrom(
-               foregroundColor: Colors.red,
-               backgroundColor: Colors.red,
-               shape: RoundedRectangleBorder(
-                 borderRadius: BorderRadius.circular(16),
-               ),
-             ),
-             child: const Text(
-               "Hapus",
-               style: TextStyle(color: Colors.white),
-             ),
-           ),
-         ),
-       ],
-     ),
-   );
+  Future<void> _deleteSelectedItems() async {
+    if (_selectedItems.isEmpty) return;
 
-   if (confirm != true) return;
-
-   // Backup item yang akan dihapus
-   List<RiwayatHidrasi> deletedItems = [];
-   for (var item in waterHistory) {
-     if (item.id != null && _selectedItems.contains(item.id)) {
-       deletedItems.add(item);
-     }
-   }
-   
-   // Hapus dari tampilan
-   setState(() {
-     waterHistory.removeWhere((item) => 
-         item.id != null && _selectedItems.contains(item.id));
-     // Kosongkan item terpilih setelah di-backup untuk dihapus
-     _selectedItems.clear(); 
-     // Keluar dari mode seleksi setelah konfirmasi hapus
-     _isSelectionMode = false;
-   });
-
-   // Tampilkan notifikasi dengan opsi batalkan
-   _showSnackBarNotification(
-     message: deletedItems.length == 1
-         ? "1 catatan hidrasi telah dihapus"
-         : "${deletedItems.length} catatan hidrasi telah dihapus",
-     actionLabel: "BATALKAN",
-     onAction: () {
-       // Hentikan timer penghapusan permanen jika "BATALKAN" ditekan
-       _undoTimer?.cancel();
-       
-       setState(() {
-         waterHistory.addAll(deletedItems);
-         waterHistory.sort((a, b) =>
-             (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
-       });
-       _showSnackBarNotification(
-         message: "Catatan telah dipulihkan",
-         duration: const Duration(seconds: 2),
-         isSuccess: true,
-       );
-     },
-   );
-
-   // Timer untuk menghapus data secara permanen jika tidak dibatalkan
-   _undoTimer = Timer(const Duration(seconds: 4), () async { // Tambahkan 'async' di sini
-     if (userId != null) {
-       print("Melakukan penghapusan permanen untuk ${deletedItems.length} item...");
-       for (var item in deletedItems) {
-         try {
-           // ==== PERUBAHAN UTAMA DI SINI ====
-           // Gunakan 'await' untuk menunggu setiap operasi selesai
-           await _controller.hapusRiwayatDanKurangiTarget(
-             idRiwayat: item.id ?? 0,
-             idPengguna: userId!,
-             tanggalHidrasi: item.tanggalHidrasi ?? "",
-             targetController: targetHidrasiController,
-           );
-           print("Berhasil menghapus item ID: ${item.id}");
-         } catch (e) {
-           print("Gagal menghapus item ID: ${item.id}. Error: $e");
-           // Anda bisa menambahkan notifikasi error di sini jika perlu
-         }
-       }
-       // Kirim event untuk refresh halaman lain SETELAH semua penghapusan selesai
-       _eventBus.fire('refresh_all');
-     }
-   });
- }
-
-Widget _buildTodayHeader() {
-  final String dateTitle = "Hari Ini";
-
-  return Container(
-    height: 56,
-    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    decoration: BoxDecoration(
-      color: _surfaceColor,
-      borderRadius: BorderRadius.circular(16),
-      boxShadow: [
-        BoxShadow(
-          color: _primaryColor.withOpacity(0.1),
-          blurRadius: 15,
-          offset: const Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.water_drop_rounded, color: _primaryColor, size: 24),
-              const SizedBox(width: 8),
-              // Expanded agar teks tidak overflow
-              Text(
-                _isSelectionMode ? "Pilih item" : dateTitle,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: _isSelectionMode ? Colors.orange : _primaryColor,
-                  letterSpacing: 0.5,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-          // Tombol kanan
-          if (_isSelectionMode)
-            IconButton(
-              icon: Icon(Icons.close, color: Colors.grey[600]),
-              onPressed: _exitSelectionMode,
-              tooltip: 'Tutup',
-            )
-          else if (waterHistory.isNotEmpty)
-            IconButton(
-              icon: Icon(Icons.more_vert, color: _primaryColor),
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  builder: (context) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        leading: Icon(Icons.edit, color: _primaryColor),
-                        title: Text(
-                          'Pilih Item',
-                          style: TextStyle(
-                            color: _textPrimaryColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        onTap: () {
-                          Navigator.pop(context);
-                          if (waterHistory.isNotEmpty) {
-                            _enterSelectionMode();
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
-              tooltip: 'Menu',
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/images/delete.png',
+              width: 60,
+              height: 60,
             ),
+            const SizedBox(height: 12),
+          ],
+        ),
+        contentTextStyle: TextStyle(
+          color: _textPrimaryColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        content: Text(
+          _selectedItems.length == 1
+              ? "Apakah kamu yakin ingin menghapus 1 catatan hidrasi?"
+              : "Apakah kamu yakin ingin menghapus ${_selectedItems.length} catatan hidrasi?",
+          textAlign: TextAlign.center,
+          style: const TextStyle(height: 1.5),
+        ),
+        actions: [
+          SizedBox(
+            width: 80,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.blueGrey,
+                backgroundColor: Colors.grey[300],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                "Batal",
+                style: TextStyle(color: Color(0xFF0F172A)),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 80,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.red,
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text(
+                "Hapus",
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
         ],
       ),
-    ),
-  );
-}
+    );
 
+    if (confirm != true) return;
+
+    // Simpan item yang akan dihapus untuk operasi backend
+    List<RiwayatHidrasi> itemsToDeletePermanently = [];
+    for (var item in waterHistory) {
+      if (item.id != null && _selectedItems.contains(item.id)) {
+        itemsToDeletePermanently.add(item);
+      }
+    }
+
+    // Hapus dari tampilan (UI) terlebih dahulu untuk responsivitas
+    setState(() {
+      waterHistory.removeWhere(
+          (item) => item.id != null && _selectedItems.contains(item.id));
+      _selectedItems.clear();
+      _isSelectionMode = false;
+    });
+
+    // Lakukan penghapusan permanen di backend
+    if (userId != null && itemsToDeletePermanently.isNotEmpty) {
+      print(
+          "Melakukan penghapusan permanen untuk ${itemsToDeletePermanently.length} item...");
+      bool allSucceeded = true;
+      for (var item in itemsToDeletePermanently) {
+        try {
+          await _controller.hapusRiwayatDanKurangiTarget(
+            idRiwayat: item.id ?? 0,
+            idPengguna: userId!,
+            tanggalHidrasi: item.tanggalHidrasi ?? "",
+            targetController: targetHidrasiController,
+          );
+          print("Berhasil menghapus permanen item ID: ${item.id}");
+        } catch (e) {
+          allSucceeded = false;
+          print("Gagal menghapus permanen item ID: ${item.id}. Error: $e");
+        }
+      }
+
+      if (allSucceeded) {
+        _showSnackBarNotification(
+          message: itemsToDeletePermanently.length == 1
+              ? "1 catatan hidrasi telah dihapus"
+              : "${itemsToDeletePermanently.length} catatan hidrasi telah dihapus",
+          isSuccess: true,
+        );
+      } else {
+         _showSnackBarNotification(
+          message: "Beberapa catatan gagal dihapus dari server.",
+          isSuccess: false,
+        );
+      }
+      _eventBus.fire('refresh_all');
+    } else {
+      _showSnackBarNotification(
+          message: "Tidak ada item yang dihapus dari server.",
+          isSuccess: false,
+        );
+    }
+  }
+
+  Widget _buildTodayHeader() {
+    final String dateTitle = "Hari Ini";
+
+    return Container(
+      height: 56,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: _surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _primaryColor.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.water_drop_rounded, color: _primaryColor, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  _isSelectionMode ? "Pilih item" : dateTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: _isSelectionMode ? Colors.orange : _primaryColor,
+                    letterSpacing: 0.5,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            if (_isSelectionMode)
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.grey[600]),
+                onPressed: _exitSelectionMode,
+                tooltip: 'Tutup',
+              )
+            else if (waterHistory.isNotEmpty)
+              PopupMenuButton<String>(
+                icon: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.delete_outline,
+                    color: _primaryColor,
+                    size: 20,
+                  ),
+                ),
+                tooltip: 'Menu Opsi',
+                elevation: 12,
+                shadowColor: _primaryColor.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: _primaryColor.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                color: Colors.white,
+                offset: const Offset(0, 8),
+                splashRadius: 20,
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'select_items',
+                    height: 56,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.checklist_rounded,
+                              color: _primaryColor,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Pilih Item',
+                                  style: TextStyle(
+                                    color: _textPrimaryColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Pilih untuk menghapus',
+                                  style: TextStyle(
+                                    color: _textSecondaryColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: _primaryColor.withOpacity(0.6),
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'refresh',
+                    height: 56,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.refresh_rounded,
+                              color: Colors.green.shade600,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Refresh Data',
+                                  style: TextStyle(
+                                    color: _textPrimaryColor,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Muat ulang riwayat',
+                                  style: TextStyle(
+                                    color: _textSecondaryColor,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: Colors.green.withOpacity(0.6),
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                onSelected: (String value) {
+                  switch (value) {
+                    case 'select_items':
+                      if (waterHistory.isNotEmpty) {
+                        _enterSelectionMode();
+                      }
+                      break;
+                    case 'refresh':
+                      refresh();
+                      _showSnackBarNotification(
+                        message: "Data berhasil dimuat ulang",
+                        isSuccess: true,
+                        duration: const Duration(seconds: 2),
+                      );
+                      break;
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildEmptyState() {
     return Center(
@@ -470,14 +568,11 @@ Widget _buildTodayHeader() {
           onTap: () {
             if (_isSelectionMode && item.id != null) {
               _toggleItemSelection(item.id!);
-            } else if (!_isSelectionMode && item.id != null) {
-              // Panjang tekan sudah menangani mode seleksi
             }
           },
           onLongPress: () {
             if (!_isSelectionMode && item.id != null) {
               _enterSelectionMode();
-              // Tambahkan item yang di-long press ke selected items
               _toggleItemSelection(item.id!);
             }
           },
@@ -488,7 +583,6 @@ Widget _buildTodayHeader() {
             ),
             child: Row(
               children: [
-                // Checkbox saat mode seleksi
                 if (_isSelectionMode)
                   Container(
                     margin: const EdgeInsets.only(right: 12),
@@ -592,7 +686,6 @@ Widget _buildTodayHeader() {
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
 
-    // Tetap mempertahankan fitur swipe-to-delete namun juga menambahkan tombol hapus langsung
     return _buildItemCard(item, time, isSmallScreen, screenWidth);
   }
 
@@ -627,14 +720,12 @@ Widget _buildTodayHeader() {
                               _buildWaterIntakeItem(waterHistory[index]),
                         ),
             ),
-            // Tampilkan tombol aksi seleksi meskipun tidak ada item yang dipilih
             if (_isSelectionMode)
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Tombol Pilih semua
                     ElevatedButton.icon(
                       icon: Icon(
                         _selectedItems.length == waterHistory.length
@@ -661,7 +752,6 @@ Widget _buildTodayHeader() {
                       onPressed: _selectAllItems,
                     ),
                     const SizedBox(width: 16),
-                    // Tombol Hapus selection - diubah untuk selalu menampilkan jumlah item yang dipilih
                     ElevatedButton.icon(
                       icon: const Icon(Icons.delete_outline, color: Colors.white),
                       label: Text(
@@ -695,7 +785,6 @@ Widget _buildTodayHeader() {
 
   @override
   void dispose() {
-    _undoTimer?.cancel();
     _eventSubscription?.cancel();
     super.dispose();
   }

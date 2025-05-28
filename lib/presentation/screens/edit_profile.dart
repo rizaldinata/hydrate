@@ -3,7 +3,6 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 import 'package:flutter/services.dart';
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart'; // Pastikan import ini ada
 
 class EditProfile extends StatefulWidget {
   final String initialNama;
@@ -35,7 +34,6 @@ class _EditProfileState extends State<EditProfile> {
   late TimeOfDay? sleepTime;
 
   final ProfilPenggunaController _controller = ProfilPenggunaController();
-  late TargetHidrasiController _targetHidrasiController; // Deklarasi
   bool _isLoading = false;
 
   final Map<String, String> genderMap = {
@@ -43,38 +41,36 @@ class _EditProfileState extends State<EditProfile> {
     "Perempuan": "Female",
   };
 
-  // Tidak perlu reverseGenderMap jika selectedGender sudah dalam format "Laki-laki" / "Perempuan"
-  // final Map<String, String> reverseGenderMap = {
-  //   "Male": "Laki-laki",
-  //   "Female": "Perempuan",
-  // };
+  final Map<String, String> reverseGenderMap = {
+    "Male": "Laki-laki",
+    "Female": "Perempuan",
+  };
 
+  @override
   @override
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.initialNama);
+    // weightController =
+    //     TextEditingController(text: widget.initialBeratBadan.toString());
+
+    // // Konversi "Male" / "Female" ke "Laki-laki" / "Perempuan"
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
+    //               (widget.initialJenisKelamin == "Male" ? "Laki-laki" : "Perempuan");
+    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
+    //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
+
     weightController =
         TextEditingController(text: widget.initialBeratBadan.toInt().toString());
+    selectedGender = widget.initialJenisKelamin;
 
-    // Pastikan initialJenisKelamin adalah "Laki-laki" atau "Perempuan"
-    // Jika dari database adalah "Male" atau "Female", perlu dikonversi di sini
-    if (widget.initialJenisKelamin == "Male") {
-      selectedGender = "Laki-laki";
-    } else if (widget.initialJenisKelamin == "Female") {
-      selectedGender = "Perempuan";
-    } else {
-      selectedGender = widget.initialJenisKelamin; // Asumsikan sudah format yang benar
-    }
-
+    // Parse jam bangun dan tidur jika tersedia
     wakeUpTime = _parseTimeString(widget.initialJamBangun);
     sleepTime = _parseTimeString(widget.initialJamTidur);
-
-    // Inisialisasi TargetHidrasiController
-    _targetHidrasiController = TargetHidrasiController();
   }
 
   TimeOfDay? _parseTimeString(String? timeString) {
-    if (timeString == null || timeString == 'Belum diatur' || timeString.isEmpty) return null;
+    if (timeString == null || timeString == 'Belum diatur') return null;
 
     try {
       final parts = timeString.split(':');
@@ -83,7 +79,7 @@ class _EditProfileState extends State<EditProfile> {
             hour: int.parse(parts[0]), minute: int.parse(parts[1]));
       }
     } catch (e) {
-      print('Error parsing time: $e for string: $timeString');
+      print('Error parsing time: $e');
     }
     return null;
   }
@@ -94,67 +90,52 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _selectTime(BuildContext context, bool isWakeUpTime) async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialEntryMode: TimePickerEntryMode.input,
-      initialTime: isWakeUpTime
-          ? wakeUpTime ?? const TimeOfDay(hour: 6, minute: 0)
-          : sleepTime ?? const TimeOfDay(hour: 22, minute: 0),
-      builder: (BuildContext context, Widget? childWidget) { // Mengganti nama variabel child agar lebih jelas
-        return Theme(
-          data: ThemeData( // ThemeData utama untuk TimePicker
-            primaryColor: const Color(0xFF00A6FB),
-            hintColor: const Color(0xFF00A6FB), // Biasanya sama dengan primaryColor atau accentColor
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF00A6FB), // Warna utama untuk elemen interaktif
-              onPrimary: Colors.white,   // Warna teks di atas warna utama
-              surface: Colors.white,     // Warna permukaan dialog
-              onSurface: Color(0xFF2F2E41), // Warna teks di atas permukaan
-            ),
-            // Mengembalikan timePickerTheme untuk kustomisasi tampilan TimePicker
-            timePickerTheme: TimePickerThemeData(
-              backgroundColor: Colors.white, // Latar belakang dialog
-              hourMinuteColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
-                      ? const Color(0xFF00A6FB) // Warna kotak jam/menit yang dipilih
-                      : const Color(0xFFE8F7FF)), // Warna kotak jam/menit yang tidak dipilih
-              hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
-                      ? Colors.white // Warna teks jam/menit yang dipilih
-                      : const Color(0xFF2F2E41)), // Warna teks jam/menit yang tidak dipilih
-              dialHandColor: const Color(0xFF00A6FB), // Warna jarum jam
-              dialBackgroundColor: const Color(0xFFE8F7FF), // Latar belakang dial
-              dayPeriodTextColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
-                      ? Colors.white
-                      : const Color(0xFF00A6FB)), // Warna teks AM/PM
-              dayPeriodColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
-                      ? const Color(0xFF00A6FB)
-                      : Colors.transparent), // Warna latar AM/PM
-              dayPeriodBorderSide: const BorderSide(color: Color(0xFF00A6FB), width: 1.5),
-              entryModeIconColor: const Color(0xFF00A6FB), // Warna ikon mode input (keyboard/dial)
-              helpTextStyle: const TextStyle(color: Color(0xFF00A6FB)), // Teks bantuan seperti "Select time"
-              // Kustomisasi tombol OK dan Cancel
-              cancelButtonStyle: TextButton.styleFrom(foregroundColor: const Color(0xFF00A6FB)),
-              confirmButtonStyle: TextButton.styleFrom(foregroundColor: const Color(0xFF00A6FB)),
-            ),
+  final TimeOfDay? pickedTime = await showTimePicker(
+    context: context,
+    initialTime: isWakeUpTime
+        ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
+        : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
+    builder: (BuildContext context, Widget? child) {
+      return Theme(
+        data: ThemeData(
+          primaryColor: const Color(0xFF00A6FB), // Warna utama biru
+          hintColor: const Color(0xFF00A6FB),
+          colorScheme: const ColorScheme.light(
+            primary: Color(0xFF00A6FB), // Warna utama
+            onPrimary: Colors.white, // Warna teks di atas warna utama
+            onSurface: Color(0xFF2F2E41), // Warna teks utama
           ),
-          child: childWidget!, // Menyediakan child yang diterima dari builder ke Theme widget
-        );
-      },
-    );
+          timePickerTheme: TimePickerThemeData(
+            backgroundColor: Colors.white,
+            hourMinuteColor: MaterialStateColor.resolveWith((states) =>
+                states.contains(MaterialState.selected)
+                    ? const Color(0xFF00A6FB)
+                    : const Color(0xFFE8F7FF)),
+            hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
+                states.contains(MaterialState.selected)
+                    ? Colors.white
+                    : const Color(0xFF2F2E41)),
+            dialHandColor: const Color(0xFF00A6FB),
+            dialBackgroundColor: const Color(0xFFE8F7FF),
+            entryModeIconColor: const Color(0xFF00A6FB),
+          ),
+        ),
+        child: child!,
+      );
+    },
+  );
 
-    if (pickedTime != null) {
-      setState(() {
-        if (isWakeUpTime) {
-          wakeUpTime = pickedTime;
-        } else {
-          sleepTime = pickedTime;
-        }
-      });
-    }
+  if (pickedTime != null) {
+    setState(() {
+      if (isWakeUpTime) {
+        wakeUpTime = pickedTime;
+      } else {
+        sleepTime = pickedTime;
+      }
+    });
   }
+}
+
 
   void _saveProfile() async {
     // Validasi input
@@ -168,45 +149,41 @@ class _EditProfileState extends State<EditProfile> {
     final nama = nameController.text;
     final berat = double.tryParse(weightController.text) ?? 0.0;
 
+    // final success = await _controller.updateProfilDanNama(
+    //   userId: widget.userId,
+    //   nama: nama,
+    //   jenisKelamin: selectedGender,
+    //   beratBadan: berat,
+    // );
+
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
       return;
     }
-    if (berat > 300) { // Batasan berat badan
-        _showOverlayError("Berat badan tidak boleh lebih dari 300 kg. Silakan masukkan berat yang sesuai.");
-        return;
-    }
-
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Pastikan selectedGender dikirim sebagai "Male" atau "Female" jika itu yang diharapkan controller
-      String genderForController = genderMap[selectedGender] ?? selectedGender;
-
       final success = await _controller.updateProfilPenggunaLengkap(
         userId: widget.userId,
         nama: nama,
-        jenisKelamin: genderForController, // Menggunakan genderMap untuk konversi
+        jenisKelamin: selectedGender,
         beratBadan: berat,
         jamBangun: _formatTimeOfDay(wakeUpTime),
         jamTidur: _formatTimeOfDay(sleepTime),
-        targetController: _targetHidrasiController, // Menyediakan instance TargetHidrasiController
       );
 
       if (success && mounted) {
-        Navigator.pop(context, true); // Mengirim true untuk menandakan ada perubahan
+        Navigator.pop(context, true);
         _showOverlaySuccess("Profil berhasil diperbarui!");
       } else if (mounted) {
         _showOverlayError("Gagal memperbarui profil!");
       }
     } catch (e) {
       if (mounted) {
-        // Lebih spesifik menangani error jika memungkinkan, atau tampilkan pesan umum
-        _showOverlayError("Terjadi kesalahan: ${e.toString()}");
-        print("Error saving profile: $e");
+        _showOverlayError("Berat badan tidak boleh lebih dari 300 kg. Silakan masukkan berat yang sesuai.",);
       }
     } finally {
       if (mounted) {
@@ -227,9 +204,7 @@ class _EditProfileState extends State<EditProfile> {
         padding: const EdgeInsets.all(20),
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00A6FB)),
-                ),
+                child: CircularProgressIndicator(),
               )
             : SingleChildScrollView(
                 child: Column(
@@ -241,23 +216,26 @@ class _EditProfileState extends State<EditProfile> {
                       style: GoogleFonts.inter(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2F2E41),
+                        color: Color(0xFF2F2E41),
                       ),
                     ),
                     const SizedBox(height: 20),
 
                     // Nama
                     _buildTextField(nameController, "Nama", "assets/images/profile/profile.svg"),
+
                     const SizedBox(height: 15),
 
                     // Jenis Kelamin (Dropdown)
                     _buildDropdown(),
+
                     const SizedBox(height: 15),
 
                     // Berat Badan
                     _buildTextField(weightController, "Berat Badan (kg)",
                         "assets/images/profile/weight.svg",
                         isNumber: true),
+
                     const SizedBox(height: 15),
 
                     // Jam Bangun
@@ -267,6 +245,7 @@ class _EditProfileState extends State<EditProfile> {
                       wakeUpTime,
                       () => _selectTime(context, true),
                     ),
+
                     const SizedBox(height: 15),
 
                     // Jam Tidur
@@ -276,6 +255,7 @@ class _EditProfileState extends State<EditProfile> {
                       sleepTime,
                       () => _selectTime(context, false),
                     ),
+
                     const SizedBox(height: 20),
 
                     // Row untuk Tombol Batal & Simpan
@@ -284,15 +264,15 @@ class _EditProfileState extends State<EditProfile> {
                         Expanded(
                           child: _buildButton(
                             "Batal",
-                            Colors.grey.shade600, // Sedikit lebih gelap untuk kontras
-                            () => Navigator.pop(context, false), // Mengirim false jika tidak ada perubahan
+                            Colors.grey,
+                            () => Navigator.pop(context),
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: _buildButton(
                             "Simpan",
-                            const Color(0xFF00A6FB),
+                            Color(0xFF00A6FB),
                             _saveProfile,
                           ),
                         ),
@@ -310,10 +290,8 @@ class _EditProfileState extends State<EditProfile> {
     return TextField(
       cursorColor: const Color(0xFF00A6FB),
       controller: controller,
-      keyboardType: isNumber ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
-      inputFormatters: isNumber
-          ? [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,1}'))] // Memperbolehkan satu digit desimal
-          : [],
+      keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+      inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
@@ -323,49 +301,50 @@ class _EditProfileState extends State<EditProfile> {
             icon,
             width: 24,
             height: 24,
-            colorFilter: const ColorFilter.mode(Color(0xFF00A6FB), BlendMode.srcIn), // Mewarnai ikon SVG
           ),
         ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2.5),
+          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
     );
   }
 
+
   // Widget Dropdown untuk Jenis Kelamin
   Widget _buildDropdown() {
     return DropdownButtonFormField<String>(
-      value: selectedGender,
+      value:
+          selectedGender, // Pastikan nilainya dalam format "Laki-laki" atau "Perempuan"
       decoration: InputDecoration(
         labelText: "Jenis Kelamin",
         labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
         prefixIcon: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: SvgPicture.asset(
-            "assets/images/profile/gender.svg",
-            width: 24,
-            height: 24,
-            colorFilter: const ColorFilter.mode(Color(0xFF00A6FB), BlendMode.srcIn),
+            padding:
+                const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
+            child: SvgPicture.asset(
+              "assets/images/profile/gender.svg",
+              width: 24,
+              height: 24,
+            ),
           ),
-        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         enabledBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 1.5),
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2.5),
+          borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-      items: genderMap.keys.map((String value) { // Menggunakan keys dari genderMap ("Laki-laki", "Perempuan")
+      items: genderMap.keys.map((String value) {
         return DropdownMenuItem<String>(
           value: value,
           child: Text(value),
@@ -390,35 +369,31 @@ class _EditProfileState extends State<EditProfile> {
           labelText: label,
           labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
           prefixIcon: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding:
+                const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
             child: SvgPicture.asset(
               icon,
               width: 24,
               height: 24,
-              colorFilter: const ColorFilter.mode(Color(0xFF00A6FB), BlendMode.srcIn),
             ),
           ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 1.5),
+            borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
             borderRadius: BorderRadius.circular(10),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2.5),
+            borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),
             borderRadius: BorderRadius.circular(10),
           ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              _formatTimeOfDay(time), // Menggunakan _formatTimeOfDay
-              style: TextStyle(
-                fontSize: 16,
-                color: time == null ? Colors.grey.shade600 : const Color(0xFF2F2E41),
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, color: Colors.grey.shade700),
+            Text(time == null
+                ? 'Belum diatur'
+                : '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}'),
+            const Icon(Icons.arrow_drop_down),
           ],
         ),
       ),
@@ -431,88 +406,70 @@ class _EditProfileState extends State<EditProfile> {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
-        padding: const EdgeInsets.symmetric(vertical: 14), // Sedikit lebih tinggi
+        padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        elevation: 3, // Menambah sedikit bayangan
       ),
       child: Text(
         text,
-        style: GoogleFonts.inter( // Menggunakan GoogleFonts
-            fontSize: 16, color: Colors.white, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+            fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
       ),
     );
   }
 
-  // Fungsi untuk menampilkan Overlay Error
+// Fungsi untuk menampilkan Overlay Error
   void _showOverlayError(String message) {
-    _showOverlay(message, Colors.red.shade400, Colors.white); // Warna teks putih untuk kontras
+    _showOverlay(message, Colors.red);
   }
 
   // Fungsi untuk menampilkan Overlay Sukses
   void _showOverlaySuccess(String message) {
-    _showOverlay(message, const Color(0xFF00A6FB), Colors.white); // Warna teks putih
+    _showOverlay(message, Colors.white.withOpacity(0.90));
   }
 
   // Fungsi umum untuk menampilkan overlay
-  void _showOverlay(String message, Color backgroundColor, Color textColor) {
-    if (!mounted) return; // Pastikan widget masih ter-mount
+  void _showOverlay(String message, Color color) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Overlay",
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          }
+        });
 
-    final overlay = Overlay.of(context);
-    OverlayEntry? overlayEntry; 
-
-    overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: MediaQuery.of(context).padding.top + 20, 
-        left: 20,
-        right: 20,
-        child: Material(
-          color: Colors.transparent,
-          child: SlideTransition(
-            position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
-                .animate(CurvedAnimation(parent: ModalRoute.of(context)!.animation!, curve: Curves.easeOut)),
+        return Align(
+          alignment: Alignment.topCenter,
+          child: Material(
+            color: Colors.transparent,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              margin: const EdgeInsets.only(top: 50, left: 20, right: 20),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: backgroundColor,
+                color: color,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  )
-                ],
               ),
               child: Text(
                 message,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.inter(
-                  color: textColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: const TextStyle(
+                    color: Color(0xFF2F2E41),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
+              .animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
+          child: child,
+        );
+      },
     );
-
-    overlay.insert(overlayEntry);
-
-    // Simpan referensi overlayEntry agar bisa diakses di dalam Future.delayed
-    final OverlayEntry? currentOverlayEntry = overlayEntry;
-
-    Future.delayed(const Duration(seconds: 3), () {
-      // Gunakan null-aware operators untuk memanggil remove dan mengakses mounted
-      if (currentOverlayEntry?.mounted ?? false) {
-        currentOverlayEntry?.remove();
-      }
-      // Set overlayEntry ke null setelah dihapus atau jika tidak lagi mounted
-      // Ini penting jika _showOverlay bisa dipanggil lagi sebelum Future selesai
-      if (overlayEntry == currentOverlayEntry) {
-          overlayEntry = null;
-      }
-    });
   }
 }
