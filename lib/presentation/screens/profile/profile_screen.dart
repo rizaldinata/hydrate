@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:app_settings/app_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,11 @@ import 'package:hydrate/presentation/screens/registration/firstPage_view.dart';
 import 'package:hydrate/presentation/screens/profile/edit_profile.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hydrate/presentation/controllers/notifikasi_controller.dart'; 
+import 'package:awesome_notifications/awesome_notifications.dart'; 
+import 'package:hydrate/services/notification_settings_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onProfileUpdated;
@@ -30,6 +36,10 @@ class ProfileScreenState extends State<ProfileScreen> {
   String? jamTidur;
   bool _isLoading = true;
   String _errorMessage = '';
+  bool _areNotificationsEnabled = false;
+
+  // Instance NotificationSettingsService
+  final NotificationSettingsService _notificationSettingsService = NotificationSettingsService();
 
   // Deklarasi Controller
   final ProfilPenggunaController _profilPenggunaController =
@@ -133,6 +143,240 @@ class ProfileScreenState extends State<ProfileScreen> {
       },
     );
   }
+
+  //fungsi untuk melakukan perizinan ke settings
+  // Di dalam kelas ProfileScreenState
+
+// Jangan lupa import pluginnya di atas file
+// import 'package:app_settings/app_settings.dart';
+
+Future<void> _showBackgroundPermissionGuidanceDialog() async {
+  // Selalu pastikan widget masih mounted sebelum menampilkan dialog
+  if (!mounted) return;
+
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false, // Pengguna harus memilih salah satu aksi
+    builder: (BuildContext dialogContext) {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          // Tentukan apakah device dalam mode landscape atau portrait
+          final isLandscape = constraints.maxWidth > constraints.maxHeight;
+          final screenWidth = constraints.maxWidth;
+          final screenHeight = constraints.maxHeight;
+          
+          // Hitung lebar dialog berdasarkan ukuran layar
+          double dialogWidth;
+          if (screenWidth < 600) {
+            // Mobile portrait
+            dialogWidth = screenWidth * 0.9;
+          } else if (screenWidth < 900) {
+            // Tablet atau mobile landscape
+            dialogWidth = screenWidth * 0.7;
+          } else {
+            // Desktop
+            dialogWidth = 500;
+          }
+          
+          // Hitung tinggi maksimum dialog
+          final maxHeight = screenHeight * (isLandscape ? 0.8 : 0.7);
+          
+          return Center(
+            child: Container(
+              width: dialogWidth,
+              constraints: BoxConstraints(
+                maxHeight: maxHeight,
+                minWidth: 280,
+                maxWidth: 600,
+              ),
+              child: AlertDialog(
+                titlePadding: EdgeInsets.all(16),
+                contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                actionsPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                
+                title: Row(
+                  children: [
+                    Icon(
+                      Icons.settings_backup_restore, 
+                      color: Theme.of(context).primaryColor,
+                      size: screenWidth < 600 ? 20 : 24,
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Optimalkan Pengingat',
+                        style: TextStyle(
+                          fontSize: screenWidth < 600 ? 16 : 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                
+                content: Container(
+                  width: double.maxFinite,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Agar pengingat minum Anda lebih andal dan tidak terganggu oleh sistem HP:',
+                          style: TextStyle(
+                            fontSize: screenWidth < 600 ? 14 : 16,
+                            height: 1.4,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        
+                        // Gunakan Card untuk memberikan emphasis pada instruksi
+                        Card(
+                          elevation: 0,
+                          color: Theme.of(context).primaryColor.withOpacity(0.05),
+                          child: Padding(
+                            padding: EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildInstructionItem(
+                                  context,
+                                  '1.',
+                                  'Pastikan optimasi baterai untuk Hydrate dimatikan (pilih "Tanpa Batasan").',
+                                  screenWidth,
+                                ),
+                                SizedBox(height: 8),
+                                _buildInstructionItem(
+                                  context,
+                                  '2.',
+                                  'Jika tersedia, izinkan "Mulai Otomatis" (Autostart) untuk Hydrate.',
+                                  screenWidth,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        
+                        SizedBox(height: 16),
+                        Text(
+                          'Sentuh "Buka Pengaturan" untuk diarahkan ke info aplikasi Hydrate.',
+                          style: TextStyle(
+                            fontSize: screenWidth < 600 ? 13 : 14,
+                            fontStyle: FontStyle.italic,
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                
+                actions: <Widget>[
+                  // Responsive button layout
+                  if (screenWidth < 600 && !isLandscape)
+                    // Stack buttons vertically on small screens
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            AppSettings.openAppSettings(); 
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text(
+                            'Buka Pengaturan',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Text(
+                            'Nanti Saja',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    // Horizontal layout for larger screens
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                          },
+                          child: Text(
+                            'Nanti Saja',
+                            style: TextStyle(
+                              fontSize: screenWidth < 600 ? 13 : 14,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(dialogContext).pop();
+                            AppSettings.openAppSettings(); 
+                          },
+                          child: Text(
+                            'Buka Pengaturan',
+                            style: TextStyle(
+                              fontSize: screenWidth < 600 ? 13 : 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+// Helper method untuk membuat item instruksi
+Widget _buildInstructionItem(BuildContext context, String number, String text, double screenWidth) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Container(
+        width: 20,
+        child: Text(
+          number,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: screenWidth < 600 ? 13 : 14,
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ),
+      SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          text,
+          style: TextStyle(
+            fontSize: screenWidth < 600 ? 13 : 14,
+            height: 1.4,
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
   // Function untuk melakukan logout
   Future<void> _performLogout() async {
@@ -307,12 +551,14 @@ class ProfileScreenState extends State<ProfileScreen> {
   void refresh() {
     print("Refreshing Profile data...");
     _loadUserData();
+    _loadNotificationPreference();
   }
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadNotificationPreference();
 
     // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
@@ -320,6 +566,53 @@ class ProfileScreenState extends State<ProfileScreen> {
         refresh();
       }
     });
+  }
+
+  Future<void> _loadNotificationPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _areNotificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+      });
+    }
+  }
+
+  Future<void> _onNotificationToggleChanged(bool newValue) async {
+    setState(() {
+      _areNotificationsEnabled = newValue;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications_enabled', newValue);
+
+    if (newValue) {
+      bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
+      if (!isAllowed) {
+        isAllowed = await NotificationController.requestNotificationPermission();
+      }
+
+      if (isAllowed) {
+        int currentIntervalSeconds = await _notificationSettingsService.getNotificationInterval();
+        
+        // Batalkan dulu jadwal lama agar tidak tumpuk
+        await NotificationController.cancelScheduledNotifications();
+        await NotificationController.schedulePeriodicHydrationNotification(
+            intervalInSeconds: currentIntervalSeconds
+        );
+        _showSnackBar("Pengingat notifikasi diaktifkan setiap ${currentIntervalSeconds ~/ 60} menit.");
+
+        if (mounted) {
+          _showBackgroundPermissionGuidanceDialog();
+        }
+      } else {
+        _showSnackBar("Izin notifikasi ditolak. Tidak dapat mengaktifkan pengingat.");
+        setState(() { _areNotificationsEnabled = false; }); 
+        await prefs.setBool('notifications_enabled', false); 
+      }
+    } else {
+      await NotificationController.cancelScheduledNotifications();
+      _showSnackBar("Pengingat notifikasi dinonaktifkan.");
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -522,8 +815,50 @@ class ProfileScreenState extends State<ProfileScreen> {
                                       jamTidur ?? 'Belum diatur',
                                       screenWidth,
                                       infoFontSize),
-                                  // Tambahkan jarak sebelum tombol
-                                  SizedBox(height: screenHeight * 0.03),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: 8.0,
+                                      horizontal: screenWidth * 0.02,
+                                    ),
+                                    child: Material( // Bungkus dengan Material untuk efek sentuhan
+                                      color: Colors.transparent,
+                                      child: InkWell( // Untuk efek sentuhan pada seluruh baris
+                                        onTap: () {
+                                          _onNotificationToggleChanged(!_areNotificationsEnabled);
+                                        },
+                                        borderRadius: BorderRadius.circular(8), // Sesuaikan
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 8.0), // Padding internal
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.notifications_active, color: Colors.white, size: screenWidth * 0.05),
+                                                  SizedBox(width: screenWidth * 0.025),
+                                                  Text(
+                                                    "Pengingat Minum",
+                                                    style: GoogleFonts.inter(
+                                                      fontSize: infoFontSize,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Switch(
+                                                value: _areNotificationsEnabled,
+                                                onChanged: _onNotificationToggleChanged,
+                                                activeColor: Colors.white,
+                                                activeTrackColor: Colors.lightBlueAccent.withOpacity(0.5),
+                                                inactiveThumbColor: Colors.blueGrey,
+                                                inactiveTrackColor: Colors.white.withOpacity(0.2),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
 
                                   // Tombol edit profile
                                   Center(
@@ -576,62 +911,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                       ),
                       child: Column(
                         children: [
-                          // Menu Rating
-                          Container(
-                            width: double.infinity,
-                            margin: EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  offset: Offset(0, 2),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 8,
-                              ),
-                              leading: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  Icons.star,
-                                  color: Colors.amber,
-                                  size: 24,
-                                ),
-                              ),
-                              title: Text(
-                                'Beri Rating',
-                                style: GoogleFonts.inter(
-                                  fontSize: titleFontSize,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2F2E41),
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Berikan penilaian untuk aplikasi ini',
-                                style: GoogleFonts.inter(
-                                  fontSize: screenWidth * 0.035,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.grey[400],
-                                size: 16,
-                              ),
-                              onTap: _showRatingDialog,
-                            ),
-                          ),
-
                           // Menu Logout
                           Container(
                             width: double.infinity,
