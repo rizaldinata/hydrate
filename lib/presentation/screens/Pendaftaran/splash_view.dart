@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/login_view.dart';
+import 'package:hydrate/presentation/screens/Pendaftaran/registration1_view.dart';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -132,7 +132,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ? ElevatedButton(
                     onPressed: () {
                       Navigator.pushReplacement(context, MaterialPageRoute(
-                                builder: (context) => LoginView(),
+                                builder: (context) => RegistrationData(),
                               ),);
                     },
                     style: ElevatedButton.styleFrom(

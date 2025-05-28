@@ -16,11 +16,13 @@ class AddWaterModalContent extends StatefulWidget {
   AddWaterModalContentState createState() => AddWaterModalContentState();
 }
 
-class AddWaterModalContentState extends State<AddWaterModalContent> {
+class AddWaterModalContentState extends State<AddWaterModalContent>
+    with TickerProviderStateMixin {
   late int tempSelectedWater;
   bool isCustomMode = false;
   late FixedExtentScrollController _scrollController;
   TextEditingController customWaterController = TextEditingController();
+  FocusNode customInputFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -35,7 +37,93 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
   void dispose() {
     _scrollController.dispose();
     customWaterController.dispose();
+    customInputFocusNode.dispose();
     super.dispose();
+  }
+
+  // Method untuk menampilkan popup error di atas
+  void _showErrorPopup(BuildContext context, String message) {
+    OverlayEntry overlayEntry;
+    final overlay = Overlay.of(context);
+    final animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 50,
+          left: 20,
+          right: 20,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, -0.5),
+              end: const Offset(0, 0),
+            ).animate(CurvedAnimation(
+              parent: animationController,
+              curve: Curves.easeOut,
+            )),
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: Material(
+                color: Colors.transparent,
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 5),
+                      ],
+                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            message,
+                            style: const TextStyle(
+                              color: Color(0xFF2F2E41),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    overlay.insert(overlayEntry);
+    animationController.forward();
+
+    // Hapus popup setelah beberapa detik
+    Future.delayed(const Duration(seconds: 3), () {
+      animationController.reverse().then((value) {
+        overlayEntry.remove();
+        animationController.dispose();
+      });
+    });
   }
 
   @override
@@ -55,9 +143,16 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
       height: modalHeight,
       padding: EdgeInsets.all(16),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+        child: SingleChildScrollView(
+          physics: NeverScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: modalHeight - 32, // Minus padding
+            ),
+            child: IntrinsicHeight(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
             // Header with title and edit/close button
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -159,7 +254,10 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
               ),
               SizedBox(height: 40),
             ],
-          ],
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -246,21 +344,14 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
     if (isCustomMode) {
       int? customValue = int.tryParse(customWaterController.text);
       if (customValue == null || customValue <= 0 || customValue > 2000) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Masukkan nilai antara 1-2000 mL"),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showErrorPopup(context, "Masukkan nilai antara 1-2000 mL");
         return;
       }
       tempSelectedWater = customValue;
     }
 
     if (widget.idPengguna == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User tidak teridentifikasi!")),
-      );
+      _showErrorPopup(context, "User tidak teridentifikasi!");
       return;
     }
 
@@ -289,9 +380,11 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
                   ),
                   child: TextField(
                     controller: customWaterController,
+                    focusNode: customInputFocusNode,
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     autofocus: true,
+                    textInputAction: TextInputAction.done,
                     style: TextStyle(
                       fontSize: 40, // Font lebih kecil saat compact
                       fontWeight: FontWeight.bold,
@@ -323,6 +416,21 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
                             customValue <= 2000) {
                           // Auto submit jika nilai valid
                           _handleAddWater();
+                        } else {
+                          // Show error popup if invalid value
+                          // JANGAN tutup keyboard, biarkan user edit lagi
+                          _showErrorPopup(context, "Masukkan nilai antara 1-2000 mL");
+                          // Keep focus on the TextField to prevent keyboard from closing
+                          Future.delayed(Duration(milliseconds: 50), () {
+                            if (customInputFocusNode.canRequestFocus) {
+                              customInputFocusNode.requestFocus();
+                              // Select all text for easier editing
+                              customWaterController.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: customWaterController.text.length,
+                              );
+                            }
+                          });
                         }
                       }
                     },
@@ -347,16 +455,14 @@ class AddWaterModalContentState extends State<AddWaterModalContent> {
           ),
         ),
 
-        if (!isCompact) ...[
-          SizedBox(height: 20),
-          Text(
-            "Masukkan jumlah air (1-2000 mL)",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
+        SizedBox(height: isCompact ? 10 : 20),
+        Text(
+          "Masukkan jumlah air (1-2000 mL)",
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey[600],
           ),
-        ],
+        ),
       ],
     );
   }
