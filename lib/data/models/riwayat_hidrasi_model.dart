@@ -2,32 +2,18 @@ class RiwayatHidrasi {
   final int? id;
   final int fkIdPengguna;
   final double jumlahHidrasi;
-  final String? tanggalHidrasi;
-  final String? waktuHidrasi;
-  final String? timestamp;
-  final DateTime? createdAt;
+  final String tanggalHidrasi;
+  final String waktuHidrasi;
+  final String? createdAt; // DateTime disimpan sebagai TEXT di SQLite
 
   RiwayatHidrasi({
     this.id,
     required this.fkIdPengguna,
     required this.jumlahHidrasi,
-    this.tanggalHidrasi,
-    this.waktuHidrasi,
-    this.timestamp,
-    this.createdAt
+    required this.tanggalHidrasi,
+    required this.waktuHidrasi,
+    this.createdAt,
   });
-
-  Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'fk_id_pengguna': fkIdPengguna,
-      'jumlah_hidrasi': jumlahHidrasi,
-      'tanggal_hidrasi': tanggalHidrasi,
-      'waktu_hidrasi': waktuHidrasi,
-      'timestamp': timestamp,
-      'createdAt' : createdAt,
-    };
-  }
 
   factory RiwayatHidrasi.fromMap(Map<String, dynamic> map) {
     return RiwayatHidrasi(
@@ -36,14 +22,18 @@ class RiwayatHidrasi {
       jumlahHidrasi: map['jumlah_hidrasi'],
       tanggalHidrasi: map['tanggal_hidrasi'],
       waktuHidrasi: map['waktu_hidrasi'],
-      timestamp: map['timestamp'],
-      createdAt: map['created_at'] != null 
-          ? DateTime.parse(map['created_at']) 
-          : null,
+      createdAt: map['created_at'],
     );
   }
-  @override
-  String toString() {
-    return 'RiwayatHidrasi{id: $id, waktu: $waktuHidrasi, createdAt: $createdAt}';
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'fk_id_pengguna': fkIdPengguna,
+      'jumlah_hidrasi': jumlahHidrasi,
+      'tanggal_hidrasi': tanggalHidrasi,
+      'waktu_hidrasi': waktuHidrasi,
+      'created_at': createdAt ?? DateTime.now().toIso8601String(), // Set default if null
+    };
   }
 }

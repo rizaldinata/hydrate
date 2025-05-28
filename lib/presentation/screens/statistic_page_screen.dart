@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // 👈 Tambahkan import Provider
 import 'package:hydrate/presentation/widgets/statisticWidgets/cadangan.dart';
 import 'package:hydrate/presentation/widgets/statisticWidgets/hydrasi_report.dart';
-import 'package:hydrate/presentation/widgets/statisticWidgets/statistic.dart';
-
+import 'package:hydrate/presentation/widgets/statisticWidgets/statistic.dart'; // Asumsi ini adalah HydrationStatsChart
+import 'package:hydrate/presentation/controllers/hydration_stats_controller.dart'; // 👈 Import controller
+import 'package:hydrate/core/utils/session_manager.dart'; // 👈 Import SessionManager
 
 class StatisticPageScreen extends StatefulWidget {
   const StatisticPageScreen({super.key});
@@ -11,11 +13,27 @@ class StatisticPageScreen extends StatefulWidget {
   State<StatisticPageScreen> createState() => StatisticPageScreenState();
 }
 
-
 class StatisticPageScreenState extends State<StatisticPageScreen> {
+  // int? _currentUserId; // 👈 Pindahkan _currentUserId dan logikanya jika perlu
+
+  @override
+  void initState() {
+    super.initState();
+    // Memuat data statistik saat widget diinisialisasi
+    // Pastikan HydrationStatsController sudah tersedia di context
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Panggil fetchHydrationStats dari controller.
+      // ID pengguna akan diambil di dalam controller menggunakan SessionManager.
+      Provider.of<HydrationStatsController>(context, listen: false)
+          .fetchHydrationStats();
+    });
+  }
 
   void refresh() {
     print("Refreshing StatisticPageScreen");
+    // Panggil fetchHydrationStats untuk memuat ulang data.
+    Provider.of<HydrationStatsController>(context, listen: false)
+        .fetchHydrationStats();
   }
 
   @override
@@ -23,7 +41,7 @@ class StatisticPageScreenState extends State<StatisticPageScreen> {
     return DefaultTabController(
       length: 2, // Jumlah tab
       child: Scaffold(
-        backgroundColor: Color(0xFFE8F7FF),
+        backgroundColor: const Color(0xFFE8F7FF),
         appBar: AppBar(
           title: const Text(
             'Riwayat Hidrasi',
@@ -33,7 +51,7 @@ class StatisticPageScreenState extends State<StatisticPageScreen> {
             ),
           ),
           centerTitle: true,
-          backgroundColor: Color(0xFF00A6FB),
+          backgroundColor: const Color(0xFF00A6FB),
           elevation: 0,
           automaticallyImplyLeading: false,
           bottom: const TabBar(
@@ -45,17 +63,26 @@ class StatisticPageScreenState extends State<StatisticPageScreen> {
               Tab(text: 'Riwayat Harian'),
             ],
           ),
+          // Tambahkan tombol refresh jika diinginkan
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: refresh,
+              tooltip: 'Segarkan Data',
+            ),
+          ],
         ),
         body: TabBarView(
           children: [
-            // Tab 1: Grafik
+            // Tab 1: Laporan Hidrasi (Grafik dan HydrasiReport)
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    HydrationStatsChart(
-                      accentColor: Color(0xFF00A6FB),
+                    // Widget grafik Anda
+                    HydrationStatsChart( // Nama widget ini mungkin 'Statistic' sesuai import Anda
+                      accentColor: const Color(0xFF00A6FB),
                       cardColor: Theme.of(context).cardColor,
                       primaryTextColor:
                           Theme.of(context).textTheme.bodyLarge?.color ??
@@ -64,14 +91,28 @@ class StatisticPageScreenState extends State<StatisticPageScreen> {
                           Theme.of(context).textTheme.bodySmall?.color ??
                               Colors.grey,
                     ),
-                    SizedBox(height: 16),
-                    // Add the new gamification widget here
-                    HydrasiReport(
-                      weeklyAverage: 1660,
-                      monthlyAverage: 1720,
-                      completionPercentage: 78,
-                      drinkFrequency: 6,
-                      accentColor: Color(0xFF00A6FB),
+                    const SizedBox(height: 16),
+                    // Menggunakan Consumer untuk mendengarkan perubahan dari HydrationStatsController
+                    Consumer<HydrationStatsController>(
+                      builder: (context, controller, child) {
+                        if (controller.isLoading) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (controller.errorMessage != null) {
+                          return Center(child: Text('Error: ${controller.errorMessage}'));
+                        }
+                        // Ambil data dari controller
+                        final stats = controller.stats;
+                        return HydrasiReport(
+                          weeklyAverage: stats.weeklyAverageIntake,
+                          monthlyAverage: stats.monthlyAverageIntake,
+                          drinkFrequency: stats.averageDailyDrinkFrequency,
+                          currentDailyIntake: stats.todayIntake, // 👈 Parameter baru
+                          averageDailyTarget: stats.averageDailyTarget, // 👈 Parameter baru
+                          accentColor: const Color(0xFF00A6FB),
+                          // completionPercentage: 78, // 👈 Hapus parameter lama ini
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -79,7 +120,9 @@ class StatisticPageScreenState extends State<StatisticPageScreen> {
             ),
 
             // Tab 2: Riwayat Harian
-            Padding(padding: EdgeInsets.all(8), child: Cadangan()),
+            // Anda mungkin ingin menggunakan RiwayatHidrasiController di sini
+            // untuk menampilkan daftar riwayat harian yang dinamis.
+            Padding(padding: const EdgeInsets.all(8), child: Cadangan()), // Widget 'Cadangan' Anda
           ],
         ),
       ),
