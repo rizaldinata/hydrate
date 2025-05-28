@@ -35,11 +35,10 @@ class CadanganState extends State<Cadangan> {
   StreamSubscription? _eventSubscription;
   final _eventBus = AppEventBus();
   Timer? _undoTimer;
-  RiwayatHidrasi? _lastDeletedItem;
   
   // Mode seleksi
   bool _isSelectionMode = false;
-  Set<int> _selectedItems = HashSet<int>();
+  final Set<int> _selectedItems = HashSet<int>();
 
   @override
   void initState() {
@@ -172,128 +171,143 @@ class CadanganState extends State<Cadangan> {
   }
 
   // Hapus item yang dipilih
-  Future<void> _deleteSelectedItems() async {
-    if (_selectedItems.isEmpty) return;
-    
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/images/delete.png',
-              width: 60,
-              height: 60,
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-        contentTextStyle: TextStyle(
-          color: _textPrimaryColor,
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
-        content: Text(
-          _selectedItems.length == 1
-              ? "Apakah kamu yakin ingin menghapus 1 catatan hidrasi?"
-              : "Apakah kamu yakin ingin menghapus ${_selectedItems.length} catatan hidrasi?",
-          textAlign: TextAlign.center,
-          style: const TextStyle(height: 1.5),
-        ),
-        actions: [
-          SizedBox(
-            width: 80,
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.blueGrey,
-                backgroundColor: Colors.grey[300],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                "Batal",
-                style: TextStyle(color: Color(0xFF0F172A)),
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 80,
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.red,
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                "Hapus",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+ Future<void> _deleteSelectedItems() async {
+   if (_selectedItems.isEmpty) return;
+   
+   bool confirm = await showDialog(
+     context: context,
+     builder: (context) => AlertDialog(
+       backgroundColor: Colors.white,
+       title: Column(
+         mainAxisSize: MainAxisSize.min,
+         children: [
+           Image.asset(
+             'assets/images/delete.png',
+             width: 60,
+             height: 60,
+           ),
+           const SizedBox(height: 12),
+         ],
+       ),
+       contentTextStyle: TextStyle(
+         color: _textPrimaryColor,
+         fontSize: 16,
+         fontWeight: FontWeight.w500,
+       ),
+       content: Text(
+         _selectedItems.length == 1
+             ? "Apakah kamu yakin ingin menghapus 1 catatan hidrasi?"
+             : "Apakah kamu yakin ingin menghapus ${_selectedItems.length} catatan hidrasi?",
+         textAlign: TextAlign.center,
+         style: const TextStyle(height: 1.5),
+       ),
+       actions: [
+         SizedBox(
+           width: 80,
+           child: TextButton(
+             onPressed: () => Navigator.of(context).pop(false),
+             style: ElevatedButton.styleFrom(
+               foregroundColor: Colors.blueGrey,
+               backgroundColor: Colors.grey[300],
+               shape: RoundedRectangleBorder(
+                 borderRadius: BorderRadius.circular(16),
+               ),
+             ),
+             child: const Text(
+               "Batal",
+               style: TextStyle(color: Color(0xFF0F172A)),
+             ),
+           ),
+         ),
+         SizedBox(
+           width: 80,
+           child: TextButton(
+             onPressed: () => Navigator.of(context).pop(true),
+             style: ElevatedButton.styleFrom(
+               foregroundColor: Colors.red,
+               backgroundColor: Colors.red,
+               shape: RoundedRectangleBorder(
+                 borderRadius: BorderRadius.circular(16),
+               ),
+             ),
+             child: const Text(
+               "Hapus",
+               style: TextStyle(color: Colors.white),
+             ),
+           ),
+         ),
+       ],
+     ),
+   );
 
-    if (confirm != true) return;
+   if (confirm != true) return;
 
-    // Backup item yang akan dihapus
-    List<RiwayatHidrasi> deletedItems = [];
-    for (var item in waterHistory) {
-      if (item.id != null && _selectedItems.contains(item.id)) {
-        deletedItems.add(item);
-      }
-    }
-    
-    // Hapus dari tampilan
-    setState(() {
-      waterHistory.removeWhere((item) => 
-          item.id != null && _selectedItems.contains(item.id));
-      _selectedItems.clear();
-      // Tidak keluar dari mode seleksi setelah menghapus
-      // _isSelectionMode = false;
-    });
+   // Backup item yang akan dihapus
+   List<RiwayatHidrasi> deletedItems = [];
+   for (var item in waterHistory) {
+     if (item.id != null && _selectedItems.contains(item.id)) {
+       deletedItems.add(item);
+     }
+   }
+   
+   // Hapus dari tampilan
+   setState(() {
+     waterHistory.removeWhere((item) => 
+         item.id != null && _selectedItems.contains(item.id));
+     // Kosongkan item terpilih setelah di-backup untuk dihapus
+     _selectedItems.clear(); 
+     // Keluar dari mode seleksi setelah konfirmasi hapus
+     _isSelectionMode = false;
+   });
 
-    // Tampilkan notifikasi dengan opsi batalkan
-    _showSnackBarNotification(
-      message: deletedItems.length == 1
-          ? "1 catatan hidrasi telah dihapus"
-          : "${deletedItems.length} catatan hidrasi telah dihapus",
-      actionLabel: "BATALKAN",
-      onAction: () {
-        setState(() {
-          waterHistory.addAll(deletedItems);
-          waterHistory.sort((a, b) =>
-              (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
-        });
-        _showSnackBarNotification(
-          message: "Catatan telah dipulihkan",
-          duration: const Duration(seconds: 2),
-          isSuccess: true,
-        );
-      },
-    );
+   // Tampilkan notifikasi dengan opsi batalkan
+   _showSnackBarNotification(
+     message: deletedItems.length == 1
+         ? "1 catatan hidrasi telah dihapus"
+         : "${deletedItems.length} catatan hidrasi telah dihapus",
+     actionLabel: "BATALKAN",
+     onAction: () {
+       // Hentikan timer penghapusan permanen jika "BATALKAN" ditekan
+       _undoTimer?.cancel();
+       
+       setState(() {
+         waterHistory.addAll(deletedItems);
+         waterHistory.sort((a, b) =>
+             (b.waktuHidrasi ?? "").compareTo(a.waktuHidrasi ?? ""));
+       });
+       _showSnackBarNotification(
+         message: "Catatan telah dipulihkan",
+         duration: const Duration(seconds: 2),
+         isSuccess: true,
+       );
+     },
+   );
 
-    // Timer untuk menghapus data secara permanen jika tidak dibatalkan
-    _undoTimer = Timer(const Duration(seconds: 4), () {
-      if (userId != null) {
-        for (var item in deletedItems) {
-          _controller.hapusRiwayatDanKurangiTarget(
-            idRiwayat: item.id ?? 0,
-            idPengguna: userId!,
-            tanggalHidrasi: item.tanggalHidrasi ?? "",
-            targetController: targetHidrasiController,
-          );
-        }
-      }
-    });
-  }
+   // Timer untuk menghapus data secara permanen jika tidak dibatalkan
+   _undoTimer = Timer(const Duration(seconds: 4), () async { // Tambahkan 'async' di sini
+     if (userId != null) {
+       print("Melakukan penghapusan permanen untuk ${deletedItems.length} item...");
+       for (var item in deletedItems) {
+         try {
+           // ==== PERUBAHAN UTAMA DI SINI ====
+           // Gunakan 'await' untuk menunggu setiap operasi selesai
+           await _controller.hapusRiwayatDanKurangiTarget(
+             idRiwayat: item.id ?? 0,
+             idPengguna: userId!,
+             tanggalHidrasi: item.tanggalHidrasi ?? "",
+             targetController: targetHidrasiController,
+           );
+           print("Berhasil menghapus item ID: ${item.id}");
+         } catch (e) {
+           print("Gagal menghapus item ID: ${item.id}. Error: $e");
+           // Anda bisa menambahkan notifikasi error di sini jika perlu
+         }
+       }
+       // Kirim event untuk refresh halaman lain SETELAH semua penghapusan selesai
+       _eventBus.fire('refresh_all');
+     }
+   });
+ }
 
 Widget _buildTodayHeader() {
   final String dateTitle = "Hari Ini";
