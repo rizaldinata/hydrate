@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/firstPage_view.dart';
-import 'package:hydrate/presentation/screens/home_screen1.dart';
-import 'package:hydrate/presentation/screens/profile_screen.dart';
-import 'package:hydrate/presentation/screens/statistic_page_screen.dart';
+import 'package:hydrate/presentation/screens/registration/firstPage_view.dart';
+import 'package:hydrate/presentation/screens/home/home_screen.dart';
+import 'package:hydrate/presentation/screens/profile/profile_screen.dart';
+import 'package:hydrate/presentation/screens/statistic/statistic_page_screen.dart';
 import 'dart:async';
 
 // Lottie untuk animasi loading
