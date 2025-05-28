@@ -3,9 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
-import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/screens/home_screen1.dart';
+import 'package:hydrate/presentation/screens/auth_wrapper_screen.dart'; 
 
 class RegistrationTime extends StatefulWidget {
   final String name;
@@ -271,16 +271,15 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                           );
 
                           if (userId > 0) {
-                            print(
-                                "Pengguna berhasil ditambahkan dengan ID: $userId");
-
-                            // Pindah ke halaman HomeScreens setelah berhasil daftar
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => HomeScreens(),
-                              ),
-                            );
+                            print("Pengguna berhasil ditambahkan dengan ID: $userId");
+                            if (mounted) { 
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (context) => const AuthWrapperScreen(),
+                                ),
+                                (Route<dynamic> route) => false,
+                              );
+                            }
                           } else {
                             print("Gagal menambahkan pengguna.");
                           }

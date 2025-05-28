@@ -15,52 +15,62 @@ import 'package:lottie/lottie.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  bool penggunaSudahTerdaftar = false;
-  try {
-    final penggunaRepository = PenggunaRepository();
-    penggunaSudahTerdaftar = await penggunaRepository.isPenggunaTerdaftar();
-    print("[DEBUG] Proses pengecekan pengguna di main selesai. Status: $penggunaSudahTerdaftar");
-  } catch (e) {
-    print("[ERROR] Error saat pengecekan pengguna di main(): $e");
-  }
+  final Future<bool> isPenggunaTerdaftarFuture = _checkInitialUserStatus();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
-    runApp(MyApp(isPenggunaAwalTerdaftar: penggunaSudahTerdaftar));
+    runApp(MyApp(isPenggunaTerdaftarFuture: isPenggunaTerdaftarFuture));
   });
 }
 
-class MyApp extends StatelessWidget {
-  final bool isPenggunaAwalTerdaftar;
+Future<bool> _checkInitialUserStatus() async {
+  try {
+    final penggunaRepository = PenggunaRepository();
+    bool isRegistered = await penggunaRepository.isPenggunaTerdaftar();
+    return isRegistered;
+  } catch (e) {
+    return false; 
+  }
+}
 
-  const MyApp({Key? key, required this.isPenggunaAwalTerdaftar}) : super(key: key);
+class MyApp extends StatelessWidget {
+  final Future<bool> isPenggunaTerdaftarFuture;
+
+  const MyApp({Key? key, required this.isPenggunaTerdaftarFuture}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'HYDRATE',
       theme: ThemeData(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: Color(0xFF00A6FB), // Warna kursor
+          cursorColor: Color(0xFF00A6FB), 
           selectionColor:
-              Color(0xFF00A6FB).withOpacity(0.5), // Warna seleksi teks
-          selectionHandleColor: Color(0xFF00A6FB), // Warna titik pemilih teks
+              Color(0xFF00A6FB).withOpacity(0.5), 
+          selectionHandleColor: Color(0xFF00A6FB), 
         ),
       ),
       debugShowCheckedModeBanner: false,
-      home: FutureBuilder(
-        future: PenggunaRepository().isPenggunaTerdaftar(),
-        builder: (context, snapshot) {
+      home: FutureBuilder<bool>(
+        future: isPenggunaTerdaftarFuture,
+        builder: (context, AsyncSnapshot<bool> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Scaffold(
               backgroundColor: const Color(0xFFE8F7FF),
               body: Center(
-                // child: CircularProgressIndicator()
                 child: Lottie.asset('assets/loading.json',
                     width: 200, height: 200),
               ),
             );
           }
-          return snapshot.data == true ? MainScreen() : InfoProduct();
+
+          if (snapshot.hasError) {
+            print("[ERROR] FutureBuilder di MyApp: ${snapshot.error}");
+            return InfoProduct(); 
+          }
+
+          bool isRegistered = snapshot.data ?? false;
+          return isRegistered ? MainScreen() : InfoProduct();
         },
       ),
     );
@@ -73,11 +83,9 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
-  int _selectedIndex = 1; // Default ke Home
-  final _eventBus = AppEventBus(); // Pastikan AppEventBus sudah didefinisikan
+  int _selectedIndex = 1; 
+  final _eventBus = AppEventBus(); 
 
-  // Keys untuk memaksa refresh pada widget
-  // Pastikan StatisticScreenState, HomeScreensState, dan ProfileScreenState ada dan memiliki metode refresh()
   final GlobalKey<StatisticPageScreenState> _statisticsKey = GlobalKey();
   final GlobalKey<HomeScreensState> _homeKey = GlobalKey();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey();
@@ -109,13 +117,6 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       print("[LIFECYCLE] Aplikasi dibuka kembali (resumed). Merefresh halaman saat ini.");
       _refreshCurrentPage();
     }
-  }
-
-  void _refreshAllPages() {
-    print("[REFRESH] Memulai _refreshAllPages.");
-    _refreshPage(0); // Statistics
-    _refreshPage(1); // Home
-    _refreshPage(2); // Profile
   }
 
   void _refreshPage(int index) {
