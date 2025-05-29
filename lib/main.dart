@@ -311,15 +311,16 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        // extendBody: true,
         backgroundColor: const Color(0xFFE8F7FF),
         bottomNavigationBar: CurvedNavigationBar(
           index: _selectedIndex,
           animationCurve: Curves.easeInOut,
           animationDuration: const Duration(milliseconds: 300),
-          backgroundColor: const Color(0xFFE8F7FF),
+          backgroundColor: const Color(0xFFE8F7FF), //warna backgruond navbar
           color: Colors.blue, // Warna utama CurvedNavigationBar
           buttonBackgroundColor: Colors.blue, // Warna tombol aktif
-          height: 60.0,
+          height: 75.0,
           items: const <Widget>[
             Image(image: AssetImage('assets/images/navigasi/stats.png'), width: 25, height: 25, color: Colors.white),
             Image(image: AssetImage('assets/images/navigasi/home.png'), width: 25, height: 25, color: Colors.white),

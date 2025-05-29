@@ -54,6 +54,7 @@ class _RegistrationDataState extends State<RegistrationData> {
   @override
   void dispose() {
     controllerName.dispose();
+    controllerWeight.dispose();
     super.dispose();
   }
 
@@ -368,9 +369,26 @@ class _RegistrationDataState extends State<RegistrationData> {
                       ),
                       onPressed: isFormFilled
                           ? () {
-                              String name = controllerName.text.trim();
+                              String name = controllerName.text;
                               String weightText = controllerWeight.text.trim();
                               double? weight = double.tryParse(weightText);
+
+                              //Validasi nama: tidak boleh kosong atau hanya berisi spasi
+                              if (name.trim().isEmpty) {
+                                showWarningDialog(context,
+                                    "Nama Pengguna tidak boleh kosong atau hanya berisi spasi.");
+                                return; // Hentikan proses jika tidak valid
+                              }
+
+                              // Validasi nama: cek karakter yang tidak diizinkan.
+                              // Pola ini akan mencari karakter apa pun yang BUKAN huruf (a-z, A-Z), spasi, atau petik (').
+                              final invalidCharacters = RegExp(r"[^a-zA-Z ']");
+                              if (invalidCharacters.hasMatch(name)) {
+                                showWarningDialog(
+                                    context,
+                                    "Nama Pengguna hanya boleh berisi huruf, spasi, dan tanda petik (').");
+                                return; // Hentikan proses jika tidak valid
+                              }
 
                               if (weight == null) {
                                 showWarningDialog(
@@ -384,7 +402,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => RegistrationTime(
-                                      name: name,
+                                      name: name.trim(),
                                       gender: selectedGender,
                                       weight: weight,
                                     ),
