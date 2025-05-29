@@ -14,7 +14,6 @@ class daftarPenggunaController {
     if (userId != null) {
       // Simpan sesi pengguna setelah berhasil mendaftar
       await SessionManager().saveUserId(userId);
-      print("User berhasil daftar dan login dengan ID: $userId");
       return true;
     } else {
       print("Pendaftaran gagal.");

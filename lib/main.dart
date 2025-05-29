@@ -16,17 +16,16 @@ import 'package:lottie/lottie.dart';
 import 'package:provider/provider.dart';
 
 // Import Controllers
-import 'package:hydrate/presentation/controllers/hydration_stats_controller.dart'; // Asumsi path
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart'; // Asumsi path
-// Jika PenggunaController juga perlu di-provide sebagai ChangeNotifier, import dan tambahkan juga
-// import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
+import 'package:hydrate/presentation/controllers/hydration_stats_controller.dart';
+import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart'; 
+
+import 'package:intl/date_symbol_data_local.dart'; 
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Tidak perlu memanggil _checkInitialUserStatus di sini jika akan ditangani oleh MyApp
-  // final Future<bool> isPenggunaTerdaftarFuture = _checkInitialUserStatus();
+  await initializeDateFormatting('id_ID', null); 
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp])
       .then((_) {
@@ -36,10 +35,6 @@ void main() async {
         providers: [
           ChangeNotifierProvider(create: (_) => HydrationStatsController()),
           ChangeNotifierProvider(create: (_) => TargetHidrasiController()),
-          // Tambahkan provider lain jika ada, contoh:
-          // ChangeNotifierProvider(create: (_) => PenggunaController()),
-          // Atau jika PenggunaController tidak ChangeNotifier tapi hanya kelas biasa yang ingin diakses:
-          // Provider(create: (_) => PenggunaController()),
         ],
         child: const MyApp(), // isPenggunaTerdaftarFuture akan dihandle di dalam MyApp
       ),
@@ -47,22 +42,17 @@ void main() async {
   });
 }
 
-// Fungsi ini bisa tetap ada jika dibutuhkan di tempat lain,
-// atau logikanya bisa dipindahkan/diintegrasikan ke dalam state management jika lebih sesuai.
 Future<bool> _checkInitialUserStatus() async {
   try {
     final penggunaRepository = PenggunaRepository();
     bool isRegistered = await penggunaRepository.isPenggunaTerdaftar();
-    print("[INIT CHECK] Pengguna terdaftar: $isRegistered");
     return isRegistered;
   } catch (e) {
-    print("[INIT CHECK ERROR] Gagal memeriksa status pengguna: $e");
     return false;
   }
 }
 
 class MyApp extends StatelessWidget {
-  // Hapus isPenggunaTerdaftarFuture dari constructor jika tidak lagi dikirim dari main()
   const MyApp({Key? key}) : super(key: key);
 
   @override
@@ -97,13 +87,10 @@ class MyApp extends StatelessWidget {
             );
           }
           if (snapshot.hasError) {
-            print("[ERROR] FutureBuilder di MyApp: ${snapshot.error}");
-            // Mungkin tampilkan halaman error yang lebih informatif atau coba lagi
-            return InfoProduct(); // Atau halaman error khusus
+            return InfoProduct();
           }
 
           bool isRegistered = snapshot.data ?? false;
-          print("[MyApp] Status registrasi pengguna: $isRegistered");
           return isRegistered ? const MainScreen() : InfoProduct();
         },
       ),
@@ -135,34 +122,22 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    print("[INFO] MainScreen initState: Observer ditambahkan.");
 
-    // Initialize controllers or fetch initial data for providers if needed
-    // Contoh: context.read<HydrationStatsController>().fetchInitialData();
-    // Pastikan ini dilakukan setelah build pertama jika context diperlukan, atau gunakan cara lain.
-
-    // Dengarkan event dari AppEventBus
-    _appEventBusSubscription = _eventBus.stream.listen((event) { // Tipe event di sini adalah AppEvent
-      print("[EVENT_BUS] Menerima event: ${event.type} dengan data: ${event.data}");
+    _appEventBusSubscription = _eventBus.stream.listen((event) {
       if (event.type == 'refresh_statistics_page') {
-          _refreshPage(0); // Refresh Halaman Statistik (index 0)
+          _refreshPage(0);
       } else if (event.type == 'refresh_home_page') {
-          _refreshPage(1); // Refresh Halaman Home (index 1)
+          _refreshPage(1);
       } else if (event.type == 'refresh_profile_page') {
-          _refreshPage(2); // Refresh Halaman Profil (index 2)
-      } else if (event.type == 'refresh_all_pages') { // Listener untuk event 'refresh_all_pages'
+          _refreshPage(2);
           _refreshPage(0);
           _refreshPage(1);
           _refreshPage(2);
       }
-      // Tambahkan kondisi lain sesuai kebutuhan event Anda
     });
 
-    // Panggil refresh untuk halaman awal yang dipilih (Home) setelah build pertama
-    // Ini memastikan halaman awal dimuat dengan data terbaru saat MainScreen pertama kali muncul.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-         print("[INIT_REFRESH] Merefresh halaman awal (Home) setelah build pertama.");
         _refreshPage(_selectedIndex);
       }
     });
@@ -191,10 +166,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     print("[REFRESH] Mencoba merefresh halaman dengan index: $index");
     switch (index) {
       case 0:
-        // Jika StatisticPageScreenState memiliki metode refresh()
         _statisticsKey.currentState?.refresh();
-        // Atau jika dikelola oleh provider:
-        // context.read<HydrationStatsController>().refreshData(); // Contoh
         print("[REFRESH] Perintah refresh untuk Statistik dikirim.");
         break;
       case 1:

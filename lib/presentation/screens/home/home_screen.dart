@@ -7,17 +7,17 @@ import 'package:hydrate/presentation/widgets/Main/customInputWater_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
-import 'package:hydrate/core/utils/hydration_calculator.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
-import 'package:hydrate/presentation/controllers/home_controller.dart';
+import 'package:hydrate/presentation/controllers/home_controller.dart'; // UI Controller
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
-import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart'; // Ditambahkan
+import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:confetti/confetti.dart';
-// Import event bus
 import 'package:hydrate/core/utils/app_event_bus.dart';
+import 'package:provider/provider.dart';
+import 'package:hydrate/services/notification_settings_service.dart';
 
 class HomeScreens extends StatefulWidget {
   const HomeScreens({
@@ -31,21 +31,21 @@ class HomeScreens extends StatefulWidget {
 class HomeScreensState extends State<HomeScreens>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late AudioPlayer _audioPlayer;
-  late final HomeController _controller;
+  late final HomeController _uiController;
   final PageController _pageController = PageController();
-  late HydrationCalculator _hydrationCalculator;
-  double target = 0;
+
   double currentIntake = 0;
   double previousIntake = 0;
   final ValueNotifier<double> _valueNotifier = ValueNotifier<double>(0);
   late final PenggunaController _penggunaController;
-  late final TargetHidrasiController _targetHidrasiController; // Ditambahkan
   int? idPengguna;
   String? namaPengguna;
+
   final RiwayatHidrasiController _riwayatHidrasiController =
       RiwayatHidrasiController();
   final TargetHidrasiRepository _targetHidrasiRepository =
-      TargetHidrasiRepository();
+      TargetHidrasiRepository(); 
+  
   String todayDate = DateFormat('yyyy-MM-dd')
       .format(DateTime.now().toUtc().add(const Duration(hours: 7)));
 
@@ -55,23 +55,15 @@ class HomeScreensState extends State<HomeScreens>
   bool _isCountdownActive = false;
   bool _isButtonCooldown = false;
 
-  // Konstanta untuk timer
   static const String _endTimeKey = 'countdown_end_time';
-
   Map<double, double> _glassOffsets = {};
-  bool _hasInitializedTarget = false;
 
-  // Stream subscription untuk event bus
-  StreamSubscription? _eventSubscription;
-  final _eventBus = AppEventBus();
+  final NotificationSettingsService _notificationSettingsService =
+      NotificationSettingsService();
+  final AppEventBus _eventBus = AppEventBus();
+  StreamSubscription<AppEvent>? _eventSubscription;
 
-  // Metode publik untuk memaksa refresh data
-  void refresh() {
-    print("Refreshing HomeScreen data...");
-    _loadUserData();
-    _loadCountdownState();
-    _loadTodayIntake();
-  }
+  bool _isHomeScreenLoading = true;
 
   @override
   void initState() {
@@ -79,45 +71,180 @@ class HomeScreensState extends State<HomeScreens>
     WidgetsBinding.instance.addObserver(this);
     NotificationController.initializeLocalNotifications();
     NotificationController.startListeningNotificationEvents();
-    _targetHidrasiController = TargetHidrasiController();
-    _loadUserData();
-    _controller = HomeController();
+    _uiController = HomeController();
     _penggunaController = PenggunaController();
-    _controller.initAnimation(this);
+    _uiController.initAnimation(this);
     _pageController.addListener(() => setState(() {}));
-    _loadCountdownState();
     _audioPlayer = AudioPlayer();
-    // Subscribe ke event bus untuk refresh data
-    _eventSubscription = _eventBus.stream.listen((event) {
-      if (event.type == 'refresh_home' || event.type == 'refresh_all') {
-        refresh();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        print("[HomeScreen - initState] Memanggil _fetchDataAndUpdateScreen untuk pemuatan awal.");
+        _fetchDataAndUpdateScreen(forceTargetRecalculation: false);
+      }
+    });
+
+    _eventSubscription = _eventBus.stream.listen((AppEvent event) {
+      if (event.type == 'refresh_all' || event.type == 'refresh_home_page') {
+        print("[HomeScreen - EventBus] Event '${event.type}' diterima. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
+        _fetchDataAndUpdateScreen(forceTargetRecalculation: true);
       }
     });
   }
 
   @override
   void dispose() {
-    // Dispose AudioPlayer when widget is disposed
+    print("[HomeScreen] dispose called");
     _audioPlayer.dispose();
     _countdownTimer?.cancel();
     _eventSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
+    _uiController.dispose();
+    _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchDataAndUpdateScreen({bool forceTargetRecalculation = false}) async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isHomeScreenLoading = true;
+    });
+
+    print("[HomeScreen - _fetchDataAndUpdateScreen] Memulai. Force recalculate: $forceTargetRecalculation. Jam: ${DateTime.now()}");
+    
+    final session = SessionManager();
+    final localUserId = await session.getUserId();
+
+    if (localUserId != null) {
+      if (mounted) {
+        // Pastikan idPengguna di state terisi
+        if (idPengguna != localUserId) { // Hanya update jika berbeda atau null
+          setState(() {
+            idPengguna = localUserId;
+          });
+        }
+
+        // 1. Muat data pengguna untuk tampilan (misal nama)
+        await _loadUserDisplayData(localUserId);
+        
+        // 2. Minta TargetHidrasiController untuk menginisialisasi atau menghitung ulang target
+        final targetController = Provider.of<TargetHidrasiController>(context, listen: false);
+        if (forceTargetRecalculation) {
+          print("[HomeScreen] Meminta TargetHidrasiController untuk MEMAKSA kalkulasi ulang target untuk userId: $localUserId");
+          await targetController.forceRecalculateAndUpdateTargetAfterProfileChange(localUserId);
+        } else {
+          print("[HomeScreen] Meminta TargetHidrasiController untuk INISIALISASI target (jika perlu) untuk userId: $localUserId");
+          await targetController.initializeOrRefreshDailyTarget(localUserId);
+        }
+        
+        // 3. Muat data intake harian (ini akan menggunakan target terbaru dari controller untuk persentase)
+        await _loadTodayIntake(localUserId); 
+        
+        // 4. Muat ulang state countdown UI timer notifikasi
+        await _loadCountdownState(); 
+
+        // --- KIRIM EVENT SETELAH SEMUA PROSES UPDATE TARGET DI HOMESCREEN SELESAI ---
+        // Ini akan memberi tahu MainScreen untuk me-refresh halaman Statistik
+        _eventBus.fire('home_target_processing_complete');
+        print("[HomeScreen - _fetchDataAndUpdateScreen] Mengirim event 'home_target_processing_complete'. Jam: ${DateTime.now()}");
+        // ---------------------------------------------------------------------------------
+      }
+    } else {
+      print("[HomeScreen - _fetchDataAndUpdateScreen] UserId tidak ditemukan.");
+      if (mounted) {
+        setState(() {
+          idPengguna = null;
+          namaPengguna = null;
+          currentIntake = 0;
+          _valueNotifier.value = 0;
+          // Provider.of<TargetHidrasiController>(context, listen: false).resetTarget(); // Jika ada fungsi reset
+        });
+      }
+    }
+
+    if (mounted) {
+      setState(() { _isHomeScreenLoading = false; });
+    }
+  }
+
+  void refresh() {
+    print("[HomeScreen - refresh] Metode refresh() publik dipanggil. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
+    _fetchDataAndUpdateScreen(forceTargetRecalculation: true);
+  }
+
+  Future<void> _loadUserDisplayData(int currentUserId) async {
+    try {
+      print("[HomeScreen - _loadUserDisplayData] Memulai untuk userId: $currentUserId. Jam: ${DateTime.now()}");
+      final pengguna = await _penggunaController.getPenggunaById(currentUserId);
+      if (mounted && pengguna != null) {
+        setState(() {
+          namaPengguna = pengguna.nama;
+        });
+        print("[HomeScreen - _loadUserDisplayData] Nama pengguna dimuat: ${pengguna.nama}");
+      } else if (pengguna == null) {
+        print("[HomeScreen - _loadUserDisplayData] Pengguna tidak ditemukan untuk userId: $currentUserId");
+      }
+    } catch (e) {
+      print("[HomeScreen - _loadUserDisplayData] Error: $e");
+    }
+  }
+
+  Future<void> _loadTodayIntake(int currentUserId) async {
+    if (!mounted) return;
+    
+    final targetController = Provider.of<TargetHidrasiController>(context, listen: false);
+    double actualTargetForCalculation = targetController.currentDailyTargetMl; 
+    if (actualTargetForCalculation <= 0) {
+        // Jika controller belum punya target valid, coba ambil dari repo sebagai fallback sementara
+        // Namun, idealnya controller sudah diinisialisasi dengan benar oleh _fetchDataAndUpdateScreen
+        final targetDataMap = await _targetHidrasiRepository.getTargetHidrasiHarian(currentUserId, todayDate);
+        actualTargetForCalculation = (targetDataMap?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0;
+        print("[HomeScreen - _loadTodayIntake] Menggunakan target fallback dari repo: $actualTargetForCalculation");
+    }
+    if (actualTargetForCalculation <= 0) actualTargetForCalculation = 2500.0;
+
+    try {
+      final targetHarianData = await _targetHidrasiRepository.getTargetHidrasiHarian(currentUserId, todayDate);
+      double totalHidrasi = 0.0;
+
+      if (targetHarianData != null) {
+        totalHidrasi = (targetHarianData['total_hidrasi_harian'] as num?)?.toDouble() ?? 0.0;
+      }
+      
+      double persentaseHidrasi = (actualTargetForCalculation > 0) 
+          ? (totalHidrasi / actualTargetForCalculation) * 100 
+          : 0.0;
+
+      if (mounted) {
+        setState(() {
+          currentIntake = totalHidrasi;
+          _valueNotifier.value = persentaseHidrasi.clamp(0.0, 100.0);
+          // Variabel 'target' lokal tidak lagi di-set di sini. UI akan menggunakan dari Provider.
+        });
+      }
+      print("[HomeScreen - _loadTodayIntake] Data hidrasi dimuat: $totalHidrasi mL dari target $actualTargetForCalculation mL (${_valueNotifier.value.toStringAsFixed(1)}%)");
+    } catch (e) {
+      print("[HomeScreen - _loadTodayIntake] Error: $e");
+       if (mounted) {
+        setState(() {
+          currentIntake = 0;
+          _valueNotifier.value = 0;
+        });
+      }
+    }
   }
 
   Future<void> _playDrinkingSound() async {
     try {
       print("Attempting to play drinking sound...");
-      // Reset the player to ensure it can play again
       await _audioPlayer.stop();
       print("AudioPlayer stopped successfully");
 
-      // Play the sound
       await _audioPlayer.play(AssetSource('sounds/drinking_water.mp3'));
       print("Sound playing started successfully");
     } catch (e) {
       print("Error playing sound: $e");
-      // Add more detailed error info
       print("Error details: ${e.toString()}");
     }
   }
@@ -125,10 +252,13 @@ class HomeScreensState extends State<HomeScreens>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
+    print("[HomeScreen] App lifecycle state berubah: $state");
     if (state == AppLifecycleState.resumed) {
-      _loadUserData();
-      _loadCountdownState();
-      setState(() {});
+      print("[HomeScreen] App resumed. Merefresh intake dan countdown timer.");
+      if (idPengguna != null) {
+        _loadTodayIntake(idPengguna!); 
+      }
+      _loadCountdownState();        
     } else if (state == AppLifecycleState.paused) {
       _saveCurrentTimerState();
     }
@@ -137,7 +267,7 @@ class HomeScreensState extends State<HomeScreens>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadUserData();
+    print("[HomeScreen] didChangeDependencies called.");
   }
 
   void _startTimer() {
@@ -242,211 +372,6 @@ class HomeScreensState extends State<HomeScreens>
     }
   }
 
-  Future<void> _loadUserData() async {
-    try {
-      final session = SessionManager();
-      final userId = await session.getUserId();
-
-      if (!mounted) return;
-
-      if (userId != null) {
-        final pengguna = await _penggunaController.getPenggunaById(userId);
-
-        if (!mounted) return;
-
-        if (pengguna != null) {
-          _hydrationCalculator = HydrationCalculator(penggunaId: userId);
-
-          setState(() {
-            idPengguna = userId;
-            namaPengguna = pengguna.nama;
-          });
-
-          await _initializeTarget();
-          await _loadTodayIntake();
-        } else {
-          print("Pengguna not found for userId: $userId");
-          // Handle case where user data might be missing or corrupted
-          // Maybe navigate to a login/setup screen
-        }
-      } else {
-        print("UserId not found in session.");
-        // Handle case where user is not logged in
-        // Maybe navigate to a login screen
-      }
-    } catch (e) {
-      print("Error loading user data: $e");
-    }
-  }
-
-  Future<void> _initializeTarget() async {
-    if (_hasInitializedTarget || idPengguna == null) return;
-
-    try {
-      await _hydrationCalculator.initializeData(idPengguna!);
-      final targetHidrasi =
-          _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-
-      if (!mounted) return;
-      _hasInitializedTarget =
-          true; // Set this earlier to prevent re-entry if async operations are slow
-
-      setState(() {
-        target = targetHidrasi;
-      });
-
-      await _checkAndCreateTodayTarget();
-
-      print("Target hidrasi diinisialisasi: $target mL");
-    } catch (e) {
-      print("Error initializing target: $e");
-      _hasInitializedTarget = false; // Reset if initialization failed
-    }
-  }
-
-  Future<void> _checkAndCreateTodayTarget() async {
-    if (idPengguna == null) return;
-
-    try {
-      final targetExists = await _targetHidrasiRepository
-          .checkTargetHidrasiExists(idPengguna!, todayDate);
-
-      if (!mounted) return;
-
-      if (!targetExists) {
-        double currentCalculatedTarget =
-            target; // Use the already calculated target
-        if (currentCalculatedTarget <= 0) {
-          // Recalculate if somehow it's still 0
-          await _hydrationCalculator.initializeData(idPengguna!);
-          currentCalculatedTarget =
-              _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-          if (!mounted) return;
-          setState(() {
-            target = currentCalculatedTarget;
-          });
-        }
-
-        await _targetHidrasiRepository.createTargetHidrasi(
-            idPengguna!, currentCalculatedTarget, todayDate, 0.0);
-        print(
-            "Target hidrasi baru dibuat untuk tanggal $todayDate: $currentCalculatedTarget mL");
-      } else {
-        // If target exists, ensure its value is up-to-date (e.g., if user profile changed)
-        await _targetHidrasiRepository.updateTargetHidrasiValue(
-            idPengguna!, todayDate);
-        print(
-            "Target hidrasi untuk tanggal $todayDate sudah ada dan diperbarui jika perlu");
-
-        final updatedTargetData = await _targetHidrasiRepository
-            .getTargetHidrasiHarian(idPengguna!, todayDate);
-
-        if (!mounted) return;
-
-        if (updatedTargetData != null &&
-            (updatedTargetData['target_hidrasi'] ?? 0) > 0) {
-          setState(() {
-            target = updatedTargetData['target_hidrasi'];
-          });
-          print("Target hidrasi dari DB: $target mL");
-        }
-      }
-    } catch (e) {
-      print("Error saat memeriksa/membuat target hidrasi: $e");
-      // Fallback: try to ensure target is set based on calculation
-      try {
-        if (idPengguna != null) {
-          await _hydrationCalculator.initializeData(idPengguna!);
-          final calculatedTarget =
-              _hydrationCalculator.calculateDailyWaterIntake() * 1000;
-          if (!mounted) return;
-          setState(() {
-            target = calculatedTarget;
-          });
-          print("Target hidrasi (recovery): $target mL");
-        }
-      } catch (e2) {
-        print("Error saat menghitung target hidrasi (recovery): $e2");
-      }
-    }
-  }
-
-  Future<void> _loadTodayIntake() async {
-    if (idPengguna == null) return;
-
-    try {
-      // Ensure target is initialized before loading intake that depends on it
-      if (target <= 0) {
-        await _initializeTarget(); // This will also call _checkAndCreateTodayTarget
-        if (!mounted || target <= 0) return; // if target still not set, abort
-      }
-
-      final targetHarian = await _targetHidrasiRepository
-          .getTargetHidrasiHarian(idPengguna!, todayDate);
-
-      if (!mounted) return;
-
-      if (targetHarian != null) {
-        double dbTargetHidrasi = targetHarian['target_hidrasi'] ?? 0.0;
-        double totalHidrasi = targetHarian['total_hidrasi_harian'] ?? 0.0;
-        double persentaseHidrasi = targetHarian['persentase_hidrasi'] ?? 0.0;
-
-        setState(() {
-          target = dbTargetHidrasi > 0
-              ? dbTargetHidrasi
-              : target; // Prioritize DB target if valid
-          currentIntake = totalHidrasi;
-          _valueNotifier.value =
-              persentaseHidrasi > 100 ? 100 : persentaseHidrasi; // Cap at 100
-        });
-
-        print(
-            "Data hidrasi dimuat: $totalHidrasi mL dari target $target mL (${_valueNotifier.value.toStringAsFixed(1)}%)");
-
-        if (totalHidrasi > 0) {
-          final prefs = await SharedPreferences.getInstance();
-          final hasStartedTimer = prefs.getBool('timer_has_started') ?? false;
-          if (!hasStartedTimer) {
-            prefs.setBool('timer_has_started', true);
-          }
-          // Logic for "SAATNYA MINUM!" if timer expired but water was drunk
-          final endTimeMillis = prefs.getInt(_endTimeKey);
-          if (endTimeMillis == null ||
-              DateTime.fromMillisecondsSinceEpoch(endTimeMillis)
-                  .isBefore(DateTime.now())) {
-            if (!mounted) return;
-            setState(() {
-              _isCountdownActive = true; // Show "SAATNYA MINUM!"
-              _remainingTime = Duration.zero;
-            });
-          } else {
-            _loadCountdownState(); // Reload to sync timer if it was running
-          }
-        } else {
-          if (!mounted) return;
-          setState(() {
-            // No intake yet, so no active countdown message unless started by adding water
-            _isCountdownActive = false;
-            _remainingTime = Duration.zero;
-          });
-        }
-      } else {
-        // No target_hidrasi record for today, this should have been created by _checkAndCreateTodayTarget
-        // This might happen if _checkAndCreateTodayTarget fails or runs after this.
-        // For safety, set intake to 0.
-        print(
-            "Peringatan: Record target_hidrasi tidak ditemukan untuk hari ini setelah pengecekan.");
-        setState(() {
-          currentIntake = 0;
-          _valueNotifier.value = 0;
-          // target should be set by _initializeTarget
-        });
-      }
-    } catch (e) {
-      print("Error saat memuat intake hari ini: $e");
-    }
-  }
-
   void _animateGlass(double amount) async {
     if (idPengguna == null) {
       if (mounted) {
@@ -460,39 +385,46 @@ class HomeScreensState extends State<HomeScreens>
     _playDrinkingSound();
 
     try {
+      final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
+
       await _riwayatHidrasiController.tambahRiwayatHidrasi(
         fkIdPengguna: idPengguna!,
         jumlahHidrasi: amount,
-        targetController: _targetHidrasiController, // Ditambahkan
+        targetController: targetControllerProvider,
       );
-
-      // Data should be re-fetched or updated by TargetHidrasiController's notifyListeners
-      // For immediate UI update, we can optimistically update and then rely on listener or re-fetch
 
       previousIntake = currentIntake;
       double newTotalIntake = currentIntake + amount;
+
+      double currentTargetForCalc = targetControllerProvider.currentDailyTargetMl;
+      if (currentTargetForCalc <= 0) currentTargetForCalc = 2500.0;
 
       // Optimistic UI update
       if (mounted) {
         setState(() {
           currentIntake = newTotalIntake;
-          _valueNotifier.value =
-              target > 0 ? min(100, (currentIntake / target) * 100) : 0;
+          _valueNotifier.value = currentTargetForCalc > 0 
+              ? min(100, (currentIntake / currentTargetForCalc) * 100) 
+              : 0;
         });
       }
 
       // Fetch fresh data to confirm
-      await _loadTodayIntake();
+      await _loadTodayIntake(idPengguna!); // Muat ulang intake untuk memastikan data & persentase sinkron
+      _eventBus.fire('refresh_statistics'); 
 
-      _eventBus.fire('refresh_statistics');
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
       if (mounted) {
-        // Revert optimistic update if error
+        final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
+        double currentTargetForCalc = targetControllerProvider.currentDailyTargetMl;
+        if (currentTargetForCalc <= 0) currentTargetForCalc = 2500.0;
+
         setState(() {
-          currentIntake = previousIntake; // Revert to previous
-          _valueNotifier.value =
-              target > 0 ? min(100, (currentIntake / target) * 100) : 0;
+          currentIntake = previousIntake; 
+          _valueNotifier.value = currentTargetForCalc > 0 
+              ? min(100, (currentIntake / currentTargetForCalc) * 100) 
+              : 0;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -508,7 +440,8 @@ class HomeScreensState extends State<HomeScreens>
     _startCountdown();
     if (mounted) {
       _showAddedWaterPopup(context, amount);
-      checkTargetAndShowAlert(context);
+      final targetController = context.read<TargetHidrasiController>();
+      checkTargetAndShowAlert(context, targetController.currentDailyTargetMl);
     }
   }
 
@@ -521,13 +454,13 @@ class HomeScreensState extends State<HomeScreens>
     });
   }
 
-  void _startCountdown() {
-    NotificationController.cancelScheduledNotifications();
+  void _startCountdown() async {
+    await NotificationController.cancelScheduledNotifications(); // Tambahkan await
 
-    int reminderIntervalInSeconds = 65;
+    int reminderIntervalInSeconds = await _notificationSettingsService.getNotificationInterval();
 
-    NotificationController.schedulePeriodicHydrationNotification(
-      intervalInSeconds: reminderIntervalInSeconds,
+    await NotificationController.schedulePeriodicHydrationNotification(
+      intervalInSeconds: reminderIntervalInSeconds, 
     );
 
     _countdownTimer?.cancel();
@@ -541,9 +474,9 @@ class HomeScreensState extends State<HomeScreens>
     final now = DateTime.now().millisecondsSinceEpoch;
     final endTimeMillis = now + _remainingTime.inMilliseconds;
 
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setInt(_endTimeKey, endTimeMillis);
-      prefs.setBool('timer_has_started', true);
+    SharedPreferences.getInstance().then((prefs) async { // jadikan async
+      await prefs.setInt(_endTimeKey, endTimeMillis);
+      await prefs.setBool('timer_has_started', true);
     });
 
     _startTimer();
@@ -558,12 +491,10 @@ class HomeScreensState extends State<HomeScreens>
 
   void _showAddedWaterPopup(BuildContext context, double amount) {
     if (!mounted) return;
-    OverlayEntry? overlayEntry; // Make it nullable
+    OverlayEntry? overlayEntry; 
     final overlay = Overlay.of(context);
-    // Ensure TickerProvider is available, typically 'this' if State uses SingleTickerProviderStateMixin
     final animationController = AnimationController(
-      vsync:
-          this, // Assuming HomeScreensState uses SingleTickerProviderStateMixin
+      vsync: this, 
       duration: const Duration(milliseconds: 500),
     );
 
@@ -660,22 +591,20 @@ class HomeScreensState extends State<HomeScreens>
 
   //? fungsi alert untuk ucapan selamat
   bool hasShownCongrats = false;
-  void checkTargetAndShowAlert(BuildContext context) {
+  void checkTargetAndShowAlert(BuildContext context, double currentTargetFromController) {
     if (!mounted) return;
 
     // Reset if intake drops below target (e.g. data correction)
-    if (currentIntake < target) {
+    if (currentIntake < currentTargetFromController) {
       hasShownCongrats = false;
     }
 
-    if (currentIntake >= target && !hasShownCongrats && target > 0) {
-      // ensure target is positive
+    if (currentIntake >= currentTargetFromController && !hasShownCongrats && currentTargetFromController > 0) {
       hasShownCongrats = true;
 
       final confettiController =
           ConfettiController(duration: const Duration(seconds: 3));
 
-      // Play confetti only if mounted
       if (mounted) confettiController.play();
 
       showGeneralDialog(
@@ -735,8 +664,7 @@ class HomeScreensState extends State<HomeScreens>
                         child: ElevatedButton(
                           onPressed: () {
                             if (mounted)
-                              confettiController
-                                  .dispose(); // Dispose only if mounted
+                              confettiController.dispose(); // Dispose only if mounted
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -780,20 +708,6 @@ class HomeScreensState extends State<HomeScreens>
     }
   }
 
-  Future<void> _stopReminders() async {
-    await NotificationController.cancelScheduledNotifications();
-    _countdownTimer?.cancel();
-    if (mounted) {
-      setState(() {
-        _isCountdownActive = false;
-        _remainingTime = Duration.zero;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Pengingat hidrasi telah dinonaktifkan.')),
-      );
-    }
-  }
-
   void _startDrinkingWithCooldown(double amount) {
     if (_isButtonCooldown) {
       _showOverlayError('Tunggu 3 detik sebelum minum lagi!');
@@ -805,7 +719,6 @@ class HomeScreensState extends State<HomeScreens>
     setState(() => _isButtonCooldown = true);
     _animateGlass(amount);
 
-    // Timer cooldown global untuk semua metode minum
     Timer(const Duration(seconds: 3), () {
       if (mounted) setState(() => _isButtonCooldown = false);
     });
@@ -813,7 +726,15 @@ class HomeScreensState extends State<HomeScreens>
 
   @override
   Widget build(BuildContext context) {
-    if (idPengguna == null || namaPengguna == null) {
+    final targetController = context.watch<TargetHidrasiController>();
+    double uiTargetMl = targetController.currentDailyTargetMl;
+    bool isTargetControllerLoading = targetController.isLoadingTarget;
+
+    bool isOverallLoading = _isHomeScreenLoading || isTargetControllerLoading;
+
+    print("[HomeScreen Build] idPengguna: $idPengguna, namaPengguna: $namaPengguna, _isHomeScreenLoading: $_isHomeScreenLoading, isTargetControllerLoading: $isTargetControllerLoading, isOverallLoading: $isOverallLoading");
+
+    if (idPengguna == null || namaPengguna == null || isOverallLoading) {
       // Check idPengguna as well
       return Scaffold(
         backgroundColor: Colors.blue[50],
@@ -824,6 +745,13 @@ class HomeScreensState extends State<HomeScreens>
     }
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
+
+    if (uiTargetMl > 0) {
+        _valueNotifier.value = min(100, (currentIntake / uiTargetMl) * 100);
+    } else {
+        _valueNotifier.value = 0;
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFE8F7FF),
       body: SingleChildScrollView(
@@ -856,14 +784,13 @@ class HomeScreensState extends State<HomeScreens>
                     ),
                   ),
                   Text(
-                    currentIntake >= target &&
-                            target > 0 // ensure target is positive
+                    currentIntake >= uiTargetMl && uiTargetMl > 0
                         ? "Pencapaianmu hari ini telah selesai."
                         : "Ayo selesaikan pencapaianmu hari ini!",
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: currentIntake >= target && target > 0
+                      color: currentIntake >= uiTargetMl && uiTargetMl > 0
                           ? const Color(0xFF07BAE4)
                           : Colors.black54,
                     ),
@@ -917,7 +844,7 @@ class HomeScreensState extends State<HomeScreens>
                                     '${currentIntake.toInt()} mL',
                                     style: TextStyle(
                                       color:
-                                          currentIntake >= target && target > 0
+                                          currentIntake >= uiTargetMl && uiTargetMl > 0
                                               ? Colors.blue
                                               : Colors.red,
                                       fontWeight: FontWeight.w600,
@@ -925,7 +852,7 @@ class HomeScreensState extends State<HomeScreens>
                                     ),
                                   ),
                                   Text(
-                                    ' / ${target.toInt()} mL',
+                                    ' / ${uiTargetMl.toInt()} mL',
                                     style: const TextStyle(
                                       color: Color(0xFF2F2E41),
                                       fontWeight: FontWeight.w500,
@@ -1075,6 +1002,8 @@ class HomeScreensState extends State<HomeScreens>
 
   void _showAddWaterModal(BuildContext context) {
     int selectedWater = 250;
+    final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1083,10 +1012,10 @@ class HomeScreensState extends State<HomeScreens>
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (bottomSheetContext) {
         return Padding(
           padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
+            bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom,
           ),
           child: AddWaterModalContent(
             selectedWater: selectedWater,
@@ -1099,44 +1028,27 @@ class HomeScreensState extends State<HomeScreens>
               });
 
               try {
-                // Save hydration record
                 await _riwayatHidrasiController.tambahRiwayatHidrasi(
                   fkIdPengguna: idPengguna!,
-                  jumlahHidrasi: selectedWater.toDouble(),
-                  targetController: _targetHidrasiController,
+                  jumlahHidrasi: newSelectedWater.toDouble(),
+                  targetController: targetControllerProvider,
                 );
-
-                // Update total in target_hidrasi
-                previousIntake = currentIntake;
-                double newTotalIntake = currentIntake + selectedWater;
-                await _targetHidrasiRepository.updateTotalHidrasi(
-                    idPengguna!, todayDate, newTotalIntake);
-
-                // Always get fresh data from database
-                final targetHarian = await _targetHidrasiRepository
-                    .getTargetHidrasiHarian(idPengguna!, todayDate);
-
-                setState(() {
-                  if (targetHarian != null) {
-                    previousIntake = currentIntake;
-                    currentIntake =
-                        targetHarian['total_hidrasi_harian'] ?? newTotalIntake;
-                    _valueNotifier.value =
-                        targetHarian['persentase_hidrasi'] ?? 0.0;
-                  } else {
-                    previousIntake = currentIntake;
-                    currentIntake = newTotalIntake;
-                  }
-                });
+                if (idPengguna != null) {
+                  await _loadTodayIntake(idPengguna!);
+                }
+                _eventBus.fire('refresh_statistics');
               } catch (e) {
                 print("Error saat menambah air: $e");
+                if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Gagal menyimpan data minum.")),
+                    );
+                  }
               }
 
               _startCountdown();
-              _showAddedWaterPopup(context, selectedWater.toDouble());
-              Navigator.pop(context);
-              //show alert
-              checkTargetAndShowAlert(context);
+              _startDrinkingWithCooldown(newSelectedWater.toDouble()); 
+              Navigator.pop(bottomSheetContext);
             },
           ),
         );

@@ -23,11 +23,17 @@ class HydrationCalculator {
   // Mengubah _initializeData menjadi metode publik
   Future<void> initializeData(int penggunaId) async {
     try {
+
+      print("[HydrationCalculator - initializeData] Memulai initializeData untuk penggunaId: $penggunaId. Jam: ${DateTime.now()}");
+
       Pengguna? penggunaData =
           await _penggunaController.getPenggunaById(penggunaId);
 
       ProfilPengguna? profilPenggunaData =
           await _profilPenggunaController.getProfilPengguna(penggunaId);
+
+      print("[HydrationCalculator - initializeData] Data Pengguna diterima: Nama=${penggunaData?.nama}");
+      print("[HydrationCalculator - initializeData] Data ProfilPengguna diterima: Berat=${profilPenggunaData?.beratBadan}, Gender=${profilPenggunaData?.jenisKelamin}, Bangun=${profilPenggunaData?.jamBangun}, Tidur=${profilPenggunaData?.jamTidur}");
 
       // Periksa apakah penggunaData null
       if (penggunaData == null) {
