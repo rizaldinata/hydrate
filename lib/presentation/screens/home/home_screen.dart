@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
+import 'package:hydrate/presentation/widgets/Main/animated_progress_circle.dart';
 import 'package:hydrate/presentation/widgets/Main/customInputWater_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
@@ -29,7 +30,8 @@ class HomeScreens extends StatefulWidget {
 }
 
 class HomeScreensState extends State<HomeScreens>
-    with TickerProviderStateMixin, WidgetsBindingObserver { // <= Perubahan di sini {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
+  // <= Perubahan di sini {
   late AudioPlayer _audioPlayer;
   late final HomeController _controller;
   final PageController _pageController = PageController();
@@ -557,101 +559,101 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   void _showAddedWaterPopup(BuildContext context, double amount) {
-  if (!mounted) return;
-  OverlayEntry? overlayEntry; 
-  final overlay = Overlay.of(context);
-  final animationController = AnimationController(
-    vsync: this, // Membutuhkan SingleTickerProviderStateMixin
-    duration: const Duration(milliseconds: 500),
-  );
+    if (!mounted) return;
+    OverlayEntry? overlayEntry;
+    final overlay = Overlay.of(context);
+    final animationController = AnimationController(
+      vsync: this, // Membutuhkan SingleTickerProviderStateMixin
+      duration: const Duration(milliseconds: 500),
+    );
 
-  overlayEntry = OverlayEntry(
-    builder: (context) {
-      return Positioned(
-        top: 50,
-        left: 20,
-        right: 20,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, -0.5),
-            end: const Offset(0, 0),
-          ).animate(CurvedAnimation(
-            parent: animationController,
-            curve: Curves.easeOut,
-          )),
-          child: AnimatedOpacity(
-            opacity: 1.0,
-            duration: const Duration(milliseconds: 300),
-            child: Material(
-              color: Colors.transparent,
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  height: 60,
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 10, horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.90),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black26, blurRadius: 5),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/images/berhasil.svg', // Pastikan path ini benar
-                        colorFilter: const ColorFilter.mode(Color(0xFF3EDAC0),
-                            BlendMode.srcIn), 
-                        width: 24,
-                        height: 24,
-                      ),
-                      const SizedBox(width: 16),
-                      const Text(
-                        "Berhasil menambahkan air !",
-                        style: TextStyle(
-                            color: Color(0xFF2F2E41),
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 50,
+          left: 20,
+          right: 20,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, -0.5),
+              end: const Offset(0, 0),
+            ).animate(CurvedAnimation(
+              parent: animationController,
+              curve: Curves.easeOut,
+            )),
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: Material(
+                color: Colors.transparent,
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    height: 60,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10, horizontal: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.90),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 5),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/berhasil.svg', // Pastikan path ini benar
+                          colorFilter: const ColorFilter.mode(
+                              Color(0xFF3EDAC0), BlendMode.srcIn),
+                          width: 24,
+                          height: 24,
+                        ),
+                        const SizedBox(width: 16),
+                        const Text(
+                          "Berhasil menambahkan air !",
+                          style: TextStyle(
+                              color: Color(0xFF2F2E41),
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  overlay.insert(overlayEntry);
-  animationController.forward();
+    overlay.insert(overlayEntry);
+    animationController.forward();
 
-  Future.delayed(const Duration(seconds: 2), () {
-    if (mounted && animationController.status != AnimationStatus.dismissed) {
-      animationController.reverse().then((value) {
-        if (overlayEntry?.mounted ?? false) {
-          overlayEntry?.remove();
-        }
-        animationController.dispose(); 
-      }).catchError((e) {
-        print("Error reversing animation or removing overlay: $e");
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && animationController.status != AnimationStatus.dismissed) {
+        animationController.reverse().then((value) {
+          if (overlayEntry?.mounted ?? false) {
+            overlayEntry?.remove();
+          }
+          animationController.dispose();
+        }).catchError((e) {
+          print("Error reversing animation or removing overlay: $e");
+          if (overlayEntry?.mounted ?? false) {
+            overlayEntry?.remove();
+          }
+          animationController.dispose();
+        });
+      } else if (!mounted) {
         if (overlayEntry?.mounted ?? false) {
           overlayEntry?.remove();
         }
         animationController.dispose();
-      });
-    } else if (!mounted) {
-      if (overlayEntry?.mounted ?? false) {
-        overlayEntry?.remove();
       }
-      animationController.dispose();
-    }
-  });
-}
+    });
+  }
 
   //? fungsi alert untuk ucapan selamat
   bool hasShownCongrats = false;
@@ -874,67 +876,10 @@ class HomeScreensState extends State<HomeScreens>
                   SizedBox(
                     height: screenHeight * 0.2,
                   ),
-                  Padding(
-                    padding: EdgeInsets.all(screenWidth * 0.1),
-                    child: Center(
-                        child: DashedCircularProgressBar.aspectRatio(
-                      aspectRatio: 1,
-                      valueNotifier: _valueNotifier,
-                      progress: _valueNotifier.value > 100
-                          ? 100
-                          : _valueNotifier.value, // Cap progress at 100
-                      startAngle: 230,
-                      sweepAngle: 260,
-                      foregroundColor: const Color(0xFF00A6FB),
-                      backgroundColor: const Color(0xFFA1E3F9),
-                      foregroundStrokeWidth: 15,
-                      backgroundStrokeWidth: 15,
-                      animation: true,
-                      seekSize: 10,
-                      seekColor: const Color(0xffeeeeee),
-                      child: Center(
-                        child: ValueListenableBuilder(
-                          valueListenable: _valueNotifier,
-                          builder: (_, double value, __) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '${min(100, value.ceil())}%',
-                                style: const TextStyle(
-                                  color: Color(0xFF2F2E41),
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: 40,
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    '${currentIntake.toInt()} mL',
-                                    style: TextStyle(
-                                      color:
-                                          currentIntake >= target && target > 0
-                                              ? Colors.blue
-                                              : Colors.red,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    ' / ${target.toInt()} mL',
-                                    style: const TextStyle(
-                                      color: Color(0xFF2F2E41),
-                                      fontWeight: FontWeight.w500,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )),
+                  AnimatedWaterProgressCircle(
+                    currentIntake: currentIntake,
+                    target: target,
+                    screenWidth: screenWidth,
                   ),
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.05),
@@ -1037,180 +982,183 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   Widget _buildDrinkOption(String gambar, double amount) {
-  return Column(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      GestureDetector(
-        onTap: () {
-          if (_isButtonCooldown) {
-            // Panggil fungsi popup peringatan kustom di sini
-            _showWarningPopup(context, 'Tunggu 3 detik sebelum minum lagi!');
-            return;
-          }
-
-          setState(() => _isButtonCooldown = true);
-
-          _animateGlass(amount); // Pastikan fungsi ini ada
-
-          // Panggil _showAddedWaterPopup jika logika penambahan air berhasil
-          // Contoh: _showAddedWaterPopup(context, amount); setelah _animateGlass atau di dalamnya
-
-          Timer(Duration(seconds: 3), () {
-            if (mounted) {
-              setState(() => _isButtonCooldown = false);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () {
+            if (_isButtonCooldown) {
+              // Panggil fungsi popup peringatan kustom di sini
+              _showWarningPopup(context, 'Tunggu 3 detik sebelum minum lagi!');
+              return;
             }
-          });
-        },
-        child: AnimatedContainer(
-          duration: const Duration(seconds: 1),
-          transform:
-              Matrix4.translationValues(0, _glassOffsets[amount] ?? 0, 0),
-          child: Opacity(
-            opacity: _isButtonCooldown ? 0.5 : 1.0,
-            child: SvgPicture.asset( // Atau Image.asset jika bukan SVG
-              gambar,
-              fit: BoxFit.scaleDown,
-              height: 50,
+
+            setState(() => _isButtonCooldown = true);
+
+            _animateGlass(amount); // Pastikan fungsi ini ada
+
+            // Panggil _showAddedWaterPopup jika logika penambahan air berhasil
+            // Contoh: _showAddedWaterPopup(context, amount); setelah _animateGlass atau di dalamnya
+
+            Timer(Duration(seconds: 3), () {
+              if (mounted) {
+                setState(() => _isButtonCooldown = false);
+              }
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(seconds: 1),
+            transform:
+                Matrix4.translationValues(0, _glassOffsets[amount] ?? 0, 0),
+            child: Opacity(
+              opacity: _isButtonCooldown ? 0.5 : 1.0,
+              child: SvgPicture.asset(
+                // Atau Image.asset jika bukan SVG
+                gambar,
+                fit: BoxFit.scaleDown,
+                height: 50,
+              ),
             ),
           ),
         ),
-      ),
-      const SizedBox(height: 5),
-      Text(
-        '${amount.toInt()} mL',
-        style: TextStyle(
-          fontSize: 12,
-          color: _isButtonCooldown ? Colors.grey : Colors.black,
-          fontWeight: FontWeight.w800,
+        const SizedBox(height: 5),
+        Text(
+          '${amount.toInt()} mL',
+          style: TextStyle(
+            fontSize: 12,
+            color: _isButtonCooldown ? Colors.grey : Colors.black,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   void _showWarningPopup(BuildContext context, String message) {
-  if (!mounted) return;
-  OverlayEntry? overlayEntry;
-  final overlay = Overlay.of(context);
-  // Pastikan TickerProvider tersedia, biasanya 'this' jika State menggunakan SingleTickerProviderStateMixin
-  final animationController = AnimationController(
-    vsync: this, // 'this' merujuk ke State object dengan SingleTickerProviderStateMixin
-    duration: const Duration(milliseconds: 500),
-  );
+    if (!mounted) return;
+    OverlayEntry? overlayEntry;
+    final overlay = Overlay.of(context);
+    // Pastikan TickerProvider tersedia, biasanya 'this' jika State menggunakan SingleTickerProviderStateMixin
+    final animationController = AnimationController(
+      vsync:
+          this, // 'this' merujuk ke State object dengan SingleTickerProviderStateMixin
+      duration: const Duration(milliseconds: 500),
+    );
 
-  overlayEntry = OverlayEntry(
-    builder: (context) {
-      return Positioned(
-        top: 50, // Posisi dari atas layar
-        left: 20,
-        right: 20,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, -1), // Muncul dari atas
-            end: const Offset(0, 0),
-          ).animate(CurvedAnimation(
-            parent: animationController,
-            curve: Curves.easeOut,
-          )),
-          child: AnimatedOpacity(
-            opacity: 1.0,
-            duration: const Duration(milliseconds: 300),
-            child: Material(
-              color: Colors.transparent,
-              child: Center(
-                child: Container(
-                  width: MediaQuery.of(context).size.width * 0.9,
-                  // height: 60, // Bisa diatur otomatis atau fixed
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[700]!
-                        .withOpacity(0.95), // Warna kuning peringatan
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
-                          blurRadius: 5,
-                          offset: Offset(0, 2)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded, // Ikon peringatan
-                        color: Colors.black87, // Warna ikon
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded( // Gunakan Expanded agar teks bisa wrap jika panjang
-                        child: Text(
-                          message,
-                          style: TextStyle(
-                              color: Colors.black87, // Warna teks
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600),
-                          textAlign: TextAlign.left,
+    overlayEntry = OverlayEntry(
+      builder: (context) {
+        return Positioned(
+          top: 50, // Posisi dari atas layar
+          left: 20,
+          right: 20,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, -1), // Muncul dari atas
+              end: const Offset(0, 0),
+            ).animate(CurvedAnimation(
+              parent: animationController,
+              curve: Curves.easeOut,
+            )),
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: const Duration(milliseconds: 300),
+              child: Material(
+                color: Colors.transparent,
+                child: Center(
+                  child: Container(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    // height: 60, // Bisa diatur otomatis atau fixed
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.amber[700]!
+                          .withOpacity(0.95), // Warna kuning peringatan
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 5,
+                            offset: Offset(0, 2)),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.warning_amber_rounded, // Ikon peringatan
+                          color: Colors.black87, // Warna ikon
+                          size: 24,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          // Gunakan Expanded agar teks bisa wrap jika panjang
+                          child: Text(
+                            message,
+                            style: TextStyle(
+                                color: Colors.black87, // Warna teks
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
+        );
+      },
+    );
 
-  overlay.insert(overlayEntry);
-  animationController.forward();
+    overlay.insert(overlayEntry);
+    animationController.forward();
 
-  // Durasi popup peringatan tampil (misalnya 2 detik)
-  Future.delayed(const Duration(seconds: 2), () {
-    if (mounted && animationController.status != AnimationStatus.dismissed) {
-      animationController.reverse().then((value) {
+    // Durasi popup peringatan tampil (misalnya 2 detik)
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted && animationController.status != AnimationStatus.dismissed) {
+        animationController.reverse().then((value) {
+          if (overlayEntry?.mounted ?? false) {
+            overlayEntry?.remove();
+          }
+          animationController.dispose();
+        }).catchError((e) {
+          print("Error reversing animation or removing overlay: $e");
+          if (overlayEntry?.mounted ?? false) {
+            overlayEntry?.remove();
+          }
+          animationController.dispose();
+        });
+      } else if (!mounted) {
         if (overlayEntry?.mounted ?? false) {
           overlayEntry?.remove();
         }
         animationController.dispose();
-      }).catchError((e) {
-        print("Error reversing animation or removing overlay: $e");
-        if (overlayEntry?.mounted ?? false) {
-          overlayEntry?.remove();
-        }
-        animationController.dispose();
-      });
-    } else if (!mounted) {
-      if (overlayEntry?.mounted ?? false) {
-        overlayEntry?.remove();
       }
-      animationController.dispose();
-    }
-  });
-}
+    });
+  }
 
   void _showAddWaterModal(BuildContext context) {
-  int selectedWater = 250;
-  showModalBottomSheet( 
-    context: context,
-    isScrollControlled: true,
-    isDismissible: true,
-    enableDrag: true,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: AddWaterModalContent(
-          selectedWater: selectedWater,
-          idPengguna: idPengguna,
-          onWaterAdded: (newSelectedWater) async {
-          _playDrinkingSound();
+    int selectedWater = 250;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: AddWaterModalContent(
+            selectedWater: selectedWater,
+            idPengguna: idPengguna,
+            onWaterAdded: (newSelectedWater) async {
+              _playDrinkingSound();
 
               setState(() {
                 selectedWater = newSelectedWater;

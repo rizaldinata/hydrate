@@ -467,23 +467,23 @@ class CadanganState extends State<Cadangan> {
                     ),
                   ),
                 ],
-                onSelected: (String value) {
-                  switch (value) {
-                    case 'select_items':
-                      if (waterHistory.isNotEmpty) {
-                        _enterSelectionMode();
-                      }
-                      break;
-                    case 'refresh':
-                      refresh();
-                      _showSnackBarNotification(
-                        message: "Data berhasil dimuat ulang",
-                        isSuccess: true,
-                        duration: const Duration(seconds: 2),
-                      );
-                      break;
-                  }
-                },
+                // onSelected: (String value) {
+                //   switch (value) {
+                //     case 'select_items':
+                //       if (waterHistory.isNotEmpty) {
+                //         _enterSelectionMode();
+                //       }
+                //       break;
+                //     case 'refresh':
+                //       refresh();
+                //       _showSnackBarNotification(
+                //         message: "Data berhasil dimuat ulang",
+                //         isSuccess: true,
+                //         duration: const Duration(seconds: 2),
+                //       );
+                //       break;
+                //   }
+                // },
               ),
           ],
         ),
