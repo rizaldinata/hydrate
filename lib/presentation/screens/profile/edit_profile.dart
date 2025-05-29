@@ -60,8 +60,8 @@ class _EditProfileState extends State<EditProfile> {
     // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
     //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
 
-    weightController =
-        TextEditingController(text: widget.initialBeratBadan.toInt().toString());
+    weightController = TextEditingController(
+        text: widget.initialBeratBadan.toInt().toString());
     selectedGender = widget.initialJenisKelamin;
 
     // Parse jam bangun dan tidur jika tersedia
@@ -90,52 +90,51 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   Future<void> _selectTime(BuildContext context, bool isWakeUpTime) async {
-  final TimeOfDay? pickedTime = await showTimePicker(
-    context: context,
-    initialTime: isWakeUpTime
-        ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
-        : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
-    builder: (BuildContext context, Widget? child) {
-      return Theme(
-        data: ThemeData(
-          primaryColor: const Color(0xFF00A6FB), // Warna utama biru
-          hintColor: const Color(0xFF00A6FB),
-          colorScheme: const ColorScheme.light(
-            primary: Color(0xFF00A6FB), // Warna utama
-            onPrimary: Colors.white, // Warna teks di atas warna utama
-            onSurface: Color(0xFF2F2E41), // Warna teks utama
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: isWakeUpTime
+          ? wakeUpTime ?? TimeOfDay(hour: 6, minute: 0)
+          : sleepTime ?? TimeOfDay(hour: 22, minute: 0),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: ThemeData(
+            primaryColor: const Color(0xFF00A6FB), // Warna utama biru
+            hintColor: const Color(0xFF00A6FB),
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF00A6FB), // Warna utama
+              onPrimary: Colors.white, // Warna teks di atas warna utama
+              onSurface: Color(0xFF2F2E41), // Warna teks utama
+            ),
+            timePickerTheme: TimePickerThemeData(
+              backgroundColor: Colors.white,
+              hourMinuteColor: MaterialStateColor.resolveWith((states) =>
+                  states.contains(MaterialState.selected)
+                      ? const Color(0xFF00A6FB)
+                      : const Color(0xFFE8F7FF)),
+              hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
+                  states.contains(MaterialState.selected)
+                      ? Colors.white
+                      : const Color(0xFF2F2E41)),
+              dialHandColor: const Color(0xFF00A6FB),
+              dialBackgroundColor: const Color(0xFFE8F7FF),
+              entryModeIconColor: const Color(0xFF00A6FB),
+            ),
           ),
-          timePickerTheme: TimePickerThemeData(
-            backgroundColor: Colors.white,
-            hourMinuteColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.selected)
-                    ? const Color(0xFF00A6FB)
-                    : const Color(0xFFE8F7FF)),
-            hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
-                states.contains(MaterialState.selected)
-                    ? Colors.white
-                    : const Color(0xFF2F2E41)),
-            dialHandColor: const Color(0xFF00A6FB),
-            dialBackgroundColor: const Color(0xFFE8F7FF),
-            entryModeIconColor: const Color(0xFF00A6FB),
-          ),
-        ),
-        child: child!,
-      );
-    },
-  );
+          child: child!,
+        );
+      },
+    );
 
-  if (pickedTime != null) {
-    setState(() {
-      if (isWakeUpTime) {
-        wakeUpTime = pickedTime;
-      } else {
-        sleepTime = pickedTime;
-      }
-    });
+    if (pickedTime != null) {
+      setState(() {
+        if (isWakeUpTime) {
+          wakeUpTime = pickedTime;
+        } else {
+          sleepTime = pickedTime;
+        }
+      });
+    }
   }
-}
-
 
   void _saveProfile() async {
     // Validasi input
@@ -183,7 +182,9 @@ class _EditProfileState extends State<EditProfile> {
       }
     } catch (e) {
       if (mounted) {
-        _showOverlayError("Berat badan tidak boleh lebih dari 300 kg. Silakan masukkan berat yang sesuai.",);
+        _showOverlayError(
+          "Berat badan tidak boleh lebih dari 300 kg. Silakan masukkan berat yang sesuai.",
+        );
       }
     } finally {
       if (mounted) {
@@ -222,7 +223,8 @@ class _EditProfileState extends State<EditProfile> {
                     const SizedBox(height: 20),
 
                     // Nama
-                    _buildTextField(nameController, "Nama", "assets/images/profile/profile.svg"),
+                    _buildTextField(nameController, "Nama",
+                        "assets/images/profile/profile.svg"),
 
                     const SizedBox(height: 15),
 
@@ -286,7 +288,9 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   // Widget untuk input text
-  Widget _buildTextField(TextEditingController controller, String label, String icon, {bool isNumber = false}) {
+  Widget _buildTextField(
+      TextEditingController controller, String label, String icon,
+      {bool isNumber = false}) {
     return TextField(
       cursorColor: const Color(0xFF00A6FB),
       controller: controller,
@@ -316,7 +320,6 @@ class _EditProfileState extends State<EditProfile> {
     );
   }
 
-
   // Widget Dropdown untuk Jenis Kelamin
   Widget _buildDropdown() {
     return DropdownButtonFormField<String>(
@@ -326,14 +329,14 @@ class _EditProfileState extends State<EditProfile> {
         labelText: "Jenis Kelamin",
         labelStyle: const TextStyle(color: Color(0xFF00A6FB)),
         prefixIcon: Padding(
-            padding:
-                const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
-            child: SvgPicture.asset(
-              "assets/images/profile/gender.svg",
-              width: 24,
-              height: 24,
-            ),
+          padding:
+              const EdgeInsets.all(12.0), // Sesuaikan padding agar ikon pas
+          child: SvgPicture.asset(
+            "assets/images/profile/gender.svg",
+            width: 24,
+            height: 24,
           ),
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: const Color(0xFF00A6FB), width: 2),

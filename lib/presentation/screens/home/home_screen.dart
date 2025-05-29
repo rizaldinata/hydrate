@@ -522,7 +522,6 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   void _startCountdown() {
-
     NotificationController.cancelScheduledNotifications();
 
     int reminderIntervalInSeconds = 65;
@@ -784,7 +783,7 @@ class HomeScreensState extends State<HomeScreens>
   Future<void> _stopReminders() async {
     await NotificationController.cancelScheduledNotifications();
     _countdownTimer?.cancel();
-    if(mounted) {
+    if (mounted) {
       setState(() {
         _isCountdownActive = false;
         _remainingTime = Duration.zero;
@@ -793,6 +792,23 @@ class HomeScreensState extends State<HomeScreens>
         SnackBar(content: Text('Pengingat hidrasi telah dinonaktifkan.')),
       );
     }
+  }
+
+  void _startDrinkingWithCooldown(double amount) {
+    if (_isButtonCooldown) {
+      _showOverlayError('Tunggu 3 detik sebelum minum lagi!');
+      return;
+    } else {
+      _showOverlaySuccess('Berhasil minum $amount ml!');
+    }
+
+    setState(() => _isButtonCooldown = true);
+    _animateGlass(amount);
+
+    // Timer cooldown global untuk semua metode minum
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) setState(() => _isButtonCooldown = false);
+    });
   }
 
   @override
@@ -1029,31 +1045,7 @@ class HomeScreensState extends State<HomeScreens>
       mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
-          onTap: () {
-            if (_isButtonCooldown) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Tunggu 3 detik sebelum minum lagi!',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.red,
-                  duration: Duration(seconds: 1),
-                ),
-              );
-              return;
-            }
-
-            setState(() => _isButtonCooldown = true);
-
-            _animateGlass(amount);
-
-            Timer(Duration(seconds: 3), () {
-              if (mounted) {
-                setState(() => _isButtonCooldown = false);
-              }
-            });
-          },
+          onTap: () => _startDrinkingWithCooldown(amount),
           child: AnimatedContainer(
             duration: const Duration(seconds: 1),
             transform:
@@ -1150,5 +1142,60 @@ class HomeScreensState extends State<HomeScreens>
         );
       },
     );
+  }
+
+  // Fungsi untuk menampilkan overlay (error/sukses)
+  void _showOverlay(String message, Color color) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Overlay",
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        Future.delayed(const Duration(seconds: 3), () {
+          if (Navigator.canPop(context)) Navigator.pop(context);
+        });
+
+        return Align(
+          alignment: Alignment.topCenter,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              margin: const EdgeInsets.only(top: 50, left: 20, right: 20),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Color(0xFF2F2E41),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
+              .animate(CurvedAnimation(parent: anim1, curve: Curves.easeOut)),
+          child: child,
+        );
+      },
+    );
+  }
+
+// Fungsi khusus untuk overlay error
+  void _showOverlayError(String message) {
+    _showOverlay(message, Colors.red);
+  }
+
+// Fungsi khusus untuk overlay sukses
+  void _showOverlaySuccess(String message) {
+    _showOverlay(message, Colors.white.withOpacity(0.90));
   }
 }
