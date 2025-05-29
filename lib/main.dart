@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
-import 'package:hydrate/presentation/screens/Pendaftaran/firstPage_view.dart';
-import 'package:hydrate/presentation/screens/home_screen1.dart';
-import 'package:hydrate/presentation/screens/profile_screen.dart';
-import 'package:hydrate/presentation/screens/statistic_page_screen.dart';
+import 'package:hydrate/presentation/screens/registration/firstPage_view.dart';
+import 'package:hydrate/presentation/screens/home/home_screen.dart';
+import 'package:hydrate/presentation/screens/profile/profile_screen.dart';
+import 'package:hydrate/presentation/screens/statistic/statistic_page_screen.dart';
 import 'dart:async';
 
 // Lottie untuk animasi loading
@@ -20,7 +20,6 @@ import 'package:hydrate/presentation/controllers/hydration_stats_controller.dart
 import 'package:hydrate/presentation/controllers/target_hidrasi_controller.dart'; // Asumsi path
 // Jika PenggunaController juga perlu di-provide sebagai ChangeNotifier, import dan tambahkan juga
 // import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +40,8 @@ void main() async {
           // Atau jika PenggunaController tidak ChangeNotifier tapi hanya kelas biasa yang ingin diakses:
           // Provider(create: (_) => PenggunaController()),
         ],
-        child: const MyApp(), // isPenggunaTerdaftarFuture akan dihandle di dalam MyApp
+        child:
+            const MyApp(), // isPenggunaTerdaftarFuture akan dihandle di dalam MyApp
       ),
     );
   });
@@ -78,8 +78,7 @@ class MyApp extends StatelessWidget {
         // Pertimbangkan untuk memindahkan warna utama ke colorScheme
         colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF00A6FB),
-            primary: const Color(0xFF00A6FB)
-        ),
+            primary: const Color(0xFF00A6FB)),
         useMaterial3: true, // Dianjurkan untuk project baru
       ),
       debugShowCheckedModeBanner: false,
@@ -127,9 +126,9 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   final GlobalKey<HomeScreensState> _homeKey = GlobalKey();
   final GlobalKey<ProfileScreenState> _profileKey = GlobalKey();
 
-  StreamSubscription? _eventSubscription; // Ini sepertinya tidak digunakan, bisa dihapus jika _appEventBusSubscription cukup
+  StreamSubscription?
+      _eventSubscription; // Ini sepertinya tidak digunakan, bisa dihapus jika _appEventBusSubscription cukup
   StreamSubscription<AppEvent>? _appEventBusSubscription;
-
 
   @override
   void initState() {
@@ -142,18 +141,21 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // Pastikan ini dilakukan setelah build pertama jika context diperlukan, atau gunakan cara lain.
 
     // Dengarkan event dari AppEventBus
-    _appEventBusSubscription = _eventBus.stream.listen((event) { // Tipe event di sini adalah AppEvent
-      print("[EVENT_BUS] Menerima event: ${event.type} dengan data: ${event.data}");
+    _appEventBusSubscription = _eventBus.stream.listen((event) {
+      // Tipe event di sini adalah AppEvent
+      print(
+          "[EVENT_BUS] Menerima event: ${event.type} dengan data: ${event.data}");
       if (event.type == 'refresh_statistics_page') {
-          _refreshPage(0); // Refresh Halaman Statistik (index 0)
+        _refreshPage(0); // Refresh Halaman Statistik (index 0)
       } else if (event.type == 'refresh_home_page') {
-          _refreshPage(1); // Refresh Halaman Home (index 1)
+        _refreshPage(1); // Refresh Halaman Home (index 1)
       } else if (event.type == 'refresh_profile_page') {
-          _refreshPage(2); // Refresh Halaman Profil (index 2)
-      } else if (event.type == 'refresh_all_pages') { // Listener untuk event 'refresh_all_pages'
-          _refreshPage(0);
-          _refreshPage(1);
-          _refreshPage(2);
+        _refreshPage(2); // Refresh Halaman Profil (index 2)
+      } else if (event.type == 'refresh_all_pages') {
+        // Listener untuk event 'refresh_all_pages'
+        _refreshPage(0);
+        _refreshPage(1);
+        _refreshPage(2);
       }
       // Tambahkan kondisi lain sesuai kebutuhan event Anda
     });
@@ -162,7 +164,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     // Ini memastikan halaman awal dimuat dengan data terbaru saat MainScreen pertama kali muncul.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-         print("[INIT_REFRESH] Merefresh halaman awal (Home) setelah build pertama.");
+        print(
+            "[INIT_REFRESH] Merefresh halaman awal (Home) setelah build pertama.");
         _refreshPage(_selectedIndex);
       }
     });
@@ -170,7 +173,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    print("[INFO] MainScreen dispose: Observer dilepas, subscription dibatalkan.");
+    print(
+        "[INFO] MainScreen dispose: Observer dilepas, subscription dibatalkan.");
     WidgetsBinding.instance.removeObserver(this);
     _eventSubscription?.cancel(); // Batalkan jika masih ada
     _appEventBusSubscription?.cancel(); // Jangan lupa batalkan subscription ini
@@ -182,7 +186,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state); // Panggil super
     print("[LIFECYCLE] App lifecycle state berubah: $state");
     if (state == AppLifecycleState.resumed) {
-      print("[LIFECYCLE] Aplikasi dibuka kembali (resumed). Merefresh halaman saat ini.");
+      print(
+          "[LIFECYCLE] Aplikasi dibuka kembali (resumed). Merefresh halaman saat ini.");
       _refreshCurrentPage();
     }
   }
@@ -214,7 +219,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   void _handlePageChanged(int index) {
-    print("[NAVIGATION] Halaman diubah ke index: $index. Index sebelumnya: $_selectedIndex");
+    print(
+        "[NAVIGATION] Halaman diubah ke index: $index. Index sebelumnya: $_selectedIndex");
     // Tidak perlu refresh jika index sama, karena bottom nav bar tidak akan memanggil onTap jika index tidak berubah
     // Namun, jika ada cara lain _selectedIndex berubah tanpa onTap (jarang terjadi), maka kondisi ini relevan.
     // if (_selectedIndex == index) {
@@ -226,14 +232,16 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     setState(() {
       _selectedIndex = index;
     });
-    print("[NAVIGATION] State diubah, memanggil refresh untuk halaman baru yang dipilih.");
+    print(
+        "[NAVIGATION] State diubah, memanggil refresh untuk halaman baru yang dipilih.");
     // Refresh halaman yang baru dipilih.
     // Ini penting jika halaman tidak mempertahankan state atau perlu data baru setiap kali aktif.
     _refreshPage(index);
   }
 
   Future<bool> _onWillPop() async {
-    print("[NAVIGATION] Tombol kembali ditekan. Index saat ini: $_selectedIndex");
+    print(
+        "[NAVIGATION] Tombol kembali ditekan. Index saat ini: $_selectedIndex");
     if (_selectedIndex != 1) {
       setState(() {
         _selectedIndex = 1;
@@ -242,7 +250,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       print("[NAVIGATION] Kembali ke halaman Home (index 1).");
       return false;
     }
-    print("[NAVIGATION] Sudah di halaman Home. Menampilkan dialog konfirmasi keluar.");
+    print(
+        "[NAVIGATION] Sudah di halaman Home. Menampilkan dialog konfirmasi keluar.");
     return await _showExitConfirmationDialog() ?? false;
   }
 
@@ -257,10 +266,12 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         title: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Keluar Aplikasi', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Keluar Aplikasi',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?', style: TextStyle(fontSize: 16)),
+        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?',
+            style: TextStyle(fontSize: 16)),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
@@ -268,8 +279,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             style: TextButton.styleFrom(
                 backgroundColor: Colors.grey.shade200,
                 foregroundColor: Colors.black87,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)
-            ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
             child: const Text('Batal'),
           ),
           ElevatedButton(
@@ -280,8 +291,8 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
             style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10)
-            ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10)),
             child: const Text('Keluar'),
           ),
         ],
@@ -292,7 +303,7 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     print("[BUILD] Membangun MainScreen. Index saat ini: $_selectedIndex");
-    
+
     // Inisialisasi _pages di dalam build atau pastikan GlobalKey sudah terpasang dengan benar
     // jika halaman di-cache oleh IndexedStack.
     final List<Widget> pages = [
@@ -301,9 +312,10 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
       ProfileScreen(
         key: _profileKey,
         onProfileUpdated: () {
-          print("[EVENT] Profile diperbarui. Mengirim event 'refresh_all_pages'.");
+          print(
+              "[EVENT] Profile diperbarui. Mengirim event 'refresh_all_pages'.");
           // Mengirim tipe event sebagai String, sesuai dengan error yang dilaporkan
-          _eventBus.fire('refresh_all_pages'); 
+          _eventBus.fire('refresh_all_pages');
         },
       ),
     ];
@@ -311,23 +323,37 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
+        // extendBody: true,
         backgroundColor: const Color(0xFFE8F7FF),
         bottomNavigationBar: CurvedNavigationBar(
           index: _selectedIndex,
           animationCurve: Curves.easeInOut,
           animationDuration: const Duration(milliseconds: 300),
-          backgroundColor: const Color(0xFFE8F7FF),
+          backgroundColor: const Color(0xFFE8F7FF), //warna backgruond navbar
           color: Colors.blue, // Warna utama CurvedNavigationBar
           buttonBackgroundColor: Colors.blue, // Warna tombol aktif
-          height: 60.0,
+          height: 75.0,
           items: const <Widget>[
-            Image(image: AssetImage('assets/images/navigasi/stats.png'), width: 25, height: 25, color: Colors.white),
-            Image(image: AssetImage('assets/images/navigasi/home.png'), width: 25, height: 25, color: Colors.white),
-            Image(image: AssetImage('assets/images/navigasi/user.png'), width: 25, height: 25, color: Colors.white),
+            Image(
+                image: AssetImage('assets/images/navigasi/stats.png'),
+                width: 25,
+                height: 25,
+                color: Colors.white),
+            Image(
+                image: AssetImage('assets/images/navigasi/home.png'),
+                width: 25,
+                height: 25,
+                color: Colors.white),
+            Image(
+                image: AssetImage('assets/images/navigasi/user.png'),
+                width: 25,
+                height: 25,
+                color: Colors.white),
           ],
           onTap: _handlePageChanged,
         ),
-        body: IndexedStack( // IndexedStack mempertahankan state halaman
+        body: IndexedStack(
+          // IndexedStack mempertahankan state halaman
           index: _selectedIndex,
           children: pages,
         ),

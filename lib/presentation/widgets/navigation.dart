@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/presentation/screens/profile/profile_screen.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 
 class Navigasi extends StatefulWidget {
