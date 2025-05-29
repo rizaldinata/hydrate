@@ -881,6 +881,68 @@ class HomeScreensState extends State<HomeScreens>
                     target: target,
                     screenWidth: screenWidth,
                   ),
+                  // Padding(
+                  //   padding: EdgeInsets.all(screenWidth * 0.1),
+                  //   child: Center(
+                  //       child: DashedCircularProgressBar.aspectRatio(
+                  //     aspectRatio: 1,
+                  //     valueNotifier: _valueNotifier,
+                  //     progress: _valueNotifier.value > 100
+                  //         ? 100
+                  //         : _valueNotifier.value, // Cap progress at 100
+                  //     startAngle: 230,
+                  //     sweepAngle: 260,
+                  //     foregroundColor: const Color(0xFF00A6FB),
+                  //     backgroundColor: const Color(0xFFA1E3F9),
+                  //     foregroundStrokeWidth: 15,
+                  //     backgroundStrokeWidth: 15,
+                  //     animation: true,
+                  //     seekSize: 10,
+                  //     seekColor: const Color(0xffeeeeee),
+                  //     child: Center(
+                  //       child: ValueListenableBuilder(
+                  //         valueListenable: _valueNotifier,
+                  //         builder: (_, double value, __) => Column(
+                  //           mainAxisSize: MainAxisSize.min,
+                  //           children: [
+                  //             Text(
+                  //               '${min(100, value.ceil())}%',
+                  //               style: const TextStyle(
+                  //                 color: Color(0xFF2F2E41),
+                  //                 fontWeight: FontWeight.w300,
+                  //                 fontSize: 40,
+                  //               ),
+                  //             ),
+                  //             Row(
+                  //               mainAxisAlignment: MainAxisAlignment.center,
+                  //               children: [
+                  //                 Text(
+                  //                   '${currentIntake.toInt()} mL',
+                  //                   style: TextStyle(
+                  //                     color:
+                  //                         currentIntake >= target && target > 0
+                  //                             ? Colors.blue
+                  //                             : Colors.red,
+                  //                     fontWeight: FontWeight.w600,
+                  //                     fontSize: 16,
+                  //                   ),
+                  //                 ),
+                  //                 Text(
+                  //                   ' / ${target.toInt()} mL',
+                  //                   style: const TextStyle(
+                  //                     color: Color(0xFF2F2E41),
+                  //                     fontWeight: FontWeight.w500,
+                  //                     fontSize: 16,
+                  //                   ),
+                  //                 ),
+                  //               ],
+                  //             ),
+                  //           ],
+                  //         ),
+                  //       ),
+                  //     ),
+                  //   )),
+                  // ),
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.05),
                     child: Container(
