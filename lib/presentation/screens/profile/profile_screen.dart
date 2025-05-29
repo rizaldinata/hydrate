@@ -11,8 +11,8 @@ import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:hydrate/presentation/controllers/notifikasi_controller.dart'; 
-import 'package:awesome_notifications/awesome_notifications.dart'; 
+import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:hydrate/services/notification_settings_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -39,7 +39,8 @@ class ProfileScreenState extends State<ProfileScreen> {
   bool _areNotificationsEnabled = false;
 
   // Instance NotificationSettingsService
-  final NotificationSettingsService _notificationSettingsService = NotificationSettingsService();
+  final NotificationSettingsService _notificationSettingsService =
+      NotificationSettingsService();
 
   // Deklarasi Controller
   final ProfilPenggunaController _profilPenggunaController =
@@ -144,244 +145,223 @@ class ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  //fungsi untuk melakukan perizinan ke settings
-  // Di dalam kelas ProfileScreenState
+  Future<void> _showBackgroundPermissionGuidanceDialog() async {
+    if (!mounted) return;
 
-// Jangan lupa import pluginnya di atas file
-// import 'package:app_settings/app_settings.dart';
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // Pengguna harus memilih salah satu aksi
+      builder: (BuildContext dialogContext) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final isLandscape = constraints.maxWidth > constraints.maxHeight;
+            final screenWidth = constraints.maxWidth;
+            final screenHeight = constraints.maxHeight;
 
-Future<void> _showBackgroundPermissionGuidanceDialog() async {
-  // Selalu pastikan widget masih mounted sebelum menampilkan dialog
-  if (!mounted) return;
+            double dialogWidth;
+            if (screenWidth < 600) {
+              dialogWidth = screenWidth * 0.9;
+            } else if (screenWidth < 900) {
+              dialogWidth = screenWidth * 0.7;
+            } else {
+              dialogWidth = 500;
+            }
 
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false, // Pengguna harus memilih salah satu aksi
-    builder: (BuildContext dialogContext) {
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          // Tentukan apakah device dalam mode landscape atau portrait
-          final isLandscape = constraints.maxWidth > constraints.maxHeight;
-          final screenWidth = constraints.maxWidth;
-          final screenHeight = constraints.maxHeight;
-          
-          // Hitung lebar dialog berdasarkan ukuran layar
-          double dialogWidth;
-          if (screenWidth < 600) {
-            // Mobile portrait
-            dialogWidth = screenWidth * 0.9;
-          } else if (screenWidth < 900) {
-            // Tablet atau mobile landscape
-            dialogWidth = screenWidth * 0.7;
-          } else {
-            // Desktop
-            dialogWidth = 500;
-          }
-          
-          // Hitung tinggi maksimum dialog
-          final maxHeight = screenHeight * (isLandscape ? 0.8 : 0.7);
-          
-          return Center(
-            child: Container(
-              width: dialogWidth,
-              constraints: BoxConstraints(
-                maxHeight: maxHeight,
-                minWidth: 280,
-                maxWidth: 600,
-              ),
-              child: AlertDialog(
-                titlePadding: EdgeInsets.all(16),
-                contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                actionsPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                
-                title: Row(
-                  children: [
-                    Icon(
-                      Icons.settings_backup_restore, 
-                      color: Theme.of(context).primaryColor,
-                      size: screenWidth < 600 ? 20 : 24,
-                    ),
-                    SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Optimalkan Pengingat',
-                        style: TextStyle(
-                          fontSize: screenWidth < 600 ? 16 : 18,
-                          fontWeight: FontWeight.w600,
+            final maxHeight = screenHeight * (isLandscape ? 0.8 : 0.7);
+
+            return Center(
+              child: Container(
+                width: dialogWidth,
+                constraints: BoxConstraints(
+                  maxHeight: maxHeight,
+                  minWidth: 280,
+                  maxWidth: 600,
+                ),
+                child: AlertDialog(
+                  titlePadding: EdgeInsets.all(16),
+                  contentPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  actionsPadding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  title: Row(
+                    children: [
+                      Icon(
+                        Icons.settings_backup_restore,
+                        color: Theme.of(context).primaryColor,
+                        size: screenWidth < 600 ? 20 : 24,
+                      ),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Optimalkan Pengingat',
+                          style: TextStyle(
+                            fontSize: screenWidth < 600 ? 16 : 18,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                
-                content: Container(
-                  width: double.maxFinite,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          'Agar pengingat minum Anda lebih andal dan tidak terganggu oleh sistem HP:',
-                          style: TextStyle(
-                            fontSize: screenWidth < 600 ? 14 : 16,
-                            height: 1.4,
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        
-                        // Gunakan Card untuk memberikan emphasis pada instruksi
-                        Card(
-                          elevation: 0,
-                          color: Theme.of(context).primaryColor.withOpacity(0.05),
-                          child: Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildInstructionItem(
-                                  context,
-                                  '1.',
-                                  'Pastikan optimasi baterai untuk Hydrate dimatikan (pilih "Tanpa Batasan").',
-                                  screenWidth,
-                                ),
-                                SizedBox(height: 8),
-                                _buildInstructionItem(
-                                  context,
-                                  '2.',
-                                  'Jika tersedia, izinkan "Mulai Otomatis" (Autostart) untuk Hydrate.',
-                                  screenWidth,
-                                ),
-                              ],
+                    ],
+                  ),
+                  content: Container(
+                    width: double.maxFinite,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Agar pengingat minum Anda lebih andal dan tidak terganggu oleh sistem HP:',
+                            style: TextStyle(
+                              fontSize: screenWidth < 600 ? 14 : 16,
+                              height: 1.4,
                             ),
                           ),
-                        ),
-                        
-                        SizedBox(height: 16),
-                        Text(
-                          'Sentuh "Buka Pengaturan" untuk diarahkan ke info aplikasi Hydrate.',
-                          style: TextStyle(
-                            fontSize: screenWidth < 600 ? 13 : 14,
-                            fontStyle: FontStyle.italic,
-                            color: Theme.of(context).textTheme.bodySmall?.color,
-                            height: 1.3,
+                          SizedBox(height: 16),
+                          Card(
+                            elevation: 0,
+                            color: Theme.of(context)
+                                .primaryColor
+                                .withOpacity(0.05),
+                            child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildInstructionItem(
+                                    context,
+                                    '1.',
+                                    'Pastikan optimasi baterai untuk Hydrate dimatikan (pilih "Tanpa Batasan").',
+                                    screenWidth,
+                                  ),
+                                  SizedBox(height: 8),
+                                  _buildInstructionItem(
+                                    context,
+                                    '2.',
+                                    'Jika tersedia, izinkan "Mulai Otomatis" (Autostart) untuk Hydrate.',
+                                    screenWidth,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                          SizedBox(height: 16),
+                          Text(
+                            'Sentuh "Buka Pengaturan" untuk diarahkan ke info aplikasi Hydrate.',
+                            style: TextStyle(
+                              fontSize: screenWidth < 600 ? 13 : 14,
+                              fontStyle: FontStyle.italic,
+                              color:
+                                  Theme.of(context).textTheme.bodySmall?.color,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  actions: <Widget>[
+                    if (screenWidth < 600 && !isLandscape)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                              AppSettings.openAppSettings();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Text(
+                              'Buka Pengaturan',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Text(
+                              'Nanti Saja',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                            child: Text(
+                              'Nanti Saja',
+                              style: TextStyle(
+                                fontSize: screenWidth < 600 ? 13 : 14,
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                              AppSettings.openAppSettings();
+                            },
+                            child: Text(
+                              'Buka Pengaturan',
+                              style: TextStyle(
+                                fontSize: screenWidth < 600 ? 13 : 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
                 ),
-                
-                actions: <Widget>[
-                  // Responsive button layout
-                  if (screenWidth < 600 && !isLandscape)
-                    // Stack buttons vertically on small screens
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                            AppSettings.openAppSettings(); 
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            'Buka Pengaturan',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Text(
-                            'Nanti Saja',
-                            style: TextStyle(fontSize: 14),
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    // Horizontal layout for larger screens
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                          },
-                          child: Text(
-                            'Nanti Saja',
-                            style: TextStyle(
-                              fontSize: screenWidth < 600 ? 13 : 14,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(dialogContext).pop();
-                            AppSettings.openAppSettings(); 
-                          },
-                          child: Text(
-                            'Buka Pengaturan',
-                            style: TextStyle(
-                              fontSize: screenWidth < 600 ? 13 : 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildInstructionItem(
+      BuildContext context, String number, String text, double screenWidth) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 20,
+          child: Text(
+            number,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: screenWidth < 600 ? 13 : 14,
+              color: Theme.of(context).primaryColor,
             ),
-          );
-        },
-      );
-    },
-  );
-}
-
-// Helper method untuk membuat item instruksi
-Widget _buildInstructionItem(BuildContext context, String number, String text, double screenWidth) {
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 20,
-        child: Text(
-          number,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: screenWidth < 600 ? 13 : 14,
-            color: Theme.of(context).primaryColor,
           ),
         ),
-      ),
-      SizedBox(width: 8),
-      Expanded(
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: screenWidth < 600 ? 13 : 14,
-            height: 1.4,
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: screenWidth < 600 ? 13 : 14,
+              height: 1.4,
+            ),
           ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
-  // Function untuk melakukan logout
   Future<void> _performLogout() async {
     try {
-      // Show loading
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -392,15 +372,11 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
         ),
       );
 
-      // Clear session
       final session = SessionManager();
       await session.clearSession();
 
-      // Close loading dialog
       Navigator.of(context).pop();
 
-      // Navigate to login screen
-      // Ganti dengan route login screen Anda
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => InfoProduct()),
         (Route<dynamic> route) => false,
@@ -408,12 +384,11 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
 
       _showSnackBar("Berhasil logout");
     } catch (e) {
-      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.of(context).pop();
       _showSnackBar("Gagal logout: ${e.toString()}");
     }
   }
 
-  // Function untuk menampilkan rating dialog
   void _showRatingDialog() {
     int selectedRating = 0;
     String reviewText = '';
@@ -449,7 +424,6 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
                     style: GoogleFonts.inter(fontSize: 14),
                   ),
                   SizedBox(height: 16),
-                  // Rating stars
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(5, (index) {
@@ -535,19 +509,11 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
     );
   }
 
-  // Function untuk submit rating
   void _submitRating(int rating, String review) {
-    // Implementasikan logic untuk menyimpan rating ke database/API
-    // Contoh implementasi sederhana:
     print("Rating: $rating, Review: $review");
-    
     _showSnackBar("Terima kasih atas rating Anda! ⭐");
-    
-    // Jika Anda memiliki API untuk menyimpan rating, panggil di sini
-    // await ApiService.submitRating(rating, review);
   }
 
-  // Metode publik untuk memaksa refresh data
   void refresh() {
     print("Refreshing Profile data...");
     _loadUserData();
@@ -560,7 +526,6 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
     _loadUserData();
     _loadNotificationPreference();
 
-    // Subscribe ke event bus untuk refresh data
     _eventSubscription = _eventBus.stream.listen((event) {
       if (event.type == 'refresh_profile' || event.type == 'refresh_all') {
         refresh();
@@ -572,7 +537,8 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _areNotificationsEnabled = prefs.getBool('notifications_enabled') ?? false;
+        _areNotificationsEnabled =
+            prefs.getBool('notifications_enabled') ?? false;
       });
     }
   }
@@ -588,26 +554,30 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
     if (newValue) {
       bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isAllowed) {
-        isAllowed = await NotificationController.requestNotificationPermission();
+        isAllowed =
+            await NotificationController.requestNotificationPermission();
       }
 
       if (isAllowed) {
-        int currentIntervalSeconds = await _notificationSettingsService.getNotificationInterval();
-        
-        // Batalkan dulu jadwal lama agar tidak tumpuk
+        int currentIntervalSeconds =
+            await _notificationSettingsService.getNotificationInterval();
+
         await NotificationController.cancelScheduledNotifications();
         await NotificationController.schedulePeriodicHydrationNotification(
-            intervalInSeconds: currentIntervalSeconds
-        );
-        _showSnackBar("Pengingat notifikasi diaktifkan setiap ${currentIntervalSeconds ~/ 60} menit.");
+            intervalInSeconds: currentIntervalSeconds);
+        _showSnackBar(
+            "Pengingat notifikasi diaktifkan setiap ${currentIntervalSeconds ~/ 60} menit.");
 
         if (mounted) {
           _showBackgroundPermissionGuidanceDialog();
         }
       } else {
-        _showSnackBar("Izin notifikasi ditolak. Tidak dapat mengaktifkan pengingat.");
-        setState(() { _areNotificationsEnabled = false; }); 
-        await prefs.setBool('notifications_enabled', false); 
+        _showSnackBar(
+            "Izin notifikasi ditolak. Tidak dapat mengaktifkan pengingat.");
+        setState(() {
+          _areNotificationsEnabled = false;
+        });
+        await prefs.setBool('notifications_enabled', false);
       }
     } else {
       await NotificationController.cancelScheduledNotifications();
@@ -661,32 +631,26 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get device metrics for responsive layout
     final Size size = MediaQuery.of(context).size;
     final double screenWidth = size.width;
     final double screenHeight = size.height;
     final double paddingTop = MediaQuery.of(context).padding.top;
 
-    // Adjust profile container height based on screen size
-    final double profileContainerHeight = screenHeight * 0.58;
-
-    // Adjust padding and spacing based on screen size
     final double horizontalPadding = screenWidth * 0.05;
     final double verticalPadding = screenHeight * 0.02;
 
-    // Adjust font sizes based on screen width
     final double titleFontSize = screenWidth * 0.04;
     final double nameFontSize = screenWidth * 0.045;
     final double infoFontSize = screenWidth * 0.038;
-
-    // Adjust profile image size
     final double profileImageSize = screenWidth * 0.2;
 
     return Scaffold(
@@ -697,286 +661,358 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
               ? Center(
                   child: Text(_errorMessage,
                       style: const TextStyle(color: Colors.red)))
-              : Column(
-                  children: [
-                    // Bagian profil pengguna dengan scroll
-                    Flexible(
-                      child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minHeight: screenHeight * 0.50,
+              : SingleChildScrollView(
+                  // Ini adalah perubahan utama: Membungkus Column utama dengan SingleChildScrollView
+                  physics: const BouncingScrollPhysics(),
+                  child: Column(
+                    children: [
+                      // Bagian profil pengguna (tidak lagi di dalam Flexible/SingleChildScrollView terpisah)
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF2AD1D1),
+                              Colors.blueAccent,
+                            ],
                           ),
-                          child: IntrinsicHeight(
-                            child: Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    Color(0xFF2AD1D1),
-                                    Colors.blueAccent,
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(25),
+                            bottomRight: Radius.circular(25),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              offset: Offset(4, 4),
+                              blurRadius: 10,
+                            ),
+                            BoxShadow(
+                              color: Colors.white.withOpacity(0.5),
+                              offset: Offset(-4, -4),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        padding: EdgeInsets.only(
+                          top: paddingTop + verticalPadding,
+                          left: horizontalPadding,
+                          right: horizontalPadding,
+                          bottom: verticalPadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: screenHeight * 0.01),
+                            Center(
+                              child: Container(
+                                padding: EdgeInsets.all(screenWidth * 0.025),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      offset: Offset(4, 4),
+                                      blurRadius: 8,
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.white.withOpacity(0.6),
+                                      offset: Offset(-4, -4),
+                                      blurRadius: 8,
+                                    ),
                                   ],
                                 ),
-                                borderRadius: BorderRadius.only(
-                                  bottomLeft: Radius.circular(25),
-                                  bottomRight: Radius.circular(25),
+                                child: SvgPicture.asset(
+                                  'assets/images/profile.svg',
+                                  width: profileImageSize,
+                                  height: profileImageSize,
+                                  fit: BoxFit.contain,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    offset: Offset(4, 4),
-                                    blurRadius: 10,
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.white.withOpacity(0.5),
-                                    offset: Offset(-4, -4),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              padding: EdgeInsets.only(
-                                top: paddingTop + verticalPadding,
-                                left: horizontalPadding,
-                                right: horizontalPadding,
-                                bottom: verticalPadding,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  SizedBox(height: screenHeight * 0.01),
-                                  // Profile Image
-                                  Center(
-                                    child: Container(
-                                      padding:
-                                          EdgeInsets.all(screenWidth * 0.025),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color:
-                                                Colors.black.withOpacity(0.2),
-                                            offset: Offset(4, 4),
-                                            blurRadius: 8,
-                                          ),
-                                          BoxShadow(
-                                            color:
-                                                Colors.white.withOpacity(0.6),
-                                            offset: Offset(-4, -4),
-                                            blurRadius: 8,
-                                          ),
-                                        ],
-                                      ),
-                                      child: SvgPicture.asset(
-                                        'assets/images/profile.svg',
-                                        width: profileImageSize,
-                                        height: profileImageSize,
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(height: screenHeight * 0.02),
-                                  Center(
-                                    child: Text(
-                                      namaPengguna ?? 'Belum diatur',
-                                      overflow: TextOverflow.ellipsis,
-                                      style: GoogleFonts.inter(
-                                        fontSize: nameFontSize,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                  SizedBox(height: screenHeight * 0.02),
-                                  _profileInfo(
-                                      Icons.person,
-                                      "Jenis Kelamin",
-                                      jenisKelamin ?? 'Laki-laki',
-                                      screenWidth,
-                                      infoFontSize),
-                                  _profileInfo(
-                                      Icons.fitness_center,
-                                      "Berat badan",
-                                      "${beratBadan?.toInt().toString() ?? '0'} kg",
-                                      screenWidth,
-                                      infoFontSize),
-                                  _profileInfo(
-                                      Icons.wb_sunny,
-                                      "Jam Bangun",
-                                      jamBangun ?? 'Belum diatur',
-                                      screenWidth,
-                                      infoFontSize),
-                                  _profileInfo(
-                                      Icons.nightlight_round,
-                                      "Jam Tidur",
-                                      jamTidur ?? 'Belum diatur',
-                                      screenWidth,
-                                      infoFontSize),
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 8.0,
-                                      horizontal: screenWidth * 0.02,
-                                    ),
-                                    child: Material( // Bungkus dengan Material untuk efek sentuhan
-                                      color: Colors.transparent,
-                                      child: InkWell( // Untuk efek sentuhan pada seluruh baris
-                                        onTap: () {
-                                          _onNotificationToggleChanged(!_areNotificationsEnabled);
-                                        },
-                                        borderRadius: BorderRadius.circular(8), // Sesuaikan
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(vertical: 8.0), // Padding internal
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(Icons.notifications_active, color: Colors.white, size: screenWidth * 0.05),
-                                                  SizedBox(width: screenWidth * 0.025),
-                                                  Text(
-                                                    "Pengingat Minum",
-                                                    style: GoogleFonts.inter(
-                                                      fontSize: infoFontSize,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Switch(
-                                                value: _areNotificationsEnabled,
-                                                onChanged: _onNotificationToggleChanged,
-                                                activeColor: Colors.white,
-                                                activeTrackColor: Colors.lightBlueAccent.withOpacity(0.5),
-                                                inactiveThumbColor: Colors.blueGrey,
-                                                inactiveTrackColor: Colors.white.withOpacity(0.2),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Tombol edit profile
-                                  Center(
-                                    child: ElevatedButton(
-                                      onPressed: () =>
-                                          _showEditProfile(context),
-                                      style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(25),
-                                        ),
-                                        elevation: 5,
-                                        backgroundColor: Colors.white,
-                                        shadowColor:
-                                            Colors.black.withOpacity(0.2),
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: screenHeight * 0.015,
-                                        ),
-                                        minimumSize: Size(
-                                          screenWidth * 0.8,
-                                          screenHeight * 0.05,
-                                        ),
-                                      ),
-                                      child: Text(
-                                        "Edit Profile",
-                                        style: TextStyle(
-                                          color: Color(0xFF2F2E41),
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: titleFontSize,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-
-                                  // Spacer bawah biar enggak mentok
-                                  SizedBox(height: screenHeight * 0.01),
-                                ],
                               ),
                             ),
-                          ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Center(
+                              child: Text(
+                                namaPengguna ?? 'Belum diatur',
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: nameFontSize,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            _profileInfo(
+                                Icons.person,
+                                "Jenis Kelamin",
+                                jenisKelamin ?? 'Laki-laki',
+                                screenWidth,
+                                infoFontSize),
+                            _profileInfo(
+                                Icons.fitness_center,
+                                "Berat badan",
+                                "${beratBadan?.toInt().toString() ?? '0'} kg",
+                                screenWidth,
+                                infoFontSize),
+                            _profileInfo(
+                                Icons.wb_sunny,
+                                "Jam Bangun",
+                                jamBangun ?? 'Belum diatur',
+                                screenWidth,
+                                infoFontSize),
+                            _profileInfo(
+                                Icons.nightlight_round,
+                                "Jam Tidur",
+                                jamTidur ?? 'Belum diatur',
+                                screenWidth,
+                                infoFontSize),
+                            Padding(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 8.0,
+                                horizontal: screenWidth * 0.02,
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    _onNotificationToggleChanged(
+                                        !_areNotificationsEnabled);
+                                  },
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8.0),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Center(
+                              child: ElevatedButton(
+                                onPressed: () => _showEditProfile(context),
+                                style: ElevatedButton.styleFrom(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  elevation: 5,
+                                  backgroundColor: Colors.white,
+                                  shadowColor: Colors.black.withOpacity(0.2),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: screenHeight * 0.015,
+                                  ),
+                                  minimumSize: Size(
+                                    screenWidth * 0.8,
+                                    screenHeight * 0.05,
+                                  ),
+                                ),
+                                child: Text(
+                                  "Edit Profile",
+                                  style: TextStyle(
+                                    color: Color(0xFF2F2E41),
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: titleFontSize,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.01),
+                          ],
                         ),
                       ),
-                    ),
 
-                    // Bagian navigasi di bawah background biru hijau
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: horizontalPadding,
-                        vertical: verticalPadding,
-                      ),
-                      child: Column(
-                        children: [
-                          // Menu Logout
-                          Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  offset: Offset(0, 2),
-                                  blurRadius: 8,
+                      // Bagian navigasi di bawah background biru hijau
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                          vertical: verticalPadding,
+                        ),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    offset: Offset(0, 2),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
                                 ),
-                              ],
+                                leading: Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF2AD1D1).withOpacity(
+                                        0.1), // Warna diubah agar konsisten
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons
+                                        .settings_applications, // Icon diubah agar lebih relevan
+                                    color: Color(0xFF2AD1D1), // Warna diubah
+                                    size: 24,
+                                  ),
+                                ),
+                                title: Text(
+                                  'Pengaturan Notifikasi', // Judul diubah
+                                  style: GoogleFonts.inter(
+                                    fontSize: titleFontSize,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF2F2E41),
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Aktifkan perizinan notifikasi Anda!', // Subtitle diubah
+                                  style: GoogleFonts.inter(
+                                    fontSize: screenWidth * 0.035,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                trailing: Switch(
+                                  value: _areNotificationsEnabled,
+                                  onChanged: _onNotificationToggleChanged,
+                                  activeColor: Colors.white,
+                                  activeTrackColor:
+                                      Colors.lightBlueAccent.withOpacity(0.5),
+                                  inactiveThumbColor: Colors.blueGrey,
+                                  inactiveTrackColor:
+                                      Colors.white.withOpacity(0.2),
+                                ),
+                                // onTap: () {
+                                //   // Aksi diubah untuk panduan izin
+                                //   _showBackgroundPermissionGuidanceDialog();
+                                // },
+                              ),
                             ),
-                            child: ListTile(
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 8,
+                            SizedBox(height: screenHeight * 0.02),
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    offset: Offset(0, 2),
+                                    blurRadius: 8,
+                                  ),
+                                ],
                               ),
-                              leading: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.red.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(10),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
                                 ),
-                                child: Icon(
-                                  Icons.logout,
-                                  color: Colors.red,
-                                  size: 24,
+                                leading: Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.amber.withOpacity(
+                                        0.1), // Warna disesuaikan dengan icon
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.star, // Icon disesuaikan
+                                    color: Colors.amber, // Warna disesuaikan
+                                    size: 24,
+                                  ),
                                 ),
-                              ),
-                              title: Text(
-                                'Logout',
-                                style: GoogleFonts.inter(
-                                  fontSize: titleFontSize,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF2F2E41),
+                                title: Text(
+                                  'Rating & Ulasan',
+                                  style: GoogleFonts.inter(
+                                    fontSize: titleFontSize,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF2F2E41),
+                                  ),
                                 ),
-                              ),
-                              subtitle: Text(
-                                'Keluar dari aplikasi',
-                                style: GoogleFonts.inter(
-                                  fontSize: screenWidth * 0.035,
-                                  color: Colors.grey[600],
+                                subtitle: Text(
+                                  'Beri rating dan ulasan',
+                                  style: GoogleFonts.inter(
+                                    fontSize: screenWidth * 0.035,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.grey[400],
+                                  size: 16,
+                                ),
+                                onTap: _showRatingDialog,
                               ),
-                              trailing: Icon(
-                                Icons.arrow_forward_ios,
-                                color: Colors.grey[400],
-                                size: 16,
-                              ),
-                              onTap: _showLogoutDialog,
                             ),
-                          ),
-
-                          // Spacer untuk memberikan ruang di bawah
-                          SizedBox(height: screenHeight * 0.02),
-                        ],
+                            SizedBox(height: screenHeight * 0.02),
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    offset: Offset(0, 2),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 8,
+                                ),
+                                leading: Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(
+                                    Icons.logout,
+                                    color: Colors.red,
+                                    size: 24,
+                                  ),
+                                ),
+                                title: Text(
+                                  'Logout Akun', // Judul disesuaikan dari Hapus Akun ke Logout
+                                  style: GoogleFonts.inter(
+                                    fontSize: titleFontSize,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF2F2E41),
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  'Keluar dari sesi aplikasi ini', // Subtitle disesuaikan
+                                  style: GoogleFonts.inter(
+                                    fontSize: screenWidth * 0.035,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                trailing: Icon(
+                                  Icons.arrow_forward_ios,
+                                  color: Colors.grey[400],
+                                  size: 16,
+                                ),
+                                onTap: _showLogoutDialog,
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
     );
   }
 
-  // Widget untuk informasi profil dengan parameter responsif
   Widget _profileInfo(IconData icon, String title, String value,
       double screenWidth, double fontSize) {
     return Padding(
@@ -1015,7 +1051,7 @@ Widget _buildInstructionItem(BuildContext context, String number, String text, d
 
   @override
   void dispose() {
-    _eventSubscription?.cancel(); // Batalkan subscription saat widget dihapus
+    _eventSubscription?.cancel();
     super.dispose();
   }
 }

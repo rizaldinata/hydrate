@@ -412,60 +412,6 @@ class CadanganState extends State<Cadangan> {
                       ),
                     ),
                   ),
-                  PopupMenuItem<String>(
-                    value: 'refresh',
-                    height: 56,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Icon(
-                              Icons.refresh_rounded,
-                              color: Colors.green.shade600,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Refresh Data',
-                                  style: TextStyle(
-                                    color: _textPrimaryColor,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'Muat ulang riwayat',
-                                  style: TextStyle(
-                                    color: _textSecondaryColor,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            color: Colors.green.withOpacity(0.6),
-                            size: 16,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                 ],
                 onSelected: (String value) {
                   switch (value) {

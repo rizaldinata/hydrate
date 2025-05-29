@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/screens/registration/registration1_view.dart';
+import 'dart:async';
 
 class OnboardingScreen extends StatefulWidget {
   @override
@@ -12,6 +13,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
   bool _hasReachedLastPage = false;
+  Timer? _timer;
 
   final List<Map<String, String>> _pages = [
     {
@@ -37,6 +39,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _startAutoSlide();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoSlide() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_currentPage < _pages.length - 1) {
+        // Slide ke kanan (halaman berikutnya)
+        _currentPage++;
+      } else {
+        // Kembali ke slide pertama setelah mencapai slide terakhir
+        _currentPage = 0;
+      }
+      
+      _pageController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
   void _onPageChanged(int index) {
     setState(() {
       _currentPage = index;
@@ -46,6 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
+// Membuat indikator halaman yang berubah ukuran
   Widget _buildIndicator(bool isActive) {
     final screenWidth = MediaQuery.of(context).size.width;
 
