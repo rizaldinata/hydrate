@@ -13,18 +13,14 @@ class HydrationCalculator {
   late int wakeUpTime;
   late int sleepTime;
 
-  // Konstruktor dengan penggunaId
   HydrationCalculator({
     required int penggunaId,
   }) {
-    initializeData(penggunaId); // Memanggil metode publik untuk inisialisasi data pengguna
+    initializeData(penggunaId);
   }
 
-  // Mengubah _initializeData menjadi metode publik
   Future<void> initializeData(int penggunaId) async {
     try {
-
-      print("[HydrationCalculator - initializeData] Memulai initializeData untuk penggunaId: $penggunaId. Jam: ${DateTime.now()}");
 
       Pengguna? penggunaData =
           await _penggunaController.getPenggunaById(penggunaId);
@@ -32,84 +28,59 @@ class HydrationCalculator {
       ProfilPengguna? profilPenggunaData =
           await _profilPenggunaController.getProfilPengguna(penggunaId);
 
-      print("[HydrationCalculator - initializeData] Data Pengguna diterima: Nama=${penggunaData?.nama}");
-      print("[HydrationCalculator - initializeData] Data ProfilPengguna diterima: Berat=${profilPenggunaData?.beratBadan}, Gender=${profilPenggunaData?.jenisKelamin}, Bangun=${profilPenggunaData?.jamBangun}, Tidur=${profilPenggunaData?.jamTidur}");
-
-      // Periksa apakah penggunaData null
       if (penggunaData == null) {
         throw Exception("Pengguna tidak ditemukan");
       }
-
-      // Setel nilai properti berdasarkan data pengguna
-      // Pastikan profilPenggunaData tidak null sebelum mengakses propertinya
-      jenisKelamin = profilPenggunaData?.jenisKelamin ?? 'Laki-laki'; // Default ke Laki-laki
-      beratBadan = profilPenggunaData?.beratBadan ?? 70.0; // Default 70 kg
+      jenisKelamin = profilPenggunaData?.jenisKelamin ?? 'Laki-laki';
+      beratBadan = profilPenggunaData?.beratBadan ?? 70.0;
       
-      // Parsing jam bangun dan tidur
-      // Format jam yang diharapkan: "HH:MM"
       String jamBangunStr = profilPenggunaData?.jamBangun ?? '';
       String jamTidurStr = profilPenggunaData?.jamTidur ?? '';
       
-      wakeUpTime = _parseHour(jamBangunStr, 6); // Default 6 pagi
-      sleepTime = _parseHour(jamTidurStr, 22);  // Default 10 malam
+      wakeUpTime = _parseHour(jamBangunStr, 6); 
+      sleepTime = _parseHour(jamTidurStr, 22);
 
-      // Debugging
-      print("Jenis Kelamin: $jenisKelamin, Berat Badan: $beratBadan kg");
-      print("Jam Bangun: $wakeUpTime, Jam Tidur: $sleepTime");
-
-      // Jika beratBadan masih 0, beri peringatan
       if (beratBadan <= 0) {
-        print("Warning: Berat badan tidak valid. Menggunakan nilai default.");
-        beratBadan = 70.0; // Set default weight if invalid
+        beratBadan = 70.0; 
       }
     } catch (e) {
-      print("Error saat mengambil data pengguna: $e");
       jenisKelamin = 'Laki-laki';
-      beratBadan = 70.0; // Default weight jika error
+      beratBadan = 70.0; 
       wakeUpTime = 6;
       sleepTime = 22;
     }
   }
   
-  // Helper method untuk mengekstrak jam dari string format "HH:MM"
   int _parseHour(String timeString, int defaultValue) {
     if (timeString == 'Belum diatur' || timeString.isEmpty) {
       return defaultValue;
     }
     
     try {
-      // Untuk format "HH:MM"
       if (timeString.contains(':')) {
         return int.parse(timeString.split(':')[0]);
       }
-      // Untuk format integer dalam string
       return int.parse(timeString);
     } catch (e) {
-      print("Error parsing time: $e");
       return defaultValue;
     }
   }
 
-  // Menghitung kebutuhan hidrasi harian dalam liter
   double calculateDailyWaterIntake() {
     if (beratBadan <= 0) {
-      print("Warning: Berat badan tidak valid. Menggunakan nilai default.");
-      beratBadan = 70.0; // Set default weight if invalid
+      beratBadan = 70.0; 
     }
-
-    // Gunakan format yang konsisten dengan database: "Laki-laki" dan "Perempuan"
     if (jenisKelamin == "Laki-laki") {
-      return beratBadan * 35 / 1000; // 35ml per kg berat badan untuk laki-laki
+      return beratBadan * 35 / 1000; 
     } else {
-      return beratBadan * 31 / 1000; // 31ml per kg berat badan untuk perempuan
+      return beratBadan * 31 / 1000; 
     }
   }
 
-  // Menghitung distribusi hidrasi sepanjang hari
   Map<String, double> calculateWaterDistribution() {
     double totalIntake = calculateDailyWaterIntake();
     int totalHours = sleepTime - wakeUpTime;
-    if (totalHours <= 0) totalHours += 24; // Jika tidur lewat tengah malam
+    if (totalHours <= 0) totalHours += 24;
 
     double hourlyIntake = totalIntake / totalHours;
 

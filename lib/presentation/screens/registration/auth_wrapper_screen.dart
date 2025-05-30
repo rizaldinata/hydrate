@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
-import 'package:hydrate/presentation/screens/registration/firstPage_view.dart';
+import 'package:hydrate/presentation/screens/registration/first_page_view.dart';
 import 'package:hydrate/main.dart'; 
 import 'package:lottie/lottie.dart';
 
 class AuthWrapperScreen extends StatefulWidget {
-  const AuthWrapperScreen({Key? key}) : super(key: key);
+  const AuthWrapperScreen({super.key});
 
   @override
   State<AuthWrapperScreen> createState() => _AuthWrapperScreenState();
@@ -24,7 +24,6 @@ class _AuthWrapperScreenState extends State<AuthWrapperScreen> {
     try {
       isRegistered = await penggunaRepository.isPenggunaTerdaftar();
     } catch (e) {
-      print("Error di AuthWrapperScreen saat cek status pengguna: $e");
       isRegistered = false;
     }
 

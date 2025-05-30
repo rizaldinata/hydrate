@@ -2,20 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-// Pastikan path ini sesuai dengan struktur proyek Anda
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
-
-// Asumsi AppEvent sudah terdefinisi di app_event_bus.dart
-// Jika belum, Anda bisa menggunakan definisi sederhana ini untuk sementara:
-// class AppEvent {
-//   final String type;
-//   final dynamic data;
-//   AppEvent({required this.type, this.data});
-// }
 
 enum StatisticPeriod { weekly, monthly, yearly }
 
@@ -25,12 +16,12 @@ class HydrationStatsChart extends StatefulWidget {
   final Color primaryTextColor;
   final Color secondaryTextColor;
 
-  HydrationStatsChart({
+  const HydrationStatsChart({
     super.key,
-    this.accentColor = Colors.blueAccent, // Warna aksen yang lebih cerah
+    this.accentColor = Colors.blueAccent,
     this.cardColor,
-    this.primaryTextColor = Colors.black87, // Warna teks primer yang sedikit lebih lembut
-    this.secondaryTextColor = Colors.black54, // Warna teks sekunder yang sedikit lebih lembut
+    this.primaryTextColor = Colors.black87,
+    this.secondaryTextColor = Colors.black54,
   });
 
   @override
@@ -49,7 +40,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   bool _isChartLoading = true;
   List<BarChartGroupData> _barGroups = [];
   List<String> _axisLabels = [];
-  double _maxYValue = 100; // Default untuk Y-axis persentase (0-100% + buffer)
+  double _maxYValue = 100;
   int? _userId;
 
   final AppEventBus _eventBus = AppEventBus();
@@ -58,13 +49,11 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   @override
   void initState() {
     super.initState();
-    print("[HydrationStatsChart] initState called");
     _riwayatHidrasiController = RiwayatHidrasiController();
     _loadInitialData();
 
     _eventSubscription = _eventBus.stream.listen((AppEvent event) {
       if (event.type == 'refresh_statistics' || event.type == 'refresh_all') {
-        print("[HydrationStatsChart] Menerima event: ${event.type}. Memuat ulang data chart...");
         if (mounted) {
           _loadInitialData();
         }
@@ -79,7 +68,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   }
 
   Future<void> _loadInitialData() async {
-    print("[HydrationStatsChart] _loadInitialData called");
     if (!mounted) return;
 
     if (_userId == null) {
@@ -96,8 +84,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           _barGroups = [];
           _axisLabels = [];
           _processedChartPoints = [];
-          _maxYValue = 100; // Reset maxYValue
-          print("[HydrationStatsChart] User ID tidak ditemukan, chart tidak bisa dimuat.");
+          _maxYValue = 100;
         });
       }
     }
@@ -114,7 +101,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     });
 
     DateTime referenceDate = _calculateReferenceDate();
-    print("[Chart] Fetching data for period: $currentPeriod, referenceDate: $referenceDate, currentIndex: $currentIndex");
 
     await _riwayatHidrasiController.fetchStatistikData(
         userId: userId,
@@ -138,8 +124,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
         _isChartLoading = false;
         touchedIndex = -1;
       });
-      print("[Chart] _fetchChartData selesai. _isChartLoading: $_isChartLoading, _isTargetLoading: $_isTargetLoading");
-      print("[Chart] Data untuk chart: BarGroups: ${_barGroups.length}, MaxY: $_maxYValue");
     }
   }
 
@@ -152,17 +136,15 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     List<Map<String, dynamic>> tempProcessedPoints = [];
     List<BarChartGroupData> tempBarGroups = [];
     List<String> tempAxisLabels = [];
-    double newCalculatedMaxY = 100.0; // Default max Y untuk persentase
+    double newCalculatedMaxY = 100.0;
 
     final screenWidth = MediaQuery.of(context).size.width;
     final barWidth = _calculateBarWidth(screenWidth);
 
-    final String todayForTarget = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7))); // Sesuaikan zona waktu jika perlu
-    print("[ChartStats - _processRawDataToPercentages] Memanggil _targetHidrasiRepository.getTargetHidrasiHarian untuk userId: $userId, tanggal: $todayForTarget");
+    final String todayForTarget = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
     final targetDataToday = await _targetHidrasiRepository.getTargetHidrasiHarian(userId, todayForTarget);
     double dailyTargetGeneral = (targetDataToday?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0;
     if (dailyTargetGeneral <= 0) dailyTargetGeneral = 2500.0;
-    print("[ChartStats - _processRawDataToPercentages] Menggunakan dailyTargetGeneral: $dailyTargetGeneral ml untuk perhitungan persentase.");
 
     if (rawDataMl.isNotEmpty) {
       bool anyExceeds100 = false;
@@ -200,21 +182,18 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
         tempBarGroups.add(makeGroupData(x, barDisplayPercentage, barWidth: barWidth, isTouched: x == touchedIndex));
         tempAxisLabels.add(label);
       }
-      newCalculatedMaxY = anyExceeds100 ? 100.0 : 100.0; // Beri headroom jika ada data > 100%
+      newCalculatedMaxY = anyExceeds100 ? 100.0 : 100.0;
     } else {
-      newCalculatedMaxY = 100.0; // Default untuk chart kosong
+      newCalculatedMaxY = 100.0;
     }
-
-    print("[ChartStats - _processRawDataToPercentages] tempBarGroups yang akan di-set: ${tempBarGroups.length}");
 
     if (mounted) {
       setState(() {
         _processedChartPoints = tempProcessedPoints;
         _barGroups = tempBarGroups;
         _axisLabels = tempAxisLabels;
-        _maxYValue = newCalculatedMaxY; // Update maxYValue
+        _maxYValue = newCalculatedMaxY;
         _isTargetLoading = false;
-        print("[ChartStats - _processRawDataToPercentages] Selesai. BarGroups: ${_barGroups.length}, AxisLabels: ${_axisLabels.length}, MaxY: $_maxYValue");
       });
     }
   }
@@ -234,8 +213,11 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
 
   double _calculateBarWidth(double screenWidth) {
     int numberOfBars = 7;
-    if(currentPeriod == StatisticPeriod.monthly) numberOfBars = _axisLabels.isNotEmpty ? _axisLabels.length : 4;
-    else if(currentPeriod == StatisticPeriod.yearly) numberOfBars = 12;
+    if(currentPeriod == StatisticPeriod.monthly) {
+      numberOfBars = _axisLabels.isNotEmpty ? _axisLabels.length : 4;
+    } else if(currentPeriod == StatisticPeriod.yearly) {
+      numberOfBars = 12;
+    }
 
     if (numberOfBars == 0) numberOfBars = 7; // fallback
 
@@ -338,9 +320,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     final chartPaddingHorizontal = width < 350 ? 8.0 : 12.0;
     final chartPaddingTop = 16.0;
 
-    // Perhitungan barWidth dan groupSpace dipindahkan ke sini agar context selalu tersedia
-    // dan ukuran chart yang sebenarnya (setelah padding) digunakan.
-    // Perlu 40 untuk reservedSize Y-axis kiri, dan padding horizontal kiri kanan dari chart itu sendiri
     final double chartAreaWidth = width - (horizontalPadding * 2) - (chartPaddingHorizontal * 2) - 44;
     final barWidthValue = _calculateBarWidth(chartAreaWidth);
     final groupSpace = barWidthValue * 0.8;
@@ -387,12 +366,12 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       );
     }
 
-    return Container(
+    return SizedBox(
       height: height,
       child: Card(
         color: cardBgColor,
         elevation: 3,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         margin: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         clipBehavior: Clip.antiAlias,
@@ -492,7 +471,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
             icon: Icon(
               Icons.chevron_left_rounded,
               size: 28,
-              color: _canNavigatePrevious() ? widget.primaryTextColor : widget.secondaryTextColor.withOpacity(0.4),
+              color: _canNavigatePrevious() ? widget.primaryTextColor : widget.secondaryTextColor.withValues(alpha: 0.4),
             ),
           ),
           Expanded(
@@ -525,7 +504,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
             icon: Icon(
               Icons.chevron_right_rounded,
               size: 28,
-              color: _canNavigateNext() ? widget.primaryTextColor : widget.secondaryTextColor.withOpacity(0.4),
+              color: _canNavigateNext() ? widget.primaryTextColor : widget.secondaryTextColor.withValues(alpha: 0.4),
             ),
           ),
         ],
@@ -551,9 +530,8 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
         final weekDate = now.subtract(Duration(days: currentIndex * 7));
         if (currentIndex == 0) return 'Minggu Ini (${_getMonthName(weekDate.month)} ${weekDate.year})';
         if (currentIndex == 1) return 'Minggu Lalu (${_getMonthName(weekDate.month)} ${weekDate.year})';
-        // Untuk minggu yang lebih lama, bisa menampilkan rentang tanggal
-        final firstDayOfWeek = weekDate.subtract(Duration(days: weekDate.weekday % 7)); // Minggu
-        final lastDayOfWeek = firstDayOfWeek.add(Duration(days: 6)); // Sabtu
+        final firstDayOfWeek = weekDate.subtract(Duration(days: weekDate.weekday % 7));
+        final lastDayOfWeek = firstDayOfWeek.add(Duration(days: 6));
         return '${DateFormat('d MMM').format(firstDayOfWeek)} - ${DateFormat('d MMM yyyy').format(lastDayOfWeek)}';
       case StatisticPeriod.monthly:
         final monthDate = DateTime(now.year, now.month - currentIndex, 1);
@@ -582,11 +560,11 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   int _getMaxIndex() {
     switch (currentPeriod) {
       case StatisticPeriod.weekly:
-        return 52 * 2; // Maks 2 tahun
+        return 52 * 2;
       case StatisticPeriod.monthly:
-        return 12 * 2; // Maks 2 tahun
+        return 12 * 2;
       case StatisticPeriod.yearly:
-        return 5; // Maks 5 tahun
+        return 5;
     }
   }
 
@@ -630,8 +608,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           tooltipBorder: BorderSide(color: widget.accentColor.withOpacity(0.5), width: 0.5),
           tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           tooltipMargin: 10,
-           // Jika fl_chart Anda versi < 0.60.0, tooltipRoundedRadius mungkin belum ada
-           // tooltipRoundedRadius: 8,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {
             if (groupIndex < 0 || groupIndex >= _processedChartPoints.length) {
               return null;
@@ -796,13 +772,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
 
     if (index >= 0 && index < _axisLabels.length) {
       textToDisplay = _axisLabels[index];
-      // Anda bisa menambahkan logika pemotongan label di sini jika diperlukan
-      // Misalnya:
-      // if (currentPeriod == StatisticPeriod.weekly && textToDisplay.length > 3 && screenWidth < 380) {
-      //   textToDisplay = textToDisplay.substring(0, 1); // Hanya huruf pertama untuk mingguan jika sempit
-      // } else if (textToDisplay.length > 5 && screenWidth < 380) {
-      //    textToDisplay = textToDisplay.substring(0,3) + "..";
-      // }
     }
 
     return SideTitleWidget(
@@ -811,37 +780,4 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       child: Text(textToDisplay, style: style, overflow: TextOverflow.ellipsis),
     );
   }
-
-  // Fungsi-fungsi placeholder yang tidak terpakai jika data dari controller:
-  // _generateAxisLabels, _calculateDynamicMaxY, _processDataToBarGroups,
-  // showingGroups, _getWeeklyData, _getMonthlyData, _getYearlyData.
-  // Anda bisa menghapusnya jika yakin tidak akan dipakai.
-  // Saya membiarkannya karena ada di kode asli yang Anda berikan.
-
-   List<String> _generateAxisLabels(List<Map<String, dynamic>> data) {
-     if (data.isEmpty) return [];
-     return data.map((item) => item['label'] as String? ?? '').toList();
-   }
-
-   double _calculateDynamicMaxY(List<Map<String, dynamic>> data) {
-     if (data.isEmpty) return 100;
-     double maxPercent = 0;
-
-     for (var item in data) {
-       if ((item['percentageY'] as num).toDouble() > maxPercent) {
-         maxPercent = (item['percentageY'] as num).toDouble();
-       }
-     }
-     return maxPercent > 100 ? (maxPercent * 1.1).clamp(110, 150) : 100;
-   }
-
-   List<BarChartGroupData> _processDataToBarGroups(List<Map<String, dynamic>> data) {
-     final barWidth = _calculateBarWidth(MediaQuery.of(context).size.width);
-     return data.map((item) {
-       final x = (item['x'] as num).toInt();
-       // Jika data 'y' adalah persentase, maka perlu di-clamp ke 100 untuk bar
-       final y = (item['percentageY'] as num).toDouble().clamp(0.0, 100.0);
-       return makeGroupData(x, y, barWidth: barWidth, isTouched: x == touchedIndex);
-     }).toList();
-   }
 }

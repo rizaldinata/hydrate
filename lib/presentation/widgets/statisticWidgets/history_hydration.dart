@@ -10,7 +10,7 @@ import 'package:lottie/lottie.dart';
 import 'dart:collection';
 
 class Cadangan extends StatefulWidget {
-  const Cadangan({Key? key}) : super(key: key);
+  const Cadangan({super.key});
 
   @override
   CadanganState createState() => CadanganState();
@@ -246,21 +246,17 @@ class CadanganState extends State<Cadangan> {
 
     // Lakukan penghapusan permanen di backend
     if (userId != null && itemsToDeletePermanently.isNotEmpty) {
-      print(
-          "Melakukan penghapusan permanen untuk ${itemsToDeletePermanently.length} item...");
       bool allSucceeded = true;
       for (var item in itemsToDeletePermanently) {
         try {
           await _controller.hapusRiwayatDanKurangiTarget(
             idRiwayat: item.id ?? 0,
             idPengguna: userId!,
-            tanggalHidrasi: item.tanggalHidrasi ?? "",
+            tanggalHidrasi: item.tanggalHidrasi,
             targetController: targetHidrasiController,
           );
-          print("Berhasil menghapus permanen item ID: ${item.id}");
         } catch (e) {
           allSucceeded = false;
-          print("Gagal menghapus permanen item ID: ${item.id}. Error: $e");
         }
       }
 
@@ -297,7 +293,7 @@ class CadanganState extends State<Cadangan> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.1),
+            color: _primaryColor.withValues(alpha: 0.1),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -335,7 +331,7 @@ class CadanganState extends State<Cadangan> {
                 icon: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: _primaryColor.withOpacity(0.1),
+                    color: _primaryColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -346,11 +342,11 @@ class CadanganState extends State<Cadangan> {
                 ),
                 tooltip: 'Menu Opsi',
                 elevation: 12,
-                shadowColor: _primaryColor.withOpacity(0.3),
+                shadowColor: _primaryColor.withValues(alpha: 0.3),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: _primaryColor.withOpacity(0.1),
+                    color: _primaryColor.withValues(alpha: 0.1),
                     width: 1,
                   ),
                 ),
@@ -368,7 +364,7 @@ class CadanganState extends State<Cadangan> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: _primaryColor.withOpacity(0.1),
+                              color: _primaryColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -405,7 +401,7 @@ class CadanganState extends State<Cadangan> {
                           ),
                           Icon(
                             Icons.arrow_forward_ios_rounded,
-                            color: _primaryColor.withOpacity(0.6),
+                            color: _primaryColor.withValues(alpha: 0.6),
                             size: 16,
                           ),
                         ],
@@ -447,8 +443,8 @@ class CadanganState extends State<Cadangan> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  _primaryColor.withOpacity(0.1),
-                  _primaryColor.withOpacity(0.2)
+                  _primaryColor.withValues(alpha: 0.1),
+                  _primaryColor.withValues(alpha: 0.2)
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -491,17 +487,17 @@ class CadanganState extends State<Cadangan> {
         vertical: 8,
       ),
       decoration: BoxDecoration(
-        color: isSelected ? _primaryColor.withOpacity(0.1) : _surfaceColor,
+        color: isSelected ? _primaryColor.withValues(alpha: 0.1) : _surfaceColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: _primaryColor.withOpacity(0.08),
+            color: _primaryColor.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: isSelected ? _primaryColor : _primaryColor.withOpacity(0.1),
+          color: isSelected ? _primaryColor : _primaryColor.withValues(alpha: 0.1),
           width: isSelected ? 2 : 1,
         ),
       ),
@@ -509,8 +505,8 @@ class CadanganState extends State<Cadangan> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          splashColor: _primaryColor.withOpacity(0.1),
-          highlightColor: _primaryColor.withOpacity(0.05),
+          splashColor: _primaryColor.withValues(alpha: 0.1),
+          highlightColor: _primaryColor.withValues(alpha: 0.05),
           onTap: () {
             if (_isSelectionMode && item.id != null) {
               _toggleItemSelection(item.id!);
@@ -550,7 +546,7 @@ class CadanganState extends State<Cadangan> {
                 Container(
                   padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
                   decoration: BoxDecoration(
-                    color: _primaryColor.withOpacity(0.1),
+                    color: _primaryColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(
@@ -593,7 +589,7 @@ class CadanganState extends State<Cadangan> {
                           vertical: isSmallScreen ? 2 : 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _primaryColor.withOpacity(0.05),
+                          color: _primaryColor.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -628,7 +624,7 @@ class CadanganState extends State<Cadangan> {
   }
 
   Widget _buildWaterIntakeItem(RiwayatHidrasi item) {
-    final String time = item.waktuHidrasi ?? "00:00";
+    final String time = item.waktuHidrasi;
     final double screenWidth = MediaQuery.of(context).size.width;
     final bool isSmallScreen = screenWidth < 360;
 

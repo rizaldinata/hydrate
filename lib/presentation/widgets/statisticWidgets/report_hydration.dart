@@ -11,7 +11,7 @@ class HydrasiReport extends StatefulWidget {
   final double averageCompletionRate; // Tambahan: rata-rata tingkat penyelesaian
 
   const HydrasiReport({
-    Key? key,
+    super.key,
     required this.weeklyAverage,
     required this.monthlyAverage,
     required this.drinkFrequency,
@@ -19,7 +19,7 @@ class HydrasiReport extends StatefulWidget {
     required this.averageDailyTarget,
     required this.averageCompletionRate, // Parameter baru
     this.accentColor = const Color(0xFF00A6FB), // Warna aksen default
-  }) : super(key: key);
+  });
 
   @override
   State<HydrasiReport> createState() => _HydrasiReportState();
@@ -112,12 +112,12 @@ class _HydrasiReportState extends State<HydrasiReport> {
       width: double.infinity, // Membuat kartu mengambil lebar penuh yang tersedia
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor.withOpacity(0.9), // Sedikit transparansi untuk kedalaman
+        color: Theme.of(context).cardColor.withValues(alpha: 0.9), // Sedikit transparansi untuk kedalaman
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)), // Border halus
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)), // Border halus
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1), // Bayangan halus
+            color: Colors.grey.withValues(alpha: 0.1), // Bayangan halus
             spreadRadius: 1,
             blurRadius: 3,
             offset: Offset(0, 1),
@@ -192,7 +192,7 @@ class _HydrasiReportState extends State<HydrasiReport> {
                   height: 14, // Tinggi progress bar
                   width: availableWidth, // Lebar penuh background progress bar
                   decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.3), // Warna background
+                    color: Colors.grey.withValues(alpha: 0.3), // Warna background
                     borderRadius: BorderRadius.circular(7), // Rounded corners
                   ),
                 ),
@@ -203,7 +203,7 @@ class _HydrasiReportState extends State<HydrasiReport> {
                   width: progressWidth, // Lebar progress yang terisi
                   decoration: BoxDecoration(
                     gradient: LinearGradient( // Menggunakan gradient untuk tampilan yang lebih menarik
-                      colors: [widget.accentColor, widget.accentColor.withOpacity(0.7)],
+                      colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.7)],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),

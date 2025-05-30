@@ -32,7 +32,6 @@ class TargetHidrasiRepository {
 
       return persentaseHidrasi;
     } catch (e) {
-      print("Error saat menghitung presentasi hidrasi: $e");
       return 0.0;
     }
   }
@@ -50,7 +49,6 @@ class TargetHidrasiRepository {
 
       return result.isNotEmpty;
     } catch (e) {
-      print("Error saat memeriksa target hidrasi: $e");
       return false;
     }
   }
@@ -64,13 +62,10 @@ class TargetHidrasiRepository {
       double targetMl = targetLiter * 1000;
 
       if (targetMl <= 0) {
-        print("[TargetHidrasiRepo - _calc] Target hidrasi tidak valid ($targetMl), menggunakan default 2450ml");
         return 2450.0;
       }
-      print("[TargetHidrasiRepo - _calc] Target dihitung: $targetMl ml");
       return targetMl;
     } catch (e) {
-      print("[TargetHidrasiRepo - _calc] Error: $e, menggunakan default 2450ml");
       return 2450.0;
     }
   }
@@ -97,10 +92,8 @@ class TargetHidrasiRepository {
         'persentase_hidrasi': persentase,
       });
 
-      print("Target hidrasi berhasil dibuat dengan ID: $id (Target: $targetHidrasi mL, Persentase: $persentase%)");
       return id;
     } catch (e) {
-      print("Error saat membuat target hidrasi: $e");
       return -1;
     }
   }
@@ -138,7 +131,6 @@ class TargetHidrasiRepository {
           whereArgs: [idPengguna, tanggal],
         );
 
-        print("Target hidrasi berhasil diupdate: $count row(s). Total: $totalHidrasi mL, Persentase: $persentase%");
         return count > 0;
       } else {
         double targetHidrasi = await _calculateTargetHidrasi(idPengguna);
@@ -153,7 +145,6 @@ class TargetHidrasiRepository {
         return id > 0;
       }
     } catch (e) {
-      print("Error saat mengupdate total hidrasi: $e");
       return false;
     }
   }
@@ -177,7 +168,6 @@ class TargetHidrasiRepository {
         return 0.0;
       }
     } catch (e) {
-      print("Error saat mendapatkan total hidrasi hari ini: $e");
       return 0.0;
     }
   }
@@ -199,7 +189,6 @@ class TargetHidrasiRepository {
         return null;
       }
     } catch (e) {
-      print("Error saat mendapatkan target hidrasi: $e");
       return null;
     }
   }
@@ -246,9 +235,7 @@ class TargetHidrasiRepository {
           'persentase_hidrasi': 0.0
         };
       }
-    } catch (e) {
-      print("Error saat mendapatkan target hidrasi harian: $e");
-
+    } catch (_) {
       try {
         double targetHidrasi = await _calculateTargetHidrasi(idPengguna);
         return {
@@ -305,7 +292,6 @@ class TargetHidrasiRepository {
           whereArgs: [idPengguna, tanggal],
         );
 
-        print("Target hidrasi berhasil diperbarui menjadi $newTarget mL dengan persentase $persentase%");
         return count > 0;
       } else {
         final int id = await createTargetHidrasi(
@@ -317,14 +303,12 @@ class TargetHidrasiRepository {
 
         return id > 0;
       }
-    } catch (e) {
-      print("Error saat mengupdate nilai target hidrasi: $e");
+    } catch (_) {
       return false;
     }
   }
 
   Future<double> fallbackCalculateTarget(int userId) async {
-    print("[TargetHidrasiRepo] fallbackCalculateTarget dipanggil untuk userId: $userId");
     return await _calculateTargetHidrasi(userId); 
   }
 

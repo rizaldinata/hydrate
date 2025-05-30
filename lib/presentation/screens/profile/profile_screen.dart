@@ -5,7 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
-import 'package:hydrate/presentation/screens/registration/firstPage_view.dart';
+import 'package:hydrate/presentation/screens/registration/first_page_view.dart';
 import 'package:hydrate/presentation/screens/profile/edit_profile.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
@@ -13,7 +13,6 @@ import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
 import 'package:awesome_notifications/awesome_notifications.dart';
-import 'package:hydrate/services/notification_settings_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onProfileUpdated;
@@ -37,10 +36,6 @@ class ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   String _errorMessage = '';
   bool _areNotificationsEnabled = false;
-
-  // Instance NotificationSettingsService
-  final NotificationSettingsService _notificationSettingsService =
-      NotificationSettingsService();
 
   // Deklarasi Controller
   final ProfilPenggunaController _profilPenggunaController =
@@ -200,7 +195,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ],
                   ),
-                  content: Container(
+                  content: SizedBox(
                     width: double.maxFinite,
                     child: SingleChildScrollView(
                       child: Column(
@@ -219,7 +214,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                             elevation: 0,
                             color: Theme.of(context)
                                 .primaryColor
-                                .withOpacity(0.05),
+                                .withValues(alpha: 0.05),
                             child: Padding(
                               padding: EdgeInsets.all(12),
                               child: Column(
@@ -335,7 +330,7 @@ class ProfileScreenState extends State<ProfileScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
+        SizedBox(
           width: 20,
           child: Text(
             number,
@@ -510,12 +505,10 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _submitRating(int rating, String review) {
-    print("Rating: $rating, Review: $review");
     _showSnackBar("Terima kasih atas rating Anda! ⭐");
   }
 
   void refresh() {
-    print("Refreshing Profile data...");
     _loadUserData();
     _loadNotificationPreference();
   }
@@ -544,46 +537,42 @@ class ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _onNotificationToggleChanged(bool newValue) async {
-    setState(() {
-      _areNotificationsEnabled = newValue;
-    });
+    if (mounted) {
+      setState(() {
+        _areNotificationsEnabled = newValue;
+      });
+    }
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('notifications_enabled', newValue);
-
+    await prefs.setBool('notifications_enabled', newValue); 
     if (newValue) {
       bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
       if (!isAllowed) {
-        isAllowed =
-            await NotificationController.requestNotificationPermission();
+        isAllowed = await NotificationController.requestNotificationPermission();
       }
 
       if (isAllowed) {
-        int currentIntervalSeconds =
-            await _notificationSettingsService.getNotificationInterval();
-
-        await NotificationController.cancelScheduledNotifications();
-        await NotificationController.schedulePeriodicHydrationNotification(
-            intervalInSeconds: currentIntervalSeconds);
-        _showSnackBar(
-            "Pengingat notifikasi diaktifkan setiap ${currentIntervalSeconds ~/ 60} menit.");
-
+        _showSnackBar("Pengingat notifikasi diaktifkan. Pengingat akan mulai terjadwal setelah Anda mencatat minum air pertama di halaman Beranda.");
         if (mounted) {
           _showBackgroundPermissionGuidanceDialog();
         }
       } else {
-        _showSnackBar(
-            "Izin notifikasi ditolak. Tidak dapat mengaktifkan pengingat.");
-        setState(() {
-          _areNotificationsEnabled = false;
-        });
-        await prefs.setBool('notifications_enabled', false);
+        _showSnackBar("Izin notifikasi ditolak. Tidak dapat mengaktifkan pengingat.");
+        if (mounted) {
+          setState(() {
+            _areNotificationsEnabled = false; 
+          });
+        }
+        await prefs.setBool('notifications_enabled', false); 
       }
     } else {
       await NotificationController.cancelScheduledNotifications();
-      _showSnackBar("Pengingat notifikasi dinonaktifkan.");
+      _showSnackBar("Pengingat notifikasi telah dinonaktifkan.");
     }
+
+    _eventBus.fire('notification_preference_changed', {'isEnabled': newValue});
   }
+
 
   Future<void> _loadUserData() async {
     setState(() {
@@ -624,7 +613,6 @@ class ProfileScreenState extends State<ProfileScreen> {
       }
     } catch (e) {
       setState(() => _errorMessage = 'Gagal memuat data: ${e.toString()}');
-      print("Error loading user data: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -684,12 +672,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               offset: Offset(4, 4),
                               blurRadius: 10,
                             ),
                             BoxShadow(
-                              color: Colors.white.withOpacity(0.5),
+                              color: Colors.white.withValues(alpha: 0.5),
                               offset: Offset(-4, -4),
                               blurRadius: 10,
                             ),
@@ -713,12 +701,12 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
+                                      color: Colors.black.withValues(alpha: 0.2),
                                       offset: Offset(4, 4),
                                       blurRadius: 8,
                                     ),
                                     BoxShadow(
-                                      color: Colors.white.withOpacity(0.6),
+                                      color: Colors.white.withValues(alpha: 0.6),
                                       offset: Offset(-4, -4),
                                       blurRadius: 8,
                                     ),
@@ -799,7 +787,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                   elevation: 5,
                                   backgroundColor: Colors.white,
-                                  shadowColor: Colors.black.withOpacity(0.2),
+                                  shadowColor: Colors.black.withValues(alpha: 0.2),
                                   padding: EdgeInsets.symmetric(
                                     vertical: screenHeight * 0.015,
                                   ),
@@ -838,7 +826,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 borderRadius: BorderRadius.circular(15),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     offset: Offset(0, 2),
                                     blurRadius: 8,
                                   ),
@@ -852,8 +840,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 leading: Container(
                                   padding: EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Color(0xFF2AD1D1).withOpacity(
-                                        0.1), // Warna diubah agar konsisten
+                                    color: Color(0xFF2AD1D1).withValues(alpha: 0.1), // Warna diubah agar konsisten
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
@@ -883,10 +870,10 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   onChanged: _onNotificationToggleChanged,
                                   activeColor: Colors.white,
                                   activeTrackColor:
-                                      Colors.lightBlueAccent.withOpacity(0.5),
+                                      Colors.lightBlueAccent.withValues(alpha: 0.5),
                                   inactiveThumbColor: Colors.blueGrey,
                                   inactiveTrackColor:
-                                      Colors.white.withOpacity(0.2),
+                                      Colors.white.withValues(alpha: 0.2),
                                 ),
                               ),
                             ),
@@ -904,6 +891,61 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ],
                               ),
+                              // child: ListTile(
+                              //   contentPadding: EdgeInsets.symmetric(
+                              //     horizontal: 20,
+                              //     vertical: 8,
+                              //   ),
+                              //   leading: Container(
+                              //     padding: EdgeInsets.all(8),
+                              //     decoration: BoxDecoration(
+                              //       color: Colors.amber.withOpacity(
+                              //           0.1), // Warna disesuaikan dengan icon
+                              //       borderRadius: BorderRadius.circular(10),
+                              //     ),
+                              //     child: Icon(
+                              //       Icons.star, // Icon disesuaikan
+                              //       color: Colors.amber, // Warna disesuaikan
+                              //       size: 24,
+                              //     ),
+                              //   ),
+                              //   title: Text(
+                              //     'Rating & Ulasan',
+                              //     style: GoogleFonts.inter(
+                              //       fontSize: titleFontSize,
+                              //       fontWeight: FontWeight.w600,
+                              //       color: Color(0xFF2F2E41),
+                              //     ),
+                              //   ),
+                              //   subtitle: Text(
+                              //     'Beri rating dan ulasan',
+                              //     style: GoogleFonts.inter(
+                              //       fontSize: screenWidth * 0.035,
+                              //       color: Colors.grey[600],
+                              //     ),
+                              //   ),
+                              //   trailing: Icon(
+                              //     Icons.arrow_forward_ios,
+                              //     color: Colors.grey[400],
+                              //     size: 16,
+                              //   ),
+                              //   onTap: _showRatingDialog,
+                              // ),
+                            ),
+                            // SizedBox(height: screenHeight * 0.02),
+                            Container(
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    offset: Offset(0, 2),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
                               child: ListTile(
                                 contentPadding: EdgeInsets.symmetric(
                                   horizontal: 20,
@@ -912,7 +954,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 leading: Container(
                                   padding: EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: Colors.red.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(

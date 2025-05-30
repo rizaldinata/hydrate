@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/controllers/profil_pengguna_controller.dart';
 import 'package:flutter/services.dart';
+import 'package:hydrate/services/notification_settings_service.dart';
 
 class EditProfile extends StatefulWidget {
   final String initialNama;
@@ -38,6 +39,8 @@ class _EditProfileState extends State<EditProfile> {
   final ProfilPenggunaController _controller = ProfilPenggunaController();
   bool _isLoading = false;
 
+  final NotificationSettingsService _notificationSettingsService = NotificationSettingsService();
+
   final Map<String, String> genderMap = {
     "Laki-laki": "Male",
     "Perempuan": "Female",
@@ -48,7 +51,6 @@ class _EditProfileState extends State<EditProfile> {
     "Female": "Perempuan",
   };
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -72,9 +74,7 @@ class _EditProfileState extends State<EditProfile> {
         return TimeOfDay(
             hour: int.parse(parts[0]), minute: int.parse(parts[1]));
       }
-    } catch (e) {
-      print('Error parsing time: $e');
-    }
+    } catch (_) {}
     return null;
   }
 
@@ -101,12 +101,12 @@ class _EditProfileState extends State<EditProfile> {
             ),
             timePickerTheme: TimePickerThemeData(
               backgroundColor: Colors.white,
-              hourMinuteColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
+              hourMinuteColor: WidgetStateColor.resolveWith((states) =>
+                  states.contains(WidgetState.selected)
                       ? const Color(0xFF00A6FB)
                       : const Color(0xFFE8F7FF)),
-              hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
+              hourMinuteTextColor: WidgetStateColor.resolveWith((states) =>
+                  states.contains(WidgetState.selected)
                       ? Colors.white
                       : const Color(0xFF2F2E41)),
               dialHandColor: const Color(0xFF00A6FB),
@@ -147,6 +147,17 @@ class _EditProfileState extends State<EditProfile> {
       return;
     }
 
+    if (wakeUpTime != null && sleepTime != null && 
+    wakeUpTime!.hour == sleepTime!.hour && 
+    wakeUpTime!.minute == sleepTime!.minute) {
+      _showOverlayError("Jam bangun dan jam tidur tidak boleh sama persis. Harap perbaiki.");
+      setState(() { _isLoading = false; });
+      return; 
+    }
+
+    final String jamBangunUntukDB = _formatTimeOfDay(wakeUpTime);
+    final String jamTidurUntukDB = _formatTimeOfDay(sleepTime);
+
     setState(() {
       _isLoading = true;
     });
@@ -157,11 +168,17 @@ class _EditProfileState extends State<EditProfile> {
         nama: nama,
         jenisKelamin: selectedGender,
         beratBadan: berat,
-        jamBangun: _formatTimeOfDay(wakeUpTime),
-        jamTidur: _formatTimeOfDay(sleepTime),
+        jamBangun: jamBangunUntukDB,
+        jamTidur: jamTidurUntukDB,
       );
 
       if (success && mounted) {
+        if (wakeUpTime != null) {
+          await _notificationSettingsService.setWakeUpTime(wakeUpTime!);
+        }
+        if (sleepTime != null) {
+          await _notificationSettingsService.setSleepTime(sleepTime!);
+        }
         Navigator.pop(context, true);
         _showOverlaySuccess("Profil berhasil diperbarui!");
       } else if (mounted) {
@@ -347,7 +364,6 @@ class _EditProfileState extends State<EditProfile> {
         setState(() {
           selectedGender = newValue!;
         });
-        print("Jenis Kelamin Dipilih: $selectedGender");
       },
     );
   }
@@ -422,7 +438,7 @@ class _EditProfileState extends State<EditProfile> {
 
   // Fungsi untuk menampilkan Overlay Sukses
   void _showOverlaySuccess(String message) {
-    _showOverlay(message, Colors.white.withOpacity(0.90));
+    _showOverlay(message, Colors.white.withValues(alpha: 0.90));
   }
 
   // Fungsi umum untuk menampilkan overlay

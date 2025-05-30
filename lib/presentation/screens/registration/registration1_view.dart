@@ -6,7 +6,10 @@ import 'package:hydrate/presentation/screens/registration/registration2_view.dar
 import 'package:hydrate/presentation/widgets/alertWidgets/alert_widget.dart';
 
 class RegistrationData extends StatefulWidget {
+  const RegistrationData({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _RegistrationDataState createState() => _RegistrationDataState();
 }
 
@@ -135,7 +138,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                       decoration: InputDecoration(
                         hintText: "Nama Pengguna",
                         hintStyle: TextStyle(
-                            color: const Color(0xFF2F2E41).withOpacity(0.5)),
+                            color: const Color(0xFF2F2E41).withValues(alpha: 0.5)),
                         filled: true,
                         fillColor: Colors.white,
                         enabledBorder: OutlineInputBorder(
@@ -220,7 +223,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                                             height: 22,
                                             colorFilter: ColorFilter.mode(
                                                 const Color(0xFF2F2E41)
-                                                    .withOpacity(0.5),
+                                                    .withValues(alpha: 0.5),
                                                 BlendMode.srcIn),
                                           ),
                                     const SizedBox(width: 10),
@@ -230,7 +233,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                                         color: selectedGender == "Perempuan"
                                             ? Colors.white
                                             : const Color(0xFF2F2E41)
-                                                .withOpacity(0.5),
+                                                .withValues(alpha: 0.5),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
@@ -241,7 +244,6 @@ class _RegistrationDataState extends State<RegistrationData> {
                             ),
                           ),
 
-                          // Tombol Laki-laki
                           Expanded(
                             child: GestureDetector(
                               onTap: () {
@@ -269,7 +271,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                                             height: 22,
                                             colorFilter: ColorFilter.mode(
                                                 const Color(0xFF2F2E41)
-                                                    .withOpacity(0.5),
+                                                    .withValues(alpha: 0.5),
                                                 BlendMode.srcIn),
                                           ),
                                     const SizedBox(width: 10),
@@ -279,7 +281,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                                         color: selectedGender == "Laki-laki"
                                             ? Colors.white
                                             : const Color(0xFF2F2E41)
-                                                .withOpacity(0.5),
+                                                .withValues(alpha: 0.5),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
@@ -320,7 +322,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                     suffixStyle:
                         TextStyle(color: const Color(0xFF2F2E41), fontSize: 16),
                     hintStyle: TextStyle(
-                        color: const Color(0xFF2F2E41).withOpacity(0.5)),
+                        color: const Color(0xFF2F2E41).withValues(alpha: 0.5)),
                     filled: true,
                     fillColor: Colors.white,
                     enabledBorder: OutlineInputBorder(
