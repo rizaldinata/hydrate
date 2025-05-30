@@ -210,7 +210,7 @@ Widget build(BuildContext context) {
   final progressState = _getProgressState();
   
   // Calculate circle size as 0.8 of screen width
-  final circleSize = widget.screenWidth * 0.8;
+  final circleSize = widget.screenWidth * 0.75;
 
   return Padding(
     padding: EdgeInsets.all(widget.screenWidth * 0.05),

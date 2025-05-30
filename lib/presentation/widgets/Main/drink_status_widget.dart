@@ -203,9 +203,10 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: widget.screenHeight * 0.22, // Adjust this value to position above circle
-      right: 0, // Menempel ke sisi kanan
+    return Padding(
+      padding: EdgeInsets.only(
+        right: widget.screenHeight * 0, // 2% dari tinggi layar
+      ),
       child: GestureDetector(
         onTap: _handleTap,
         child: AnimatedContainer(

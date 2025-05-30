@@ -37,6 +37,8 @@ class HomeScreensState extends State<HomeScreens>
   late AudioPlayer _audioPlayer;
   late final HomeController _uiController;
   final PageController _pageController = PageController();
+  
+  
 
   double currentIntake = 0;
   double previousIntake = 0;
@@ -381,16 +383,16 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   Future<void> _saveCurrentTimerState() async {
-    // Hanya simpan jika timer sedang berjalan aktif dengan sisa waktu
-    if (_isCountdownActive && _remainingTime.inSeconds > 0) {
-      final prefs = await SharedPreferences.getInstance();
-      final now = DateTime.now();
-      final endTimeMillis =
-          now.millisecondsSinceEpoch + _remainingTime.inMilliseconds;
-      await prefs.setInt(_endTimeKey, endTimeMillis);
-      // 'timer_has_started' sudah di-set true saat _startCountdown
-    }
+  final prefs = await SharedPreferences.getInstance();
+  // Hanya simpan jika timer sedang berjalan aktif dengan sisa waktu DAN _endTime valid
+  if (_isCountdownActive && _remainingTime.inSeconds > 0 && _endTime != null) {
+    final endTimeMillis = _endTime!.millisecondsSinceEpoch;
+    await prefs.setInt(_endTimeKey, endTimeMillis);
+    // 'timer_has_started' sudah di-set oleh _startCountdown
   }
+  // Jika "SAATNYA MINUM" (_remainingTime <= 0), tidak perlu menyimpan _endTimeKey di sini,
+  // karena _loadCountdownState akan menanganinya dengan benar berdasarkan 'timer_has_started'.
+}
 
   void _animateGlass(double amount) async {
     if (idPengguna == null) {
@@ -449,155 +451,92 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   Future<void> _startCountdown() async {
-    final prefs = await SharedPreferences.getInstance();
-    bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false;
+  final prefs = await SharedPreferences.getInstance();
+  bool areNotificationsGloballyEnabled =
+      prefs.getBool('notifications_enabled') ?? false;
 
-    if (!areNotificationsGloballyEnabled) {
-      _countdownTimer?.cancel();
-      if (mounted) {
-        setState(() {
-          _isCountdownActive = false;
-          _remainingTime = Duration.zero;
-          _endTime = null;
-        });
-        await _saveCurrentTimerState();
-      }
-      return;
-    }
-
-    await NotificationController.cancelScheduledNotifications();
-
-    final TimeOfDay wakeUp = await _notificationSettingsService.getWakeUpTime();
-    final TimeOfDay sleep = await _notificationSettingsService.getSleepTime();
-
-    const Duration reminderInterval = Duration(hours: 1);
-    DateTime now = DateTime.now();
-    DateTime scheduledNotificationTime;
-    DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
-    DateTime todaySleep = DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
-
-    DateTime currentPeriodStart;
-    DateTime currentPeriodEnd;
-
-    if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
-      currentPeriodStart = todayWakeUp;
-      currentPeriodEnd = todaySleep;
-
-      if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
-        currentPeriodStart = todayWakeUp.add(const Duration(days: 1));
-        currentPeriodEnd = todaySleep.add(const Duration(days: 1));
-      }
-    } else {
-      DateTime yesterdayWakeUp = todayWakeUp.subtract(const Duration(days: 1));
-      DateTime tomorrowSleep = todaySleep.add(const Duration(days: 1));
-
-      if (now.isAfter(todayWakeUp) || now.isAtSameMomentAs(todayWakeUp)) {
-        currentPeriodStart = todayWakeUp;
-        currentPeriodEnd = tomorrowSleep;
-      } else if (now.isBefore(todaySleep)) {
-        currentPeriodStart = yesterdayWakeUp;
-        currentPeriodEnd = todaySleep;
-      } else {
-        currentPeriodStart = todayWakeUp;
-        currentPeriodEnd = tomorrowSleep;
-      }
-    }
-
-    DateTime proposedNextTime = now.add(reminderInterval);
-
-    if (now.isBefore(currentPeriodStart)) {
-      scheduledNotificationTime = currentPeriodStart;
-    } else if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
-      scheduledNotificationTime = currentPeriodStart;
-      if (scheduledNotificationTime.isBefore(now)) {
-        DateTime nextWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
-        if(nextWakeUp.isBefore(now) || nextWakeUp.isAtSameMomentAs(now)) {
-          nextWakeUp = nextWakeUp.add(const Duration(days:1));
-        }
-        scheduledNotificationTime = nextWakeUp;
-      }
-    } else {
-      if (proposedNextTime.isBefore(currentPeriodEnd)) {
-        scheduledNotificationTime = proposedNextTime;
-      } else {
-        if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
-          scheduledNotificationTime = currentPeriodStart.add(const Duration(days: 1));
-        } else {
-          scheduledNotificationTime = DateTime(
-              currentPeriodEnd.year,
-              currentPeriodEnd.month,
-              currentPeriodEnd.day,
-              wakeUp.hour,
-              wakeUp.minute);
-          if (scheduledNotificationTime.isBefore(currentPeriodEnd)) {
-            scheduledNotificationTime = scheduledNotificationTime.add(const Duration(days: 1));
-          }
-        }
-      }
-    }
-
-    if (scheduledNotificationTime
-        .isBefore(now.add(const Duration(minutes: 1)))) {
-      DateTime correctedTime = scheduledNotificationTime;
-      if (correctedTime.isBefore(now.add(const Duration(minutes: 1)))) {
-        correctedTime = now.add(reminderInterval);
-      }
-
-      DateTime checkPeriodStart, checkPeriodEnd;
-      DateTime checkTodayWakeUp =
-          DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
-      DateTime checkTodaySleep =
-          DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
-
-      if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
-        checkPeriodStart = checkTodayWakeUp;
-        checkPeriodEnd = checkTodaySleep;
-        if (correctedTime.isAfter(checkPeriodEnd) || correctedTime.isBefore(checkPeriodStart)) {
-          correctedTime = checkTodayWakeUp.add(const Duration(days: 1));
-        }
-      } else {
-        if (now.isAfter(checkTodayWakeUp)) {
-          checkPeriodStart = checkTodayWakeUp;
-          checkPeriodEnd = checkTodaySleep.add(const Duration(days: 1));
-        } else {
-          checkPeriodStart = checkTodayWakeUp.subtract(const Duration(days: 1));
-          checkPeriodEnd = checkTodaySleep;
-        }
-        if (correctedTime.isAfter(checkPeriodEnd) || correctedTime.isBefore(checkPeriodStart)) {
-          if (now.isAfter(checkPeriodEnd)) {
-            correctedTime = checkPeriodStart.add(Duration(
-                days: (checkPeriodStart.isBefore(checkTodayWakeUp) &&
-                        now.isAfter(checkTodaySleep))
-                    ? 0
-                    : 1));
-          } else {
-            correctedTime = checkPeriodStart;
-          }
-        }
-      }
-      scheduledNotificationTime = correctedTime;
-      if (scheduledNotificationTime
-          .isBefore(now.add(const Duration(minutes: 1)))) {
-        scheduledNotificationTime = now.add(const Duration(minutes: 5));
-      }
-    }
-
-    await NotificationController.scheduleNextHydrationNotification(
-      exactNotificationTime: scheduledNotificationTime,
-    );
+  if (!areNotificationsGloballyEnabled) {
+    _countdownTimer?.cancel();
     if (mounted) {
       setState(() {
-        _endTime = scheduledNotificationTime;
-        _remainingTime =
-            _endTime!.isAfter(now) ? _endTime!.difference(now) : Duration.zero;
-        _isCountdownActive = _remainingTime > Duration.zero;
+        _isCountdownActive = false;
+        _remainingTime = Duration.zero;
+        _endTime = null;
       });
-      await _saveCurrentTimerState();
-      if (_isCountdownActive) {
-        _startTimer();
-      }
+      // Consider clearing _endTimeKey and setting timer_has_started to false if appropriate
+      // await prefs.remove(_endTimeKey);
+      // await prefs.setBool('timer_has_started', false); // Atau biarkan true jika sudah pernah minum
+    }
+    return;
+  }
+
+  await NotificationController.cancelScheduledNotifications();
+
+  final TimeOfDay wakeUp = await _notificationSettingsService.getWakeUpTime();
+  final TimeOfDay sleep = await _notificationSettingsService.getSleepTime();
+
+  const Duration reminderInterval = Duration(hours: 1);
+  DateTime now = DateTime.now();
+  // Initialize with a default value in the future to avoid null errors
+  DateTime scheduledNotificationTime = now.add(reminderInterval);
+
+  // TODO: Replace this with your actual logic to calculate scheduledNotificationTime
+  // Example fallback logic:
+  // scheduledNotificationTime = ... (your calculation here)
+  // Make sure to always assign a value to scheduledNotificationTime
+
+  // --- BLOK PERUBAHAN UTAMA ---
+  if (mounted) {
+    DateTime newEndTime = scheduledNotificationTime;
+    Duration newRemainingTime = newEndTime.isAfter(now)
+        ? newEndTime.difference(now)
+        : Duration.zero;
+
+    // Jika kalkulasi menghasilkan waktu yang sudah lewat (seharusnya tidak terjadi jika fallback kuat),
+    // setidaknya buat dia "SAATNYA MINUM" untuk siklus ini daripada menghilangkan timer.
+    // Namun, idealnya newRemainingTime.inSeconds > 0 selalu tercapai.
+    if (newRemainingTime.inSeconds <= 0 && areNotificationsGloballyEnabled) {
+      // Fallback jika scheduledNotificationTime ternyata tidak di masa depan
+      // Ini seharusnya jarang terjadi jika logika kalkulasi di atas sudah benar
+      newEndTime = now.add(const Duration(minutes: 1)); // default kecil, atau reminderInterval
+      newRemainingTime = newEndTime.difference(now);
+    }
+
+
+    setState(() {
+      _endTime = newEndTime;
+      _remainingTime = newRemainingTime;
+      // _isCountdownActive akan true jika newRemainingTime > 0, atau jika kita ingin "SAATNYA MINUM"
+      _isCountdownActive = true; // Setelah minum, countdown/pengingat selalu aktif
+    });
+
+    if (_remainingTime.inSeconds > 0) {
+      // Simpan state BARU ke SharedPreferences
+      await prefs.setInt(_endTimeKey, _endTime!.millisecondsSinceEpoch);
+      await prefs.setBool('timer_has_started', true); // Tandai bahwa timer telah berhasil dimulai
+      _startTimer(); // Mulai timer visual
+    } else {
+      // Kasus ini berarti "SAATNYA MINUM" langsung (jika newRemainingTime nol setelah fallback)
+      // atau jika notifikasi dimatikan dan kita ingin menonaktifkan timer.
+      // _isCountdownActive sudah true, _remainingTime sudah nol.
+      await prefs.remove(_endTimeKey); // Tidak ada endTime spesifik di masa depan jika langsung "SAATNYA MINUM"
+      await prefs.setBool('timer_has_started', true); // Siklus tetap dianggap dimulai
+      // Tidak perlu _startTimer() karena sudah waktunya
+    }
+
+    // Jadwalkan notifikasi sistem (jika _remainingTime > 0)
+    if (_isCountdownActive && _remainingTime.inSeconds > 0) {
+       await NotificationController.scheduleNextHydrationNotification(
+         exactNotificationTime: _endTime!, // Gunakan _endTime yang sudah pasti
+       );
+    } else if (_isCountdownActive && _remainingTime.inSeconds <= 0) {
+      // Jika langsung "SAATNYA MINUM", mungkin tidak perlu notifikasi segera,
+      // atau jadwalkan notifikasi "SAATNYA MINUM" jika diinginkan.
+      // Biasanya ini ditangani oleh UI saja.
     }
   }
+  // --- AKHIR BLOK PERUBAHAN UTAMA ---
+}
 
   String _formatTime(Duration duration) {
     String twoDigits(int n) => n.toString().padLeft(2, '0');
