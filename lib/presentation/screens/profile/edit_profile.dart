@@ -139,8 +139,30 @@ class _EditProfileState extends State<EditProfile> {
       return;
     }
 
-    final nama = nameController.text;
+    final nama = nameController.text.trim();
     final berat = double.tryParse(weightController.text) ?? 0.0;
+
+    //! If nama > 20
+    if (nama.length > maxCharacters) { // maxCharacters sudah Anda definisikan (20)
+      _showOverlayError("Nama tidak boleh lebih dari $maxCharacters karakter.");
+      setState(() { _isLoading = false; }); // Hentikan loading jika ada
+      return;
+    }
+
+    //! If nama nggk sesuai
+    final RegExp nameRegex = RegExp(r"^[a-zA-Z ']+$");
+    if (!nameRegex.hasMatch(nama)) {
+      _showOverlayError("Nama hanya boleh mengandung huruf, spasi, dan tanda petik (').");
+      setState(() { _isLoading = false; }); // Hentikan loading jika ada
+      return;
+    }
+
+    //! If nama kosong
+    if (nama.isEmpty) {
+        _showOverlayError("Nama tidak boleh hanya berisi spasi.");
+        setState(() { _isLoading = false; });
+        return;
+    }
 
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
