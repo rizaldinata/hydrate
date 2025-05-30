@@ -98,30 +98,38 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
     ));
   }
 
-  void _updateAnimationPlaybackBasedOnState() {
-    final progressState = _getProgressState();
-    if (!mounted) return;
+void _updateAnimationPlaybackBasedOnState() {
+  final progressState = _getProgressState();
+  if (!mounted) return;
 
-    if (progressState == ProgressState.empty) {
-      if (!_exclamationMarkMovementController.isAnimating) {
-        _exclamationMarkMovementController.repeat(reverse: true);
+  if (progressState == ProgressState.empty) {
+    if (!_exclamationMarkMovementController.isAnimating) {
+      _exclamationMarkMovementController.repeat(reverse: true);
+    }
+    // Hentikan animasi gelombang jika kosong
+    if (_waveController.isAnimating) {
+      _waveController.stop();
+    }
+  } else { // Mencakup Normal, Exceeded, dan Critical
+    if (_exclamationMarkMovementController.isAnimating) {
+      _exclamationMarkMovementController.stop();
+      _exclamationMarkMovementController.reset();
+    }
+
+    // Jika ada air (currentIntake > 0), jalankan animasi gelombang
+    // Ini akan membuat air tetap bergelombang meskipun sudah exceeded atau critical
+    if (widget.currentIntake > 0) {
+      if (!_waveController.isAnimating) {
+        _waveController.repeat();
       }
-      if (_waveController.isAnimating) _waveController.stop();
     } else {
-      if (_exclamationMarkMovementController.isAnimating) {
-        _exclamationMarkMovementController.stop();
-        _exclamationMarkMovementController.reset();
-      }
-      if ((progressState == ProgressState.normal ||
-              progressState == ProgressState.exceeded ||
-              progressState == ProgressState.critical) &&
-          widget.currentIntake > 0) {
-        if (!_waveController.isAnimating) _waveController.repeat();
-      } else {
-        if (_waveController.isAnimating) _waveController.stop();
+      // Jika tidak ada air (misalnya, target > 0 tapi intake = 0), hentikan gelombang
+      if (_waveController.isAnimating) {
+        _waveController.stop();
       }
     }
   }
+}
 
   @override
   void didUpdateWidget(AnimatedWaterProgressCircle oldWidget) {
@@ -424,7 +432,7 @@ class ProgressArcPainter extends CustomPainter {
 
 class WaterWavePainter extends CustomPainter {
   final double wavePhase;
-  final double waterLevel; 
+  final double waterLevel; // Ini adalah rasio aktual, bisa > 1.0
   final ProgressState progressState;
   final double arcStrokeWidth;
 
@@ -437,19 +445,42 @@ class WaterWavePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progressState == ProgressState.empty || waterLevel <= 0.001) {
+    if (progressState == ProgressState.empty && waterLevel <= 0.001) { // Tambahkan pengecekan waterLevel juga untuk empty state
       return;
     }
 
     final center = Offset(size.width / 2, size.height / 2);
-    final waterRadius = math.min(size.width, size.height) / 2 - arcStrokeWidth - 1.5; 
+    // waterRadius adalah radius dari area lingkaran DALAM tempat air bergelombang
+    final waterRadius = math.min(size.width, size.height) / 2 - arcStrokeWidth - 1.5; // Pengurangan 1.5 agar ada sedikit jarak dari arc
     if (waterRadius <= 0) return;
 
     final clipPath = Path()..addOval(Rect.fromCircle(center: center, radius: waterRadius));
     canvas.clipPath(clipPath);
 
-    final cappedVisualWaterLevel = math.min(waterLevel, 1.0);
-    final waterSurfaceY = size.height * (1 - cappedVisualWaterLevel);
+    // cappedVisualWaterLevel menentukan seberapa penuh lingkaran secara visual (0.0 hingga 1.0)
+    final cappedVisualWaterLevel = math.min(waterLevel, 1.0).clamp(0.0, 1.0); // Pastikan clamp 0-1
+
+    // Hitung Y permukaan air berdasarkan bagian atas dan tinggi wadah air visual (lingkaran dalam)
+    final waterContainerTopY = center.dy - waterRadius;
+    final waterContainerHeight = 2 * waterRadius;
+    final waterSurfaceY = waterContainerTopY + (waterContainerHeight * (1 - cappedVisualWaterLevel));
+
+    // Jika level air sangat rendah (hampir kosong tapi tidak 0), jangan gambar gelombang agar tidak aneh
+    if (cappedVisualWaterLevel < 0.01 && waterLevel > 0) {
+        // Gambar lapisan air tipis statis jika mau, atau return saja
+        // Untuk sekarang, jika sangat rendah, kita tidak gambar gelombangnya
+        // agar tidak ada gelombang aneh di dasar yang hampir kosong.
+        // Jika ingin ada air statis tipis:
+        // final waterPaint = Paint()..color = const Color(0xAA4AA8FF); // Warna air solid tipis
+        // canvas.drawRect(Rect.fromLTRB(0, waterSurfaceY, size.width, center.dy + waterRadius), waterPaint);
+        return;
+    }
+    
+    // Jika setelah perhitungan di atas, waterSurfaceY melebihi dasar lingkaran (karena floating point)
+    // atau intake sangat kecil sehingga cappedVisualWaterLevel mendekati 0,
+    // pastikan gelombang tidak "meluap" ke bawah.
+    // Ini seharusnya sudah ditangani oleh cappedVisualWaterLevel yang di-clamp(0.0, 1.0)
+    // dan perhitungan waterSurfaceY yang baru.
 
     const Color gradLight = Color(0xFFA0E0FF);
     const Color gradDark = Color(0xFF4AA8FF);
@@ -462,17 +493,22 @@ class WaterWavePainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final wavePath = Path();
-    final amplitude = 5.0;
-    final frequency = 2.0;
+    final amplitude = 5.0; // Amplitudo gelombang
+    final frequency = 2.0; // Frekuensi gelombang
+
     wavePath.moveTo(0, waterSurfaceY);
     for (double x = 0; x <= size.width; x++) {
       double yOffset = amplitude * math.sin(frequency * x * (math.pi / 180) + wavePhase) +
           amplitude * 0.4 * math.sin(frequency * 0.8 * x * (math.pi / 180) + wavePhase * 1.2 + math.pi / 4);
       wavePath.lineTo(x, waterSurfaceY + yOffset);
     }
-    wavePath.lineTo(size.width, size.height); wavePath.lineTo(0, size.height); wavePath.close();
+    // Tutup path dengan menggambar hingga ke dasar area kliping
+    wavePath.lineTo(size.width, center.dy + waterRadius); // Ke sudut kanan bawah area air
+    wavePath.lineTo(0, center.dy + waterRadius); // Ke sudut kiri bawah area air
+    wavePath.close();
     canvas.drawPath(wavePath, waterPaint);
 
+    // Busa hanya jika ada cukup air
     if (cappedVisualWaterLevel > 0.05) {
       final foamPaint = Paint()..color = Colors.white.withOpacity(0.5)..style = PaintingStyle.stroke..strokeWidth = 1.5;
       final foamPath = Path();
@@ -489,10 +525,9 @@ class WaterWavePainter extends CustomPainter {
   bool shouldRepaint(covariant WaterWavePainter oldDelegate) =>
       oldDelegate.wavePhase != wavePhase ||
       oldDelegate.waterLevel != waterLevel ||
-      oldDelegate.progressState != progressState || 
+      oldDelegate.progressState != progressState ||
       oldDelegate.arcStrokeWidth != arcStrokeWidth;
 }
-
 class EmptyGlassPainter extends CustomPainter {
   final double screenWidth;
   EmptyGlassPainter({required this.screenWidth});
