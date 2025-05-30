@@ -1,7 +1,6 @@
-import 'package:sqflite/sqflite.dart';
 import 'package:hydrate/data/datasources/database_helper.dart';
 import 'package:hydrate/data/models/riwayat_hidrasi_model.dart';
-import 'package:intl/intl.dart'; // Untuk format tanggal
+import 'package:intl/intl.dart';
 
 class RiwayatHidrasiRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
@@ -13,7 +12,6 @@ class RiwayatHidrasiRepository {
     try {
       final db = await _dbHelper.database;
 
-      // Dapatkan waktu saat ini dalam WIB (UTC+7)
       final now = DateTime.now().toUtc().add(Duration(hours: 7));
       final tanggalHariIni = DateFormat('yyyy-MM-dd').format(now);
       final waktuSekarang = DateFormat('HH:mm:ss').format(now);
@@ -38,7 +36,6 @@ class RiwayatHidrasiRepository {
     }
   }
 
-  /// Fungsi untuk mengambil riwayat hidrasi berdasarkan tanggal.
   Future<List<RiwayatHidrasi>> getRiwayatHidrasiByTanggal(int idPengguna, String tanggal) async {
     try {
       final db = await _dbHelper.database;
@@ -57,7 +54,6 @@ class RiwayatHidrasiRepository {
     }
   }
 
-  /// Ambil semua data riwayat hidrasi untuk pengguna tertentu.
   Future<List<RiwayatHidrasi>> getRiwayatHidrasi(int idPengguna) async {
     try {
       final db = await _dbHelper.database;
@@ -75,7 +71,6 @@ class RiwayatHidrasiRepository {
     }
   }
 
-  /// Menghapus Riwayat Hidrasi berdasarkan ID dan mengembalikan jumlah hidrasi yang dihapus.
   Future<double?> hapusRiwayatBerdasarkanId(int idRiwayat) async {
     final db = await _dbHelper.database;
 
@@ -98,16 +93,14 @@ class RiwayatHidrasiRepository {
       whereArgs: [idRiwayat],
     );
 
-    // Menampilkan hasil penghapusan
     print("Jumlah data yang dihapus: $deleteResult");
 
     return jumlah;
   }
 
-  /// Mendapatkan total asupan hidrasi untuk hari ini.
   Future<double> getTodayIntake(int userId) async {
     final db = await _dbHelper.database;
-    final String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7))); // Sesuaikan zona waktu
+    final String todayDate = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
     final result = await db.rawQuery('''
       SELECT SUM(jumlah_hidrasi) as total
       FROM riwayat_hidrasi
@@ -116,16 +109,13 @@ class RiwayatHidrasiRepository {
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
   }
 
-  /// Mendapatkan rata-rata asupan harian selama N hari terakhir.
   Future<double> getAverageIntakeLastNDays(int userId, int days) async {
     final db = await _dbHelper.database;
-    final DateTime now = DateTime.now().toUtc().add(Duration(hours: 7)); // Sesuaikan zona waktu
+    final DateTime now = DateTime.now().toUtc().add(Duration(hours: 7));
     final DateTime startDate = now.subtract(Duration(days: days));
     final String formattedStartDate = DateFormat('yyyy-MM-dd').format(startDate);
     final String formattedEndDate = DateFormat('yyyy-MM-dd').format(now);
 
-    // Mengambil rata-rata total_hidrasi_harian dari tabel target_hidrasi
-    // karena total_hidrasi_harian sudah mencerminkan total asupan per hari.
     final result = await db.rawQuery('''
       SELECT AVG(total_hidrasi_harian) as avg_intake
       FROM target_hidrasi
@@ -138,15 +128,13 @@ class RiwayatHidrasiRepository {
     return 0.0;
   }
 
-  /// Mendapatkan frekuensi minum rata-rata harian selama N hari terakhir.
   Future<int> getAverageDrinkFrequencyLastNDays(int userId, int days) async {
     final db = await _dbHelper.database;
-    final DateTime now = DateTime.now().toUtc().add(Duration(hours: 7)); // Sesuaikan zona waktu
+    final DateTime now = DateTime.now().toUtc().add(Duration(hours: 7));
     final DateTime startDate = now.subtract(Duration(days: days));
     final String formattedStartDate = DateFormat('yyyy-MM-dd').format(startDate);
     final String formattedEndDate = DateFormat('yyyy-MM-dd').format(now);
 
-    // Query untuk menghitung jumlah entri per hari dalam periode N hari
     final List<Map<String, dynamic>> dailyCounts = await db.rawQuery('''
       SELECT COUNT(id) as count, tanggal_hidrasi
       FROM riwayat_hidrasi
@@ -163,7 +151,6 @@ class RiwayatHidrasiRepository {
       totalCount += (row['count'] as int);
     }
 
-    // Hitung jumlah hari unik dalam periode tersebut
     final List<Map<String, dynamic>> uniqueDates = await db.rawQuery('''
       SELECT DISTINCT tanggal_hidrasi
       FROM riwayat_hidrasi
@@ -173,6 +160,88 @@ class RiwayatHidrasiRepository {
     int numberOfDays = uniqueDates.length;
     if (numberOfDays == 0) return 0;
 
-    return (totalCount / numberOfDays).round(); // Rata-rata frekuensi per hari
+    return (totalCount / numberOfDays).round();
+  }
+
+  Future<List<Map<String, dynamic>>> getDailyHydrationForWeek(int userId, DateTime weekEndDate) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> dailyTotals = [];
+
+    for (int i = 6; i >= 0; i--) {
+      final currentDate = weekEndDate.subtract(Duration(days: i));
+      final formattedDate = DateFormat('yyyy-MM-dd').format(currentDate);
+
+      final result = await db.rawQuery('''
+        SELECT SUM(jumlah_hidrasi) as total
+        FROM riwayat_hidrasi
+        WHERE fk_id_pengguna = ? AND tanggal_hidrasi = ?
+      ''', [userId, formattedDate]);
+      
+      double totalForDay = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+
+      int dayIndex = 6 - i;
+      dailyTotals.add({
+        'x': dayIndex,
+        'y': totalForDay,
+        'label': DateFormat('E', 'id_ID').format(currentDate),
+      });
+    }
+    print("[Repo-Mingguan] Data yang akan dikembalikan untuk minggu berakhir ${DateFormat('yyyy-MM-dd').format(weekEndDate)}: $dailyTotals");
+    return dailyTotals;
+  }
+
+  Future<List<Map<String, dynamic>>> getWeeklyHydrationForMonth(int userId, int year, int month) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> weeklyTotals = [];
+
+    final firstDayOfMonth = DateTime(year, month, 1);
+    final lastDayOfMonth = DateTime(year, month + 1, 0);
+
+    DateTime currentWeekStart = firstDayOfMonth.subtract(Duration(days: firstDayOfMonth.weekday - 1));
+    if (firstDayOfMonth.weekday == DateTime.sunday) { 
+        currentWeekStart = firstDayOfMonth.subtract(Duration(days: 6));
+    }
+
+    int weekIndex = 0;
+    while (currentWeekStart.isBefore(lastDayOfMonth) || currentWeekStart.isAtSameMomentAs(lastDayOfMonth)) {
+      DateTime currentWeekEnd = currentWeekStart.add(Duration(days: 6));
+
+      String formattedWeekStart = DateFormat('yyyy-MM-dd').format(currentWeekStart);
+      String formattedWeekEnd = DateFormat('yyyy-MM-dd').format(currentWeekEnd);
+
+      final result = await db.rawQuery('''
+        SELECT SUM(jumlah_hidrasi) as total
+        FROM riwayat_hidrasi
+        WHERE fk_id_pengguna = ? AND tanggal_hidrasi BETWEEN ? AND ?
+      ''', [userId, formattedWeekStart, formattedWeekEnd]);
+      
+      double totalForWeek = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+      weeklyTotals.add({'x': weekIndex, 'y': totalForWeek, 'label': 'M${weekIndex + 1}'});
+      
+      currentWeekStart = currentWeekStart.add(Duration(days: 7));
+      weekIndex++;
+      if (weekIndex > 4 && currentWeekStart.month != month) break; 
+    }
+    print("[Repo-Mingguan] Data mingguan yang dikembalikan untuk bulan $month: $weeklyTotals");
+    return weeklyTotals;
+  }
+
+  Future<List<Map<String, dynamic>>> getMonthlyHydrationForYear(int userId, int year) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> monthlyTotals = [];
+
+    for (int month = 1; month <= 12; month++) {
+      String monthPadded = month.toString().padLeft(2, '0');
+      final result = await db.rawQuery('''
+        SELECT SUM(jumlah_hidrasi) as total
+        FROM riwayat_hidrasi
+        WHERE fk_id_pengguna = ? AND INSTR(tanggal_hidrasi, ?) > 0 
+      ''', [userId, '$year-$monthPadded']);
+      
+      double totalForMonth = (result.first['total'] as num?)?.toDouble() ?? 0.0;
+      monthlyTotals.add({'x': month - 1, 'y': totalForMonth, 'label': DateFormat('MMM', 'id_ID').format(DateTime(year, month))});
+    }
+    print("[Repo-Tahunan] Data yang akan dikembalikan untuk tahun $year: $monthlyTotals");
+    return monthlyTotals;
   }
 }

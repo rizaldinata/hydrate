@@ -9,9 +9,13 @@ class ProfilPenggunaController {
   // Method untuk mengambil data profil
   Future<ProfilPengguna?> getProfilPengguna(int fkIdPengguna) async {
     try {
-      return await _profilRepo.getProfilPenggunaByUserId(fkIdPengguna);
+      print("[ProfilPenggunaController] Meminta profil untuk userId: $fkIdPengguna"); // PRINT SEBELUM PANGGIL REPO
+      ProfilPengguna? profil = await _profilRepo.getProfilPenggunaByUserId(fkIdPengguna);
+      // --- DEBUG POINT PPC-PENTING ---
+      print("[ProfilPenggunaController] Data Profil DITERIMA DARI REPO: Berat=${profil?.beratBadan}, Gender=${profil?.jenisKelamin}, Bangun=${profil?.jamBangun}, Tidur=${profil?.jamTidur} untuk userId: $fkIdPengguna");
+      return profil;
     } catch (e) {
-      print("Error fetching profile: $e");
+      print("[ProfilPenggunaController] Error fetching profile: $e");
       return null;
     }
   }
