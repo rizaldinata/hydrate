@@ -32,6 +32,8 @@ class _EditProfileState extends State<EditProfile> {
   late String selectedGender;
   late TimeOfDay? wakeUpTime;
   late TimeOfDay? sleepTime;
+  int maxCharacters = 20;
+  int maxNumber = 3;
 
   final ProfilPenggunaController _controller = ProfilPenggunaController();
   bool _isLoading = false;
@@ -51,14 +53,6 @@ class _EditProfileState extends State<EditProfile> {
   void initState() {
     super.initState();
     nameController = TextEditingController(text: widget.initialNama);
-    // weightController =
-    //     TextEditingController(text: widget.initialBeratBadan.toString());
-
-    // // Konversi "Male" / "Female" ke "Laki-laki" / "Perempuan"
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
-    //               (widget.initialJenisKelamin == "Male" ? "Laki-laki" : "Perempuan");
-    // selectedGender = reverseGenderMap[widget.initialJenisKelamin] ??
-    //               (widget.initialJenisKelamin == "Laki-laki" ? "Laki-laki" : "Perempuan");
 
     weightController = TextEditingController(
         text: widget.initialBeratBadan.toInt().toString());
@@ -148,13 +142,6 @@ class _EditProfileState extends State<EditProfile> {
     final nama = nameController.text;
     final berat = double.tryParse(weightController.text) ?? 0.0;
 
-    // final success = await _controller.updateProfilDanNama(
-    //   userId: widget.userId,
-    //   nama: nama,
-    //   jenisKelamin: selectedGender,
-    //   beratBadan: berat,
-    // );
-
     if (berat <= 0) {
       _showOverlayError("Berat badan harus lebih dari 0 kg!");
       return;
@@ -221,6 +208,7 @@ class _EditProfileState extends State<EditProfile> {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    
 
                     // Nama
                     _buildTextField(nameController, "Nama",
@@ -294,6 +282,7 @@ class _EditProfileState extends State<EditProfile> {
     return TextField(
       cursorColor: const Color(0xFF00A6FB),
       controller: controller,
+      maxLength: controller == nameController ? maxCharacters : maxNumber,
       keyboardType: isNumber ? TextInputType.number : TextInputType.text,
       inputFormatters: isNumber ? [FilteringTextInputFormatter.digitsOnly] : [],
       decoration: InputDecoration(
@@ -316,6 +305,7 @@ class _EditProfileState extends State<EditProfile> {
           borderSide: const BorderSide(color: Color(0xFF00A6FB), width: 2),
           borderRadius: BorderRadius.circular(10),
         ),
+        counter: Offstage(),
       ),
     );
   }
@@ -404,21 +394,26 @@ class _EditProfileState extends State<EditProfile> {
   }
 
   // Widget untuk Tombol
-  Widget _buildButton(String text, Color color, VoidCallback onPressed) {
+    Widget _buildButton(String text, Color color, VoidCallback onPressed) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
       ),
       child: Text(
         text,
         style: const TextStyle(
-            fontSize: 16, color: Colors.white, fontWeight: FontWeight.bold),
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
+
 
 // Fungsi untuk menampilkan Overlay Error
   void _showOverlayError(String message) {

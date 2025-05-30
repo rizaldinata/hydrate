@@ -33,7 +33,7 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
     if (widget.isCountdownActive && widget.remainingTime.inSeconds > 0) {
       if (_showFullMessage) {
         return Text(
-          "Hidrasi selanjutnya ${widget.formatTime(widget.remainingTime)}",
+          "${widget.formatTime(widget.remainingTime)} Hidrasi selanjutnya",
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -158,7 +158,7 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: widget.screenHeight * 0.25, // Adjust this value to position above circle
+      top: widget.screenHeight * 0.22, // Adjust this value to position above circle
       right: 0, // Menempel ke sisi kanan
       child: GestureDetector(
         onTap: _handleTap,

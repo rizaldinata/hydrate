@@ -8,6 +8,7 @@ class HydrasiReport extends StatefulWidget {
   final Color accentColor;
   final double currentDailyIntake; // Asupan hidrasi hari ini
   final double averageDailyTarget; // Rata-rata target harian pengguna
+  final double averageCompletionRate; // Tambahan: rata-rata tingkat penyelesaian
 
   const HydrasiReport({
     Key? key,
@@ -16,6 +17,7 @@ class HydrasiReport extends StatefulWidget {
     required this.drinkFrequency,
     required this.currentDailyIntake,
     required this.averageDailyTarget,
+    required this.averageCompletionRate, // Parameter baru
     this.accentColor = const Color(0xFF00A6FB), // Warna aksen default
   }) : super(key: key);
 
@@ -69,22 +71,38 @@ class _HydrasiReportState extends State<HydrasiReport> {
 
   // Mengubah _buildStatsGrid menjadi _buildStatsColumn untuk layout vertikal
   Widget _buildStatsColumn(BuildContext context) {
-    final double completionRate = widget.averageDailyTarget > 0
-        ? (widget.currentDailyIntake / widget.averageDailyTarget * 100)
-        : 0.0;
-
     // Jarak antar kartu statistik
     const double cardSpacing = 10.0;
 
     return Column(
       children: [
-        _buildStatCard(context, 'Rata-rata Mingguan', '${widget.weeklyAverage.toStringAsFixed(0)} ml/hari', Icons.calendar_view_week),
+        _buildStatCard(
+          context, 
+          'Rata-rata Mingguan', 
+          '${_formatIntake(widget.weeklyAverage)} mL/hari', 
+          Icons.calendar_view_week
+        ),
         const SizedBox(height: cardSpacing),
-        _buildStatCard(context, 'Rata-rata Bulanan', '${widget.monthlyAverage.toStringAsFixed(0)} ml/hari', Icons.calendar_month),
+        _buildStatCard(
+          context, 
+          'Rata-rata Bulanan', 
+          '${_formatIntake(widget.monthlyAverage)} mL/hari', 
+          Icons.calendar_month
+        ),
         const SizedBox(height: cardSpacing),
-        _buildStatCard(context, 'Rata2 Penyelesaian', '${completionRate.toStringAsFixed(1)}%', Icons.check_circle_outline),
+        _buildStatCard(
+          context, 
+          'Rata-rata Penyelesaian', 
+          '${_formatPercentage(widget.averageCompletionRate)}%', 
+          Icons.check_circle_outline
+        ),
         const SizedBox(height: cardSpacing),
-        _buildStatCard(context, 'Frekuensi Minum', '${widget.drinkFrequency} kali/hari', Icons.local_drink),
+        _buildStatCard(
+          context, 
+          'Frekuensi Minum', 
+          '${widget.drinkFrequency} kali/hari', 
+          Icons.local_drink
+        ),
       ],
     );
   }
@@ -144,6 +162,7 @@ class _HydrasiReportState extends State<HydrasiReport> {
   }
 
   Widget _buildProgressIndicator(BuildContext context) {
+    // Menggunakan currentDailyIntake dan averageDailyTarget untuk progress indicator
     final double percentage = widget.averageDailyTarget > 0
         ? (widget.currentDailyIntake / widget.averageDailyTarget)
         : 0.0;
@@ -154,7 +173,7 @@ class _HydrasiReportState extends State<HydrasiReport> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Rata Rata Hidrasi Harian',
+          'Progress Hidrasi Hari Ini',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -200,7 +219,7 @@ class _HydrasiReportState extends State<HydrasiReport> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween, // Teks rata kiri dan kanan
           children: [
             Text(
-              '${widget.currentDailyIntake.round()} ml',
+              '${_formatIntake(widget.currentDailyIntake)} mL',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
@@ -208,7 +227,7 @@ class _HydrasiReportState extends State<HydrasiReport> {
               ),
             ),
             Text(
-              '${widget.averageDailyTarget.round()} ml',
+              '${_formatIntake(widget.averageDailyTarget)} mL',
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).textTheme.bodySmall?.color, // Warna standar untuk target
@@ -216,7 +235,44 @@ class _HydrasiReportState extends State<HydrasiReport> {
             ),
           ],
         ),
+        const SizedBox(height: 4),
+        Center(
+          child: Text(
+            '${_formatPercentage(percentage * 100)}% tercapai',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: _getProgressColor(percentage),
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  /// Helper method untuk memformat nilai asupan air (hanya dalam mL)
+  String _formatIntake(double value) {
+    // Selalu tampilkan dalam mL tanpa desimal
+    return value.round().toString();
+  }
+
+  /// Helper method untuk memformat persentase
+  String _formatPercentage(double value) {
+    if (value == value.roundToDouble()) {
+      return value.round().toString();
+    } else {
+      return value.toStringAsFixed(1);
+    }
+  }
+
+  /// Helper method untuk menentukan warna berdasarkan progress
+  Color _getProgressColor(double percentage) {
+    if (percentage >= 1.0) {
+      return Colors.green; // Hijau jika sudah mencapai target
+    } else if (percentage >= 0.7) {
+      return Colors.orange; // Orange jika sudah 70%
+    } else {
+      return Colors.red; // Merah jika masih kurang dari 70%
+    }
   }
 }

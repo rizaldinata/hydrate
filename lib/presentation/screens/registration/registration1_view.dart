@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/screens/registration/registration2_view.dart';
@@ -17,17 +18,8 @@ class _RegistrationDataState extends State<RegistrationData> {
   // Mengubah ke format yang konsisten dengan database
   String selectedGender = "Perempuan"; // Default gender
   int maxCharacters = 20;
+  int maxNumbers = 2;
   String remainingText = "0/20 karakter";
-
-  // Validasi input
-  // bool _isFormValid() {
-  //   final weight = double.tryParse(controllerWeight.text);
-  //   return controllerName.text.isNotEmpty &&
-  //       selectedGender.isNotEmpty &&
-  //       weight != null &&
-  //       weight >= 1 &&
-  //       weight <= 300;
-  // }
 
   void _checkForm() {
     setState(() {
@@ -310,6 +302,18 @@ class _RegistrationDataState extends State<RegistrationData> {
                   controller: controllerWeight,
                   keyboardType: TextInputType.number,
                   cursorColor: const Color(0xFF00A6FB),
+                  maxLength: 3, // Batasi maksimal 3 karakter
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly, // Hanya angka 0-9
+                    LengthLimitingTextInputFormatter(3), // Maksimal 3 karakter
+                  ],
+                  buildCounter: (
+                    BuildContext context, {
+                    required int currentLength,
+                    required int? maxLength,
+                    required bool isFocused,
+                  }) =>
+                      const SizedBox(), // Sembunyikan counter seperti pada nama
                   decoration: InputDecoration(
                     hintText: "Berat Badan",
                     suffixText: "kg",
@@ -384,8 +388,7 @@ class _RegistrationDataState extends State<RegistrationData> {
                               // Pola ini akan mencari karakter apa pun yang BUKAN huruf (a-z, A-Z), spasi, atau petik (').
                               final invalidCharacters = RegExp(r"[^a-zA-Z ']");
                               if (invalidCharacters.hasMatch(name)) {
-                                showWarningDialog(
-                                    context,
+                                showWarningDialog(context,
                                     "Nama Pengguna hanya boleh berisi huruf, spasi, dan tanda petik (').");
                                 return; // Hentikan proses jika tidak valid
                               }
