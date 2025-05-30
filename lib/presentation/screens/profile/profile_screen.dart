@@ -888,10 +888,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   inactiveTrackColor:
                                       Colors.white.withOpacity(0.2),
                                 ),
-                                // onTap: () {
-                                //   // Aksi diubah untuk panduan izin
-                                //   _showBackgroundPermissionGuidanceDialog();
-                                // },
                               ),
                             ),
                             SizedBox(height: screenHeight * 0.02),
@@ -981,7 +977,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  'Logout Akun', // Judul disesuaikan dari Hapus Akun ke Logout
+                                  'Hapus Akun', // Judul disesuaikan dari Hapus Akun ke Logout
                                   style: GoogleFonts.inter(
                                     fontSize: titleFontSize,
                                     fontWeight: FontWeight.w600,
@@ -989,7 +985,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  'Keluar dari sesi aplikasi ini', // Subtitle disesuaikan
+                                  'Hapus akun ini dan buat baru.', // Subtitle disesuaikan
                                   style: GoogleFonts.inter(
                                     fontSize: screenWidth * 0.035,
                                     color: Colors.grey[600],
