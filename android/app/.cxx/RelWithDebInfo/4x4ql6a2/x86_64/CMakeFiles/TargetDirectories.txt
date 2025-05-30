@@ -1,0 +1,2 @@
+C:/laragon/www/hydrate/android/app/.cxx/RelWithDebInfo/4x4ql6a2/x86_64/CMakeFiles/edit_cache.dir
+C:/laragon/www/hydrate/android/app/.cxx/RelWithDebInfo/4x4ql6a2/x86_64/CMakeFiles/rebuild_cache.dir
