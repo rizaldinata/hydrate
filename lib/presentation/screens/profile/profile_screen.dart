@@ -90,7 +90,7 @@ class ProfileScreenState extends State<ProfileScreen> {
               Icon(Icons.logout, color: Colors.red, size: 24),
               SizedBox(width: 8),
               Text(
-                'Konfirmasi Logout',
+                'Konfirmasi',
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -99,7 +99,7 @@ class ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
           content: Text(
-            'Apakah Anda yakin ingin keluar dari aplikasi?',
+            'Apakah Anda yakin ingin menghapus profil?',
             style: GoogleFonts.inter(fontSize: 16),
           ),
           actions: <Widget>[
@@ -123,7 +123,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               child: Text(
-                'Logout',
+                'Hapus',
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -383,131 +383,7 @@ class ProfileScreenState extends State<ProfileScreen> {
       _showSnackBar("Gagal logout: ${e.toString()}");
     }
   }
-
-  void _showRatingDialog() {
-    int selectedRating = 0;
-    String reviewText = '';
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              title: Row(
-                children: [
-                  Icon(Icons.star, color: Colors.amber, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    'Beri Rating',
-                    style: GoogleFonts.inter(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bagaimana pengalaman Anda menggunakan aplikasi ini?',
-                    style: GoogleFonts.inter(fontSize: 14),
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return GestureDetector(
-                        onTap: () {
-                          setStateDialog(() {
-                            selectedRating = index + 1;
-                          });
-                        },
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 4),
-                          child: Icon(
-                            index < selectedRating
-                                ? Icons.star
-                                : Icons.star_border,
-                            color: Colors.amber,
-                            size: 32,
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                  SizedBox(height: 16),
-                  TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Tulis ulasan Anda (opsional)',
-                      hintStyle: GoogleFonts.inter(color: Colors.grey[500]),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.grey[300]!),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Color(0xFF2AD1D1)),
-                      ),
-                    ),
-                    maxLines: 3,
-                    onChanged: (value) {
-                      reviewText = value;
-                    },
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    'Batal',
-                    style: GoogleFonts.inter(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF2AD1D1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  onPressed: selectedRating > 0
-                      ? () {
-                          Navigator.of(context).pop();
-                          _submitRating(selectedRating, reviewText);
-                        }
-                      : null,
-                  child: Text(
-                    'Kirim',
-                    style: GoogleFonts.inter(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _submitRating(int rating, String review) {
-    _showSnackBar("Terima kasih atas rating Anda! ⭐");
-  }
-
+  
   void refresh() {
     _loadUserData();
     _loadNotificationPreference();
@@ -797,7 +673,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  "Edit Profile",
+                                  "Ubah Profil",
                                   style: TextStyle(
                                     color: Color(0xFF2F2E41),
                                     fontWeight: FontWeight.w700,
@@ -851,7 +727,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  'Pengaturan Notifikasi', // Judul diubah
+                                  'Pengingat Minum', // Judul diubah
                                   style: GoogleFonts.inter(
                                     fontSize: titleFontSize,
                                     fontWeight: FontWeight.w600,
@@ -964,7 +840,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  'Hapus Akun', // Judul disesuaikan dari Hapus Akun ke Logout
+                                  'Hapus Profil', // Judul disesuaikan dari Hapus Akun ke Logout
                                   style: GoogleFonts.inter(
                                     fontSize: titleFontSize,
                                     fontWeight: FontWeight.w600,

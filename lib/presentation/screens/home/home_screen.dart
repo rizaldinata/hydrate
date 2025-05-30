@@ -821,7 +821,7 @@ class HomeScreensState extends State<HomeScreens>
                           screenHeight: screenHeight,
                           formatTime: _formatTime,
                           onStatusChange: () {
-                            print("Status widget changed");
+                            // print("Status widget changed");
                           },
                         ),
                       ),
