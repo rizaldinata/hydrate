@@ -27,16 +27,13 @@ class HydrationStatsController extends ChangeNotifier {
       final int? userId = await SessionManager().getUserId(); // Mengambil ID pengguna
       if (userId != null) {
         _stats = await _repository.getHydrationStatistics(userId);
-        print("Statistik hidrasi dimuat untuk pengguna ID: $userId");
       } else {
         _stats = HydrationStatsModel.empty(); // Reset jika tidak ada user ID
         _errorMessage = "ID pengguna tidak ditemukan. Tidak dapat memuat statistik.";
-        print(_errorMessage);
       }
-    } catch (e) {
-      _errorMessage = 'Gagal memuat statistik hidrasi: $e';
+    } catch (_) {
+      _errorMessage = 'Gagal memuat statistik hidrasi';
       _stats = HydrationStatsModel.empty(); // Reset jika ada error
-      print('Error di HydrationStatsController (fetchHydrationStats): $_errorMessage');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -64,11 +61,9 @@ class HydrationStatsController extends ChangeNotifier {
         await fetchHydrationStats();
       } else {
          _errorMessage = "ID pengguna tidak ditemukan. Tidak dapat memperbarui statistik.";
-        print(_errorMessage);
       }
-    } catch (e) {
-      _errorMessage = 'Gagal memperbarui dan memuat ulang statistik: $e';
-      print('Error di HydrationStatsController (triggerDailyStatsUpdateAndRefresh): $_errorMessage');
+    } catch (_) {
+      _errorMessage = 'Gagal memperbarui dan memuat ulang statistik';
     } finally {
       _isLoading = false;
       notifyListeners(); // Memberitahu UI bahwa proses selesai

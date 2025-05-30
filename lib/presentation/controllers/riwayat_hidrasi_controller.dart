@@ -112,19 +112,15 @@ class RiwayatHidrasiController extends ChangeNotifier {
       switch (periode) {
         case StatisticPeriod.weekly: 
           _statistikData = await _repository.getDailyHydrationForWeek(userId, referensiTanggal);
-          print("[Controller-Mingguan] Data diterima dari repo: $_statistikData"); 
           break;
         case StatisticPeriod.monthly:
           _statistikData = await _repository.getWeeklyHydrationForMonth(userId, referensiTanggal.year, referensiTanggal.month);
-          print("[Controller-Bulanan] Data diterima dari repo: $_statistikData"); 
           break;
         case StatisticPeriod.yearly:
           _statistikData = await _repository.getMonthlyHydrationForYear(userId, referensiTanggal.year);
-          print("[Controller-Tahunan] Data diterima dari repo: $_statistikData"); 
           break;
       }
-    } catch (e) {
-       print("[Controller] Error saat fetchStatistikData untuk periode $periode: $e"); 
+    } catch (_) {
       _statistikData = [];
     } finally {
       _isLoadingStats = false;

@@ -16,22 +16,13 @@ class RiwayatHidrasiRepository {
       final tanggalHariIni = DateFormat('yyyy-MM-dd').format(now);
       final waktuSekarang = DateFormat('HH:mm:ss').format(now);
 
-      print("Menambahkan riwayat hidrasi dengan jumlah: $jumlahHidrasi pada $tanggalHariIni $waktuSekarang WIB");
-
       int result = await db.rawInsert('''
         INSERT INTO riwayat_hidrasi (fk_id_pengguna, jumlah_hidrasi, tanggal_hidrasi, waktu_hidrasi)
         VALUES (?, ?, ?, ?)
       ''', [fkIdPengguna, jumlahHidrasi, tanggalHariIni, waktuSekarang]);
 
-      if (result > 0) {
-        print("Riwayat hidrasi berhasil ditambahkan! ID: $result");
-      } else {
-        print("Gagal menambahkan riwayat hidrasi.");
-      }
-
       return result;
     } catch (e) {
-      print("Error saat menambahkan riwayat hidrasi: $e");
       return -1;
     }
   }
@@ -46,10 +37,8 @@ class RiwayatHidrasiRepository {
         orderBy: 'waktu_hidrasi DESC',
       );
 
-      print("Mengambil riwayat hidrasi untuk tanggal $tanggal: ${maps.length} data");
       return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
     } catch (e) {
-      print("Error saat mengambil riwayat hidrasi berdasarkan tanggal: $e");
       return [];
     }
   }
@@ -66,7 +55,6 @@ class RiwayatHidrasiRepository {
 
       return maps.map((map) => RiwayatHidrasi.fromMap(map)).toList();
     } catch (e) {
-      print("Error saat mengambil riwayat hidrasi: $e");
       return [];
     }
   }
@@ -85,16 +73,11 @@ class RiwayatHidrasiRepository {
 
     final double jumlah = result.first['jumlah_hidrasi'];
 
-    print("Jumlah hidrasi yang akan dihapus: $jumlah");
-
-    final deleteResult = await db.delete(
+    await db.delete(
       'riwayat_hidrasi',
       where: 'id = ?',
       whereArgs: [idRiwayat],
     );
-
-    print("Jumlah data yang dihapus: $deleteResult");
-
     return jumlah;
   }
 
@@ -186,7 +169,6 @@ class RiwayatHidrasiRepository {
         'label': DateFormat('E', 'id_ID').format(currentDate),
       });
     }
-    print("[Repo-Mingguan] Data yang akan dikembalikan untuk minggu berakhir ${DateFormat('yyyy-MM-dd').format(weekEndDate)}: $dailyTotals");
     return dailyTotals;
   }
 
@@ -222,7 +204,6 @@ class RiwayatHidrasiRepository {
       weekIndex++;
       if (weekIndex > 4 && currentWeekStart.month != month) break; 
     }
-    print("[Repo-Mingguan] Data mingguan yang dikembalikan untuk bulan $month: $weeklyTotals");
     return weeklyTotals;
   }
 
@@ -241,7 +222,6 @@ class RiwayatHidrasiRepository {
       double totalForMonth = (result.first['total'] as num?)?.toDouble() ?? 0.0;
       monthlyTotals.add({'x': month - 1, 'y': totalForMonth, 'label': DateFormat('MMM', 'id_ID').format(DateTime(year, month))});
     }
-    print("[Repo-Tahunan] Data yang akan dikembalikan untuk tahun $year: $monthlyTotals");
     return monthlyTotals;
   }
 }

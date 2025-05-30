@@ -16,7 +16,7 @@ class HydrationStatsChart extends StatefulWidget {
   final Color primaryTextColor;
   final Color secondaryTextColor;
 
-  HydrationStatsChart({
+  const HydrationStatsChart({
     super.key,
     this.accentColor = Colors.blue,
     this.cardColor,
@@ -49,13 +49,11 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   @override
   void initState() {
     super.initState();
-    print("[HydrationStatsChart] initState called");
     _riwayatHidrasiController = RiwayatHidrasiController();
     _loadInitialData();
 
     _eventSubscription = _eventBus.stream.listen((AppEvent event) {
       if (event.type == 'refresh_statistics' || event.type == 'refresh_all') {
-        print("[HydrationStatsChart] Menerima event: ${event.type}. Memuat ulang data chart...");
         if (mounted) {
           _loadInitialData();
         }
@@ -70,17 +68,13 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   }
 
   Future<void> _loadInitialData() async {
-    print("[HydrationStatsChart] _loadInitialData called");
     
-    // Gunakan variabel instance _userId
     if (_userId == null) { 
       final session = SessionManager();
-      // Tetapkan nilai ke variabel instance _userId
       _userId = await session.getUserId(); 
     }
 
     if (_userId != null) {
-      // Teruskan nilai _userId yang sudah pasti tidak null
       await _fetchChartData(_userId!); 
     } else {
       if (mounted) {
@@ -89,7 +83,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           _barGroups = [];
           _axisLabels = [];
           _processedChartPoints = [];
-          print("[HydrationStatsChart] User ID tidak ditemukan, chart tidak bisa dimuat.");
         });
       }
     }
@@ -102,7 +95,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     });
 
     DateTime referenceDate = _calculateReferenceDate();
-    print("[Chart] Fetching data for period: $currentPeriod, referenceDate: $referenceDate, currentIndex: $currentIndex");
 
     await _riwayatHidrasiController.fetchStatistikData(
       userId: userId, 
@@ -126,12 +118,10 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     }
 
     if (mounted) {
-      setState(() {;
+      setState(() {
         _isChartLoading = false;
         touchedIndex = -1; 
       });
-      print("[Chart] _fetchChartData selesai. _isChartLoading: $_isChartLoading, _isTargetLoading: $_isTargetLoading");
-      print("[Chart] Data untuk chart: BarGroups: ${_barGroups.length}, MaxY: $_maxYValue");
     }
   }
 
@@ -152,11 +142,9 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     final barWidth = _calculateBarWidth(MediaQuery.of(context).size.width);
 
     final String todayForTarget = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
-    print("[ChartStats - _processRawDataToPercentages] Memanggil _targetHidrasiRepository.getTargetHidrasiHarian untuk userId: $userId, tanggal: $todayForTarget");
     final targetDataToday = await _targetHidrasiRepository.getTargetHidrasiHarian(userId, todayForTarget);
     double dailyTargetGeneral = (targetDataToday?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0; 
     if (dailyTargetGeneral <= 0) dailyTargetGeneral = 2500.0;
-    print("[ChartStats - _processRawDataToPercentages] Menggunakan dailyTargetGeneral: $dailyTargetGeneral ml untuk perhitungan persentase.");
 
      if (rawDataMl.isNotEmpty) {
         for (int i = 0; i < rawDataMl.length; i++) {
@@ -194,8 +182,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       }
      }
 
-    print("[ChartStats - _processRawDataToPercentages] tempBarGroups yang akan di-set: $tempBarGroups");
-
     if (mounted) {
       setState(() {
         _processedChartPoints = tempProcessedPoints;
@@ -203,7 +189,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
         _axisLabels = tempAxisLabels;
         _maxYValue = calculatedMaxY; 
         _isTargetLoading = false;
-        print("[ChartStats - _processRawDataToPercentages] Selesai. BarGroups: ${_barGroups.length}, AxisLabels: ${_axisLabels.length}");
       });   
     }
   }
@@ -221,33 +206,6 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     }
   }
 
-  List<String> _generateAxisLabels(List<Map<String, dynamic>> data) {
-    if (data.isEmpty) return [];
-    return data.map((item) => item['label'] as String? ?? '').toList();
-  }
-
-  double _calculateDynamicMaxY(List<Map<String, dynamic>> data) {
-    if (data.isEmpty) return 110; 
-    double maxPercent = 0;
-
-    for (var item in data) {
-      if ((item['percentageY'] as num).toDouble() > maxPercent) {
-         maxPercent = (item['percentageY'] as num).toDouble();
-      }
-    }
-
-    return maxPercent > 100 ? (maxPercent * 1.1).clamp(110, 150) : 110;
-  }
-
-  List<BarChartGroupData> _processDataToBarGroups(List<Map<String, dynamic>> data) {
-    final barWidth = _calculateBarWidth(MediaQuery.of(context).size.width); // Hitung barWidth
-    return data.map((item) {
-      final x = (item['x'] as num).toInt();
-      final y = (item['y'] as num).toDouble();
-      return makeGroupData(x, y, barWidth: barWidth, isTouched: x == touchedIndex);
-    }).toList();
-  }
-  
   double _calculateBarWidth(double screenWidth) {
     // Logika yang sama seperti di _buildChartCard Anda
     return screenWidth < 300 ? 8.0 : (screenWidth < 400 ? 10.0 : 12.0);
@@ -277,7 +235,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       decoration: BoxDecoration(
         color: widget.cardColor ?? Colors.grey[100],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -346,7 +304,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     final subtitleFontSize = width < 350 ? 10.0 : 12.0;
     final legendFontSize = width < 350 ? 10.0 : 11.0;
     
-    return Container(
+    return SizedBox(
       height: height,
       child: Card(
         color: widget.cardColor,
@@ -432,7 +390,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
             } : null,
             icon: Icon(
               Icons.chevron_left,
-              color: _canNavigatePrevious() ? widget.primaryTextColor : Colors.grey.withOpacity(0.5),
+              color: _canNavigatePrevious() ? widget.primaryTextColor : Colors.grey.withValues(alpha: 0.5),
             ),
           ),
           Expanded(
@@ -456,7 +414,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
             } : null,
             icon: Icon(
               Icons.chevron_right,
-              color: _canNavigateNext() ? widget.primaryTextColor : Colors.grey.withOpacity(0.5),
+              color: _canNavigateNext() ? widget.primaryTextColor : Colors.grey.withValues(alpha: 0.5),
             ),
           ),
         ],
@@ -543,7 +501,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           height: 12,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [widget.accentColor, widget.accentColor.withOpacity(0.5)],
+              colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.5)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -567,7 +525,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   return BarChartData(
     barTouchData: BarTouchData( // (LOGIKA TOOLTIP AKAN DIPERBARUI DI BAWAH)
       touchTooltipData: BarTouchTooltipData(
-        getTooltipColor: (_) => Colors.blueGrey.withOpacity(0.8),
+        getTooltipColor: (_) => Colors.blueGrey.withValues(alpha: 0.8),
         tooltipBorder: BorderSide.none,
         tooltipMargin: 8,
         getTooltipItem: (group, groupIndex, rod, rodIndex) {
@@ -598,7 +556,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
               TextSpan(
                 text: ' (${originalMl.toStringAsFixed(0)} ml)', // Tampilkan ml asli
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   fontSize: (MediaQuery.of(context).size.width < 350 ? 9 : 11),
                   fontWeight: FontWeight.w400,
                 ),
@@ -713,9 +671,9 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       barRods: [
         BarChartRodData(
           toY: isTouched ? y + (y * 0.05) : y, // 5% increase when touched
-          color: isTouched ? widget.accentColor.withOpacity(0.85) : widget.accentColor,
+          color: isTouched ? widget.accentColor.withValues(alpha: 0.85) : widget.accentColor,
           gradient: LinearGradient(
-            colors: [widget.accentColor, widget.accentColor.withOpacity(0.7)],
+            colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.7)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -748,7 +706,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     }
     
     return SideTitleWidget(
-      meta: meta,  // <-- KEMBALIKAN KE MENGGUNAKAN PARAMETER 'meta'
+      meta: meta,
       space: 8,
       child: Text(
         textToDisplay,

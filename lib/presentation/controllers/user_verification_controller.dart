@@ -1,4 +1,3 @@
-// lib/presentation/controllers/user_verification_controller.dart
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/core/utils/hydration_calculator.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
@@ -10,14 +9,12 @@ class UserVerificationController {
   final TargetHidrasiRepository _targetHidrasiRepository = TargetHidrasiRepository();
   late HydrationCalculator _hydrationCalculator;
   
-  // User data
   int? _idPengguna;
   String? _namaPengguna;
   double _target = 0;
   double _currentIntake = 0;
   bool _hasInitializedTarget = false;
   
-  // Getters
   int? get idPengguna => _idPengguna;
   String? get namaPengguna => _namaPengguna;
   double get target => _target;
@@ -27,7 +24,6 @@ class UserVerificationController {
   String get todayDate => DateFormat('yyyy-MM-dd')
       .format(DateTime.now().toUtc().add(const Duration(hours: 7)));
 
-  /// Memuat dan memverifikasi data user
   Future<UserVerificationResult> loadAndVerifyUser() async {
     try {
       final session = SessionManager();
@@ -51,17 +47,13 @@ class UserVerificationController {
         );
       }
 
-      // Initialize hydration calculator
       _hydrationCalculator = HydrationCalculator(penggunaId: userId);
       
-      // Set user data
       _idPengguna = userId;
       _namaPengguna = pengguna.nama;
 
-      // Initialize target
       await _initializeTarget();
       
-      // Load today's intake
       await _loadTodayIntake();
 
       return UserVerificationResult(
@@ -72,16 +64,14 @@ class UserVerificationController {
         currentIntake: _currentIntake,
       );
 
-    } catch (e) {
-      print("Error loading user data: $e");
+    } catch (_) {
       return UserVerificationResult(
         success: false,
-        error: "Error loading user data: $e",
+        error: "Error loading user data",
       );
     }
   }
 
-  /// Inisialisasi target hidrasi
   Future<void> _initializeTarget() async {
     if (_hasInitializedTarget || _idPengguna == null) return;
 
@@ -94,14 +84,11 @@ class UserVerificationController {
 
       await _checkAndCreateTodayTarget();
 
-      print("Target hidrasi diinisialisasi: $_target mL");
     } catch (e) {
-      print("Error initializing target: $e");
       _hasInitializedTarget = false;
     }
   }
 
-  /// Memeriksa dan membuat target hari ini jika belum ada
   Future<void> _checkAndCreateTodayTarget() async {
     if (_idPengguna == null) return;
 
@@ -119,36 +106,27 @@ class UserVerificationController {
 
         await _targetHidrasiRepository.createTargetHidrasi(
             _idPengguna!, currentCalculatedTarget, todayDate, 0.0);
-        print("Target hidrasi baru dibuat untuk tanggal $todayDate: $currentCalculatedTarget mL");
       } else {
         await _targetHidrasiRepository.updateTargetHidrasiValue(_idPengguna!, todayDate);
-        print("Target hidrasi untuk tanggal $todayDate sudah ada dan diperbarui jika perlu");
 
         final updatedTargetData = await _targetHidrasiRepository
             .getTargetHidrasiHarian(_idPengguna!, todayDate);
 
         if (updatedTargetData != null && (updatedTargetData['target_hidrasi'] ?? 0) > 0) {
           _target = updatedTargetData['target_hidrasi'];
-          print("Target hidrasi dari DB: $_target mL");
         }
       }
-    } catch (e) {
-      print("Error saat memeriksa/membuat target hidrasi: $e");
-      // Fallback: try to ensure target is set based on calculation
+    } catch (_) {
       try {
         if (_idPengguna != null) {
           await _hydrationCalculator.initializeData(_idPengguna!);
           final calculatedTarget = _hydrationCalculator.calculateDailyWaterIntake() * 1000;
           _target = calculatedTarget;
-          print("Target hidrasi (recovery): $_target mL");
         }
-      } catch (e2) {
-        print("Error saat menghitung target hidrasi (recovery): $e2");
-      }
+      } catch (_) {}
     }
   }
 
-  /// Memuat intake hari ini
   Future<void> _loadTodayIntake() async {
     if (_idPengguna == null) return;
 
@@ -168,23 +146,17 @@ class UserVerificationController {
         _target = dbTargetHidrasi > 0 ? dbTargetHidrasi : _target;
         _currentIntake = totalHidrasi;
 
-        print("Data hidrasi dimuat: $totalHidrasi mL dari target $_target mL");
       } else {
-        print("Peringatan: Record target_hidrasi tidak ditemukan untuk hari ini setelah pengecekan.");
         _currentIntake = 0;
       }
-    } catch (e) {
-      print("Error saat memuat intake hari ini: $e");
-    }
+    } catch (_) {}
   }
 
-  /// Refresh data user
   Future<UserVerificationResult> refreshUserData() async {
     _hasInitializedTarget = false;
     return await loadAndVerifyUser();
   }
 
-  /// Reset controller state
   void reset() {
     _idPengguna = null;
     _namaPengguna = null;
@@ -193,19 +165,15 @@ class UserVerificationController {
     _hasInitializedTarget = false;
   }
 
-  /// Get current intake percentage
   double getIntakePercentage() {
     if (_target <= 0) return 0;
     final percentage = (_currentIntake / _target) * 100;
     return percentage > 100 ? 100 : percentage;
   }
 
-  /// Check if target is achieved
   bool isTargetAchieved() {
     return _target > 0 && _currentIntake >= _target;
   }
-
-  /// Get truncated name for display
   String getTruncatedName(int maxLength) {
     if (_namaPengguna == null) return "";
     if (_namaPengguna!.length <= maxLength) return _namaPengguna!;
@@ -219,7 +187,6 @@ class UserVerificationController {
   }
 }
 
-/// Result class untuk hasil verifikasi user
 class UserVerificationResult {
   final bool success;
   final String? error;

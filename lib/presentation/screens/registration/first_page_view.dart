@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hydrate/presentation/screens/registration/splash_view.dart';
 
 class InfoProduct extends StatelessWidget {
+  const InfoProduct({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +108,7 @@ class InfoProduct extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Color(0xFF00A6FB).withOpacity(0.25),
+                            color: Color(0xFF00A6FB).withValues(alpha: 0.25),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),

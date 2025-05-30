@@ -7,6 +7,7 @@ class AddWaterModalContent extends StatefulWidget {
   final Function(int) onWaterAdded;
 
   const AddWaterModalContent({
+    super.key,
     required this.selectedWater,
     required this.idPengguna,
     required this.onWaterAdded,
@@ -76,19 +77,19 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
+                      color: Colors.white.withValues(alpha: 0.95),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(color: Colors.black26, blurRadius: 5),
                       ],
-                      border: Border.all(color: Colors.red.withOpacity(0.3)),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.error_outline,
-                          color: Colors.red,
+                          color: Colors.red.withValues(alpha: 0.3),
                           size: 24,
                         ),
                         const SizedBox(width: 16),
@@ -137,7 +138,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
       duration: Duration(milliseconds: 300),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       height: modalHeight,
@@ -197,7 +198,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Color(0xFF00A6FB).withOpacity(0.10),
+                      color: Color(0xFF00A6FB).withValues(alpha: 0.10),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Icon(
@@ -236,7 +237,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                     await _handleAddWater();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.blue.withValues(alpha: 0.10),
                     padding: EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -310,7 +311,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
             height: 50, // Container highlight lebih kecil
             width: MediaQuery.of(context).size.width - 40,
             decoration: BoxDecoration(
-              color: const Color(0xFF00A6FB).withOpacity(0.15),
+              color: const Color(0xFF00A6FB).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
           ),
@@ -358,24 +359,19 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
     await widget.onWaterAdded(tempSelectedWater);
   }
 
-  // Widget for custom input mode dengan ukuran adaptif
   Widget _buildCustomInputMode(BuildContext context, bool isCompact) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Input container sesuai dengan design
-        Container(
-          child: Row(
+        Row(
             children: [
-              // Left spacer untuk centering
               Expanded(flex: 1, child: Container()),
 
-              // Input field
               Expanded(
                 flex: 2,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00A6FB).withOpacity(0.15),
+                    color: const Color(0xFF00A6FB).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: TextField(
@@ -386,7 +382,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                     autofocus: true,
                     textInputAction: TextInputAction.done,
                     style: TextStyle(
-                      fontSize: 40, // Font lebih kecil saat compact
+                      fontSize: 40,
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF00A6FB),
                     ),
@@ -396,7 +392,7 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                       hintStyle: TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey.withOpacity(0.5),
+                        color: Colors.grey.withValues(alpha: 0.5),
                       ),
                     ),
                     onChanged: (value) {
@@ -408,23 +404,17 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                       }
                     },
                     onSubmitted: (value) {
-                      // Handle input selesai saat user tekan enter/done
                       if (isCustomMode) {
                         int? customValue = int.tryParse(value);
                         if (customValue != null &&
                             customValue > 0 &&
                             customValue <= 2000) {
-                          // Auto submit jika nilai valid
                           _handleAddWater();
                         } else {
-                          // Show error popup if invalid value
-                          // JANGAN tutup keyboard, biarkan user edit lagi
                           _showErrorPopup(context, "Masukkan nilai antara 1-2000 mL");
-                          // Keep focus on the TextField to prevent keyboard from closing
                           Future.delayed(Duration(milliseconds: 50), () {
                             if (customInputFocusNode.canRequestFocus) {
                               customInputFocusNode.requestFocus();
-                              // Select all text for easier editing
                               customWaterController.selection = TextSelection(
                                 baseOffset: 0,
                                 extentOffset: customWaterController.text.length,
@@ -438,14 +428,13 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
                 ),
               ),
 
-              // mL text
               Expanded(
                 flex: 1,
                 child: Text(
                   "mL",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 24, // Text lebih kecil saat compact
+                    fontSize: 24, 
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF2F2E41),
                   ),
@@ -453,8 +442,6 @@ class AddWaterModalContentState extends State<AddWaterModalContent>
               ),
             ],
           ),
-        ),
-
         SizedBox(height: isCompact ? 10 : 20),
         Text(
           "Masukkan jumlah air (1-2000 mL)",

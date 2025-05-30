@@ -15,11 +15,11 @@ class AnimatedWaterProgressCircle extends StatefulWidget {
   final double screenWidth;
 
   const AnimatedWaterProgressCircle({
-    Key? key,
+    super.key,
     required this.currentIntake,
     required this.target,
     required this.screenWidth,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedWaterProgressCircle> createState() =>
@@ -190,9 +190,9 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
   Color _getTargetUnitTextColor(ProgressState state) {
     if (state == ProgressState.empty) return Colors.transparent;
      switch (state) {
-      case ProgressState.critical: return Colors.red.shade600.withOpacity(0.8);
-      case ProgressState.exceeded: return Colors.orange.shade600.withOpacity(0.8);
-      default: return const Color(0xFF005A8D).withOpacity(0.8);
+      case ProgressState.critical: return Colors.red.shade600.withValues(alpha: 0.8);
+      case ProgressState.exceeded: return Colors.orange.shade600.withValues(alpha: 0.8);
+      default: return const Color(0xFF005A8D).withValues(alpha: 0.8);
     }
   }
 
@@ -539,7 +539,7 @@ class WaterWavePainter extends CustomPainter {
 
     if (progressState != ProgressState.critical && waterLevel > 0.05) {
       final foamPaint = Paint()
-        ..color = Colors.white.withOpacity(0.5)
+        ..color = Colors.white.withValues(alpha: 0.5)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5;
       
@@ -576,13 +576,13 @@ class EmptyGlassPainter extends CustomPainter {
     final glassRimHeight = 5.0;
 
     final glassFillPaint = Paint()
-      ..color = const Color(0xFFD0EFFF).withOpacity(0.5) // Warna isi lebih transparan
+      ..color = const Color(0xFFD0EFFF).withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     final glassStrokePaint = Paint()
-      ..color = const Color(0xFF87CEFA).withOpacity(0.7) // Warna outline lebih lembut
+      ..color = const Color(0xFF87CEFA).withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5; // Stroke lebih tipis
+      ..strokeWidth = 1.5;  
 
     final glassPath = Path()
       ..moveTo(center.dx - glassWidth / 2, center.dy - glassHeight / 2 + glassRimHeight) 
@@ -600,7 +600,7 @@ class EmptyGlassPainter extends CustomPainter {
       width: glassWidth,
       height: glassRimHeight * 1.5,
     );
-    canvas.drawOval(rimRect, glassStrokePaint..style = PaintingStyle.fill ..color = const Color(0xFFB0E0E6).withOpacity(0.6));
+    canvas.drawOval(rimRect, glassStrokePaint..style = PaintingStyle.fill ..color = const Color(0xFFB0E0E6).withValues(alpha: 0.6));
     canvas.drawOval(rimRect, glassStrokePaint..style = PaintingStyle.stroke);
   }
 
@@ -610,7 +610,7 @@ class EmptyGlassPainter extends CustomPainter {
 
 class ExclamationPainter extends CustomPainter {
   final double screenWidth;
-  final bool isLarge; // Tambahkan parameter ini
+  final bool isLarge;
 
   ExclamationPainter({required this.screenWidth, this.isLarge = false});
 
@@ -620,14 +620,12 @@ class ExclamationPainter extends CustomPainter {
       ..color = Colors.red.shade500 
       ..style = PaintingStyle.fill;
 
-    // Sesuaikan ukuran berdasarkan isLarge
-    final scaleFactor = isLarge ? 1.5 : 1.0; // Faktor skala jika isLarge true
+    final scaleFactor = isLarge ? 1.5 : 1.0; 
 
     final barWidth = size.width * 0.35 * scaleFactor;
     final barHeight = size.height * 0.6 * scaleFactor;
     final dotRadius = size.width * 0.22 * scaleFactor;
 
-    // Pastikan tidak melebihi bounds jika diperbesar
     final clampedBarHeight = math.min(barHeight, size.height * 0.7);
     final clampedDotRadius = math.min(dotRadius, size.width * 0.3);
     
@@ -648,7 +646,7 @@ class ExclamationPainter extends CustomPainter {
     );
 
     canvas.drawCircle(
-      Offset(size.width / 2, dotCenterY - (clampedBarHeight - barHeight)/2 ), // Sesuaikan posisi dot jika barHeight di-clamp
+      Offset(size.width / 2, dotCenterY - (clampedBarHeight - barHeight)/2 ), 
       clampedDotRadius,
       paint,
     );

@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
 import 'package:hydrate/presentation/widgets/Main/animated_progress_circle.dart';
-import 'package:hydrate/presentation/widgets/Main/customInputWater_widget.dart';
+import 'package:hydrate/presentation/widgets/Main/custom_input_water_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart'; // UI Controller
@@ -58,7 +58,7 @@ class HomeScreensState extends State<HomeScreens>
   bool _isButtonCooldown = false;
 
   static const String _endTimeKey = 'countdown_end_time';
-  Map<double, double> _glassOffsets = {};
+  final Map<double, double> _glassOffsets = {};
 
   final NotificationSettingsService _notificationSettingsService =
       NotificationSettingsService();
@@ -71,6 +71,7 @@ class HomeScreensState extends State<HomeScreens>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
     NotificationController.initializeLocalNotifications();
     NotificationController.startListeningNotificationEvents();
     _uiController = HomeController();
@@ -81,22 +82,21 @@ class HomeScreensState extends State<HomeScreens>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        print("[HomeScreen - initState] Memanggil _fetchDataAndUpdateScreen untuk pemuatan awal.");
         _fetchDataAndUpdateScreen(forceTargetRecalculation: false);
+        _scheduleWakeUpNotification(); 
       }
     });
 
     _eventSubscription = _eventBus.stream.listen((AppEvent event) {
       if (event.type == 'refresh_all' || event.type == 'refresh_home_page') {
-        print("[HomeScreen - EventBus] Event '${event.type}' diterima. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
         _fetchDataAndUpdateScreen(forceTargetRecalculation: true);
+        _scheduleWakeUpNotification(); 
       }
     });
   }
 
   @override
   void dispose() {
-    print("[HomeScreen] dispose called");
     _audioPlayer.dispose();
     _countdownTimer?.cancel();
     _eventSubscription?.cancel();
@@ -106,14 +106,62 @@ class HomeScreensState extends State<HomeScreens>
     super.dispose();
   }
 
+  Future<void> _scheduleWakeUpNotification() async {
+    if (!mounted) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false; 
+
+    if (!areNotificationsGloballyEnabled) {
+      print("[HomeScreen - _scheduleWakeUpNotification] Notifikasi global DINONAKTIFKAN, notifikasi bangun tidak dijadwalkan.");
+      return;
+    }
+    
+    if (idPengguna == null) {
+        print("[HomeScreen - _scheduleWakeUpNotification] idPengguna null, tidak bisa mengambil pengaturan waktu.");
+        final session = SessionManager();
+        idPengguna = await session.getUserId();
+        if (idPengguna == null) {
+            print("[HomeScreen - _scheduleWakeUpNotification] Tetap tidak bisa mendapatkan idPengguna. Batal penjadwalan.");
+            return;
+        }
+    }
+
+
+    final TimeOfDay wakeUp = await _notificationSettingsService.getWakeUpTime();
+    DateTime now = DateTime.now();
+    DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
+    DateTime nextWakeUpNotificationTime;
+
+    if (now.isBefore(todayWakeUp)) {
+      nextWakeUpNotificationTime = todayWakeUp;
+    } else {
+      nextWakeUpNotificationTime = todayWakeUp.add(const Duration(days: 1));
+    }
+    
+    nextWakeUpNotificationTime = nextWakeUpNotificationTime.add(const Duration(seconds: 10));
+
+    const int wakeUpNotificationId = 200; 
+
+    await AwesomeNotifications().cancel(wakeUpNotificationId); 
+
+    print("[HomeScreen - _scheduleWakeUpNotification] Menjadwalkan notifikasi bangun untuk: $nextWakeUpNotificationTime");
+    
+    await NotificationController.scheduleNextHydrationNotification(
+        exactNotificationTime: nextWakeUpNotificationTime,
+        title: 'Bangun Tidur! Waktunya Minum Air 💧',
+        body: 'Awali harimu dengan hidrasi yang cukup!',
+        notificationId: wakeUpNotificationId, 
+        payload: {'type': 'wake_up_reminder'} 
+    );
+  }
+
   Future<void> _fetchDataAndUpdateScreen({bool forceTargetRecalculation = false}) async {
     if (!mounted) return;
     
     setState(() {
       _isHomeScreenLoading = true;
     });
-
-    print("[HomeScreen - _fetchDataAndUpdateScreen] Memulai. Force recalculate: $forceTargetRecalculation. Jam: ${DateTime.now()}");
     
     final session = SessionManager();
     final localUserId = await session.getUserId();
@@ -133,10 +181,8 @@ class HomeScreensState extends State<HomeScreens>
         // 2. Minta TargetHidrasiController untuk menginisialisasi atau menghitung ulang target
         final targetController = Provider.of<TargetHidrasiController>(context, listen: false);
         if (forceTargetRecalculation) {
-          print("[HomeScreen] Meminta TargetHidrasiController untuk MEMAKSA kalkulasi ulang target untuk userId: $localUserId");
           await targetController.forceRecalculateAndUpdateTargetAfterProfileChange(localUserId);
         } else {
-          print("[HomeScreen] Meminta TargetHidrasiController untuk INISIALISASI target (jika perlu) untuk userId: $localUserId");
           await targetController.initializeOrRefreshDailyTarget(localUserId);
         }
         
@@ -149,11 +195,9 @@ class HomeScreensState extends State<HomeScreens>
         // --- KIRIM EVENT SETELAH SEMUA PROSES UPDATE TARGET DI HOMESCREEN SELESAI ---
         // Ini akan memberi tahu MainScreen untuk me-refresh halaman Statistik
         _eventBus.fire('home_target_processing_complete');
-        print("[HomeScreen - _fetchDataAndUpdateScreen] Mengirim event 'home_target_processing_complete'. Jam: ${DateTime.now()}");
         // ---------------------------------------------------------------------------------
       }
     } else {
-      print("[HomeScreen - _fetchDataAndUpdateScreen] UserId tidak ditemukan.");
       if (mounted) {
         setState(() {
           idPengguna = null;
@@ -171,24 +215,24 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   void refresh() {
-    print("[HomeScreen - refresh] Metode refresh() publik dipanggil. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
     _fetchDataAndUpdateScreen(forceTargetRecalculation: true);
   }
 
   Future<void> _loadUserDisplayData(int currentUserId) async {
     try {
-      print("[HomeScreen - _loadUserDisplayData] Memulai untuk userId: $currentUserId. Jam: ${DateTime.now()}");
       final pengguna = await _penggunaController.getPenggunaById(currentUserId);
       if (mounted && pengguna != null) {
         setState(() {
           namaPengguna = pengguna.nama;
         });
-        print("[HomeScreen - _loadUserDisplayData] Nama pengguna dimuat: ${pengguna.nama}");
       } else if (pengguna == null) {
-        print("[HomeScreen - _loadUserDisplayData] Pengguna tidak ditemukan untuk userId: $currentUserId");
       }
     } catch (e) {
-      print("[HomeScreen - _loadUserDisplayData] Error: $e");
+      if (mounted) {
+        setState(() {
+          namaPengguna = null;
+        });
+      }
     }
   }
 
@@ -202,7 +246,6 @@ class HomeScreensState extends State<HomeScreens>
         // Namun, idealnya controller sudah diinisialisasi dengan benar oleh _fetchDataAndUpdateScreen
         final targetDataMap = await _targetHidrasiRepository.getTargetHidrasiHarian(currentUserId, todayDate);
         actualTargetForCalculation = (targetDataMap?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0;
-        print("[HomeScreen - _loadTodayIntake] Menggunakan target fallback dari repo: $actualTargetForCalculation");
     }
     if (actualTargetForCalculation <= 0) actualTargetForCalculation = 2500.0;
 
@@ -225,9 +268,7 @@ class HomeScreensState extends State<HomeScreens>
           // Variabel 'target' lokal tidak lagi di-set di sini. UI akan menggunakan dari Provider.
         });
       }
-      print("[HomeScreen - _loadTodayIntake] Data hidrasi dimuat: $totalHidrasi mL dari target $actualTargetForCalculation mL (${_valueNotifier.value.toStringAsFixed(1)}%)");
     } catch (e) {
-      print("[HomeScreen - _loadTodayIntake] Error: $e");
        if (mounted) {
         setState(() {
           currentIntake = 0;
@@ -239,24 +280,22 @@ class HomeScreensState extends State<HomeScreens>
 
   Future<void> _playDrinkingSound() async {
     try {
-      print("Attempting to play drinking sound...");
       await _audioPlayer.stop();
-      print("AudioPlayer stopped successfully");
 
       await _audioPlayer.play(AssetSource('sounds/drinking_water.mp3'));
-      print("Sound playing started successfully");
     } catch (e) {
-      print("Error playing sound: $e");
-      print("Error details: ${e.toString()}");
+      if (mounted) {
+        setState(() {
+          _audioPlayer.dispose();
+        });
+      }
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    print("[HomeScreen] App lifecycle state berubah: $state");
     if (state == AppLifecycleState.resumed) {
-      print("[HomeScreen] App resumed. Merefresh intake dan countdown timer.");
       if (idPengguna != null) {
         _loadTodayIntake(idPengguna!); 
       }
@@ -269,7 +308,6 @@ class HomeScreensState extends State<HomeScreens>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    print("[HomeScreen] didChangeDependencies called.");
   }
 
   void _startTimer() {
@@ -416,7 +454,6 @@ class HomeScreensState extends State<HomeScreens>
       _eventBus.fire('refresh_statistics'); 
 
     } catch (e) {
-      print("Gagal menyimpan riwayat: $e");
       if (mounted) {
         final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
         double currentTargetForCalc = targetControllerProvider.currentDailyTargetMl;
@@ -456,32 +493,152 @@ class HomeScreensState extends State<HomeScreens>
     });
   }
 
-  void _startCountdown() async {
-    await NotificationController.cancelScheduledNotifications(); // Tambahkan await
+  Future<void> _startCountdown() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false; 
 
-    int reminderIntervalInSeconds = await _notificationSettingsService.getNotificationInterval();
+    if (!areNotificationsGloballyEnabled) {
+      print("[HomeScreen - _startCountdown] Notifikasi global DINONAKTIFKAN. Tidak menjadwalkan. Jam: ${DateTime.now()}"); 
+      _countdownTimer?.cancel();
+      if (mounted) {
+        setState(() {
+          _isCountdownActive = false;
+          _remainingTime = Duration.zero;
+          _endTime = null; 
+        });
+        await _saveCurrentTimerState(); 
+      }
+      return; 
+    }
 
-    await NotificationController.schedulePeriodicHydrationNotification(
-      intervalInSeconds: reminderIntervalInSeconds, 
+    print("[HomeScreen - _startCountdown] Notifikasi global AKTIF. Memulai proses penjadwalan. Jam: ${DateTime.now()}"); 
+
+    await NotificationController.cancelScheduledNotifications();
+
+    print("[HomeScreen - _startCountdown] Jadwal lama dibatalkan. Jam: ${DateTime.now()}");
+
+    final TimeOfDay wakeUp = await _notificationSettingsService.getWakeUpTime();
+    final TimeOfDay sleep = await _notificationSettingsService.getSleepTime();
+
+    print("[HomeScreen - _startCountdown] Pengaturan Waktu: Bangun=${wakeUp.hour}:${wakeUp.minute}, Tidur=${sleep.hour}:${sleep.minute}"); 
+
+    const Duration reminderInterval = Duration(minutes: 1);
+    DateTime now = DateTime.now();
+    DateTime scheduledNotificationTime;
+    DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
+    DateTime todaySleep = DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
+
+    DateTime currentPeriodStart;
+    DateTime currentPeriodEnd;
+
+    if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
+      currentPeriodStart = todayWakeUp;
+      currentPeriodEnd = todaySleep;
+
+      if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
+        currentPeriodStart = todayWakeUp.add(const Duration(days: 1));
+        currentPeriodEnd = todaySleep.add(const Duration(days: 1));
+      }
+    } else {
+      DateTime yesterdayWakeUp = todayWakeUp.subtract(const Duration(days: 1));
+      DateTime tomorrowSleep = todaySleep.add(const Duration(days: 1));
+
+      if (now.isAfter(todayWakeUp) || now.isAtSameMomentAs(todayWakeUp)) {
+        currentPeriodStart = todayWakeUp;
+        currentPeriodEnd = tomorrowSleep;
+      } else if (now.isBefore(todaySleep)) {
+        currentPeriodStart = yesterdayWakeUp;
+        currentPeriodEnd = todaySleep;
+      } else {
+        currentPeriodStart = todayWakeUp;
+        currentPeriodEnd = tomorrowSleep;
+      }
+    }
+    
+    DateTime proposedNextTime = now.add(reminderInterval);
+
+    if (now.isBefore(currentPeriodStart)) {
+      scheduledNotificationTime = currentPeriodStart;
+    } else if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
+      scheduledNotificationTime = currentPeriodStart; 
+      if (scheduledNotificationTime.isBefore(now)) {
+        print("[HS - _startCountdown] KOREKSI WAKTU: Waktu terjadwal awal ($scheduledNotificationTime) terlalu dekat/lampau dari $now.");
+        print("[HS - _startCountdown] WAKTU TERJADWAL SETELAH KOREKSI: $scheduledNotificationTime");
+        DateTime nextWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
+          if(nextWakeUp.isBefore(now) || nextWakeUp.isAtSameMomentAs(now)) {
+              nextWakeUp = nextWakeUp.add(const Duration(days:1));
+          }
+          scheduledNotificationTime = nextWakeUp;
+      }
+    } else {
+      if (proposedNextTime.isBefore(currentPeriodEnd)) {
+        scheduledNotificationTime = proposedNextTime; 
+      } else {
+        if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
+            scheduledNotificationTime = currentPeriodStart.add(const Duration(days: 1)); 
+        } else {
+            scheduledNotificationTime = DateTime(currentPeriodEnd.year, currentPeriodEnd.month, currentPeriodEnd.day, wakeUp.hour, wakeUp.minute);
+            if (scheduledNotificationTime.isBefore(currentPeriodEnd)) {
+                scheduledNotificationTime = scheduledNotificationTime.add(const Duration(days:1));
+            }
+        }
+      }
+    }
+
+    if (scheduledNotificationTime.isBefore(now.add(const Duration(minutes: 1)))) { 
+      DateTime correctedTime = scheduledNotificationTime;
+      if (correctedTime.isBefore(now.add(const Duration(minutes:1)))) {
+          correctedTime = now.add(reminderInterval); 
+      }
+
+      DateTime checkPeriodStart, checkPeriodEnd;
+      DateTime checkTodayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
+      DateTime checkTodaySleep = DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
+
+      if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
+          checkPeriodStart = checkTodayWakeUp;
+          checkPeriodEnd = checkTodaySleep;
+          if (correctedTime.isAfter(checkPeriodEnd) || correctedTime.isBefore(checkPeriodStart)) {
+              correctedTime = checkTodayWakeUp.add(const Duration(days: 1)); 
+          }
+      } else { 
+          if (now.isAfter(checkTodayWakeUp)) { 
+              checkPeriodStart = checkTodayWakeUp;
+              checkPeriodEnd = checkTodaySleep.add(const Duration(days: 1));
+          } else { 
+              checkPeriodStart = checkTodayWakeUp.subtract(const Duration(days: 1));
+              checkPeriodEnd = checkTodaySleep;
+          }
+          if (correctedTime.isAfter(checkPeriodEnd) || correctedTime.isBefore(checkPeriodStart)) {
+              if (now.isAfter(checkPeriodEnd)){ 
+                  correctedTime = checkPeriodStart.add(Duration(days: (checkPeriodStart.isBefore(checkTodayWakeUp) && now.isAfter(checkTodaySleep)) ? 0 : 1 )); 
+              } else { 
+                  correctedTime = checkPeriodStart;
+              }
+          }
+      }
+      scheduledNotificationTime = correctedTime;
+      if (scheduledNotificationTime.isBefore(now.add(const Duration(minutes:1)))) {
+          scheduledNotificationTime = now.add(const Duration(minutes: 5)); 
+      }
+    }
+
+    print("[HomeScreen - _startCountdown] AKAN MENJADWALKAN notifikasi untuk: $scheduledNotificationTime. Jam: ${DateTime.now()}"); 
+    await NotificationController.scheduleNextHydrationNotification(
+        exactNotificationTime: scheduledNotificationTime,
     );
-
-    _countdownTimer?.cancel();
-    if (!mounted) return;
-
-    setState(() {
-      _remainingTime = Duration(seconds: reminderIntervalInSeconds);
-      _isCountdownActive = true;
-    });
-
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final endTimeMillis = now + _remainingTime.inMilliseconds;
-
-    SharedPreferences.getInstance().then((prefs) async { // jadikan async
-      await prefs.setInt(_endTimeKey, endTimeMillis);
-      await prefs.setBool('timer_has_started', true);
-    });
-
-    _startTimer();
+    if (mounted) {
+      setState(() {
+        _endTime = scheduledNotificationTime; 
+        _remainingTime = _endTime!.isAfter(now) ? _endTime!.difference(now) : Duration.zero;
+        _isCountdownActive = _remainingTime > Duration.zero;
+        print("[HomeScreen - _startCountdown] UI Timer diupdate. EndTime: $_endTime, Sisa waktu: $_remainingTime, Aktif: $_isCountdownActive. Jam: ${DateTime.now()}"); 
+      });
+      await _saveCurrentTimerState(); 
+      if(_isCountdownActive) { 
+          _startTimer(); 
+      }
+    }
   }
 
   String _formatTime(Duration duration) {
@@ -496,7 +653,7 @@ class HomeScreensState extends State<HomeScreens>
     OverlayEntry? overlayEntry;
     final overlay = Overlay.of(context);
     final animationController = AnimationController(
-      vsync: this, // Membutuhkan SingleTickerProviderStateMixin
+      vsync: this,
       duration: const Duration(milliseconds: 500),
     );
 
@@ -526,7 +683,7 @@ class HomeScreensState extends State<HomeScreens>
                     padding: const EdgeInsets.symmetric(
                         vertical: 10, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.90),
+                      color: Colors.white.withValues(alpha: 0.90),
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(color: Colors.black26, blurRadius: 5),
@@ -536,7 +693,7 @@ class HomeScreensState extends State<HomeScreens>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SvgPicture.asset(
-                          'assets/images/berhasil.svg', // Pastikan path ini benar
+                          'assets/images/berhasil.svg',
                           colorFilter: const ColorFilter.mode(
                               Color(0xFF3EDAC0), BlendMode.srcIn),
                           width: 24,
@@ -573,7 +730,6 @@ class HomeScreensState extends State<HomeScreens>
           }
           animationController.dispose();
         }).catchError((e) {
-          print("Error reversing animation or removing overlay: $e");
           if (overlayEntry?.mounted ?? false) {
             overlayEntry?.remove();
           }
@@ -662,8 +818,9 @@ class HomeScreensState extends State<HomeScreens>
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            if (mounted)
-                              confettiController.dispose(); // Dispose only if mounted
+                            if (mounted) {
+                              confettiController.dispose();
+                            }
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -730,8 +887,6 @@ class HomeScreensState extends State<HomeScreens>
     bool isTargetControllerLoading = targetController.isLoadingTarget;
 
     bool isOverallLoading = _isHomeScreenLoading || isTargetControllerLoading;
-
-    print("[HomeScreen Build] idPengguna: $idPengguna, namaPengguna: $namaPengguna, _isHomeScreenLoading: $_isHomeScreenLoading, isTargetControllerLoading: $isTargetControllerLoading, isOverallLoading: $isOverallLoading");
 
     if (idPengguna == null || namaPengguna == null || isOverallLoading) {
       // Check idPengguna as well
@@ -810,68 +965,6 @@ class HomeScreensState extends State<HomeScreens>
                     target: uiTargetMl,
                     screenWidth: screenWidth,
                   ),
-                  // Padding(
-                  //   padding: EdgeInsets.all(screenWidth * 0.1),
-                  //   child: Center(
-                  //       child: DashedCircularProgressBar.aspectRatio(
-                  //     aspectRatio: 1,
-                  //     valueNotifier: _valueNotifier,
-                  //     progress: _valueNotifier.value > 100
-                  //         ? 100
-                  //         : _valueNotifier.value, // Cap progress at 100
-                  //     startAngle: 230,
-                  //     sweepAngle: 260,
-                  //     foregroundColor: const Color(0xFF00A6FB),
-                  //     backgroundColor: const Color(0xFFA1E3F9),
-                  //     foregroundStrokeWidth: 15,
-                  //     backgroundStrokeWidth: 15,
-                  //     animation: true,
-                  //     seekSize: 10,
-                  //     seekColor: const Color(0xffeeeeee),
-                  //     child: Center(
-                  //       child: ValueListenableBuilder(
-                  //         valueListenable: _valueNotifier,
-                  //         builder: (_, double value, __) => Column(
-                  //           mainAxisSize: MainAxisSize.min,
-                  //           children: [
-                  //             Text(
-                  //               '${min(100, value.ceil())}%',
-                  //               style: const TextStyle(
-                  //                 color: Color(0xFF2F2E41),
-                  //                 fontWeight: FontWeight.w300,
-                  //                 fontSize: 40,
-                  //               ),
-                  //             ),
-                  //             Row(
-                  //               mainAxisAlignment: MainAxisAlignment.center,
-                  //               children: [
-                  //                 Text(
-                  //                   '${currentIntake.toInt()} mL',
-                  //                   style: TextStyle(
-                  //                     color:
-                  //                         currentIntake >= target && target > 0
-                  //                             ? Colors.blue
-                  //                             : Colors.red,
-                  //                     fontWeight: FontWeight.w600,
-                  //                     fontSize: 16,
-                  //                   ),
-                  //                 ),
-                  //                 Text(
-                  //                   ' / ${target.toInt()} mL',
-                  //                   style: const TextStyle(
-                  //                     color: Color(0xFF2F2E41),
-                  //                     fontWeight: FontWeight.w500,
-                  //                     fontSize: 16,
-                  //                   ),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //           ],
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   )),
-                  // ),
                   Transform.translate(
                     offset: Offset(0, screenHeight * -0.05),
                     child: Container(
@@ -922,7 +1015,7 @@ class HomeScreensState extends State<HomeScreens>
                       borderRadius: const BorderRadius.all(Radius.circular(10)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF2F2E41).withOpacity(0.1),
+                          color: const Color(0xFF2F2E41).withValues(alpha: 0.1),
                           blurRadius: 12,
                           offset: const Offset(1, 2),
                         ),
@@ -1063,11 +1156,11 @@ class HomeScreensState extends State<HomeScreens>
                         vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Colors.amber[700]!
-                          .withOpacity(0.95), // Warna kuning peringatan
+                          .withValues(alpha: 0.95), // Warna kuning peringatan
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 5,
                             offset: Offset(0, 2)),
                       ],
@@ -1115,7 +1208,6 @@ class HomeScreensState extends State<HomeScreens>
           }
           animationController.dispose();
         }).catchError((e) {
-          print("Error reversing animation or removing overlay: $e");
           if (overlayEntry?.mounted ?? false) {
             overlayEntry?.remove();
           }
@@ -1168,7 +1260,6 @@ class HomeScreensState extends State<HomeScreens>
                 }
                 _eventBus.fire('refresh_statistics');
               } catch (e) {
-                print("Error saat menambah air: $e");
                 if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Gagal menyimpan data minum.")),
@@ -1238,6 +1329,6 @@ class HomeScreensState extends State<HomeScreens>
 
 // Fungsi khusus untuk overlay sukses
   void _showOverlaySuccess(String message) {
-    _showOverlay(message, Colors.white.withOpacity(0.90));
+    _showOverlay(message, Colors.white.withValues(alpha: 0.90));
   }
 }

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hydrate/data/datasources/database_helper.dart';
-import 'package:hydrate/data/repositories/pengguna_repository.dart';
 import 'package:hydrate/main.dart';
 import 'package:hydrate/presentation/controllers/pengguna_controller.dart';
+import 'package:hydrate/core/utils/session_manager.dart';
+import 'package:hydrate/services/notification_settings_service.dart'; 
 
 
 class RegistrationTime extends StatefulWidget {
@@ -12,41 +12,25 @@ class RegistrationTime extends StatefulWidget {
   final String gender;
   final double weight;
 
-  RegistrationTime({
-    Key? key,
+  const RegistrationTime({
+    super.key,
     required this.name,
     required this.gender,
     required this.weight,
-  }) : super(key: key);
-
-  final DatabaseHelper _databaseHelper = DatabaseHelper();
+  });
 
   @override
-  _RegistrationTimeState createState() => _RegistrationTimeState();
+  RegistrationTimeState createState() => RegistrationTimeState();
 }
 
-class _RegistrationTimeState extends State<RegistrationTime> {
+class RegistrationTimeState extends State<RegistrationTime> {
   final PenggunaController _penggunaController = PenggunaController();
-  final PenggunaRepository _penggunaRepository = PenggunaRepository();
   TextEditingController controllerWakeUpTime = TextEditingController();
   TextEditingController controllerSleepTime = TextEditingController();
   TextEditingController timeController = TextEditingController();
-  Map<String, dynamic> penggunaData = {};
   bool isFinalFormFilled = false;
 
-  Future<void> _selectTime(
-      BuildContext context, TextEditingController controller) async {
-    TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-
-    if (picked != null) {
-      setState(() {
-        controller.text = picked.format(context);
-      });
-    }
-  }
+  final NotificationSettingsService _notificationSettingsService = NotificationSettingsService();
 
   @override
   void initState() {
@@ -264,8 +248,7 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                               String nama = widget.name;
                               String jenisKelamin = widget.gender;
                               double beratBadan = widget.weight;
-                              String jamBangun =
-                                  controllerWakeUpTime.text.trim();
+                              String jamBangun = controllerWakeUpTime.text.trim();
                               String jamTidur = controllerSleepTime.text.trim();
 
                               if (nama.isEmpty ||
@@ -273,11 +256,41 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                                   beratBadan <= 0 ||
                                   jamBangun.isEmpty ||
                                   jamTidur.isEmpty) {
-                                _showWarningDialog(); // atau tampilkan dialog validasi
+                                _showWarningDialog();
                                 return;
                               }
 
+                              TimeOfDay? wakeUpForValidation = _parseTimeStringToTimeOfDay(jamBangun);
+                              TimeOfDay? sleepForValidation = _parseTimeStringToTimeOfDay(jamTidur);
+
+                              if (wakeUpForValidation != null && 
+                                  sleepForValidation != null &&
+                                  wakeUpForValidation.hour == sleepForValidation.hour &&
+                                  wakeUpForValidation.minute == sleepForValidation.minute) {
+                                
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Jam bangun dan jam tidur tidak boleh sama persis!"),
+                                      backgroundColor: Colors.redAccent,
+                                    ),
+                                  );
+                                }
+                                return; 
+                              }
+
+                              print("[RegistrationTime] Tombol DAFTAR ditekan. Data: Nama=$nama, Gender=$jenisKelamin, Berat=$beratBadan, Bangun=$jamBangun, Tidur=$jamTidur. Jam: ${DateTime.now()}");
+
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (BuildContext context) {
+                                  return Center(child: CircularProgressIndicator());
+                                },
+                              );
+
                               try {
+                                print("[RegistrationTime] Memanggil _penggunaController.tambahPengguna...");
                                 int userId =
                                     await _penggunaController.tambahPengguna(
                                   nama,
@@ -287,21 +300,52 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                                   jamTidur,
                                 );
 
-// <<<<<<< HEAD
+                                print("[RegistrationTime] Hasil dari tambahPengguna, userId: $userId");
+
+                                if (mounted) Navigator.of(context).pop();
+
                                 if (userId > 0) {
-                                  print(
-                                      "Pengguna berhasil ditambahkan dengan ID: $userId");
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MainScreen(),
-                                    ),
-                                  );
+                                  final session = SessionManager();
+                                  print("[RegistrationTime] AKAN menyimpan UserId $userId ke session...");
+                                  await session.saveUserId(userId);
+                                  print("[RegistrationTime] UserId $userId SELESAI disimpan ke session.");
+
+                                  TimeOfDay? wakeUpToSave = _parseTimeStringForService(jamBangun);
+                                  TimeOfDay? sleepToSave = _parseTimeStringForService(jamTidur);
+
+                                  if (wakeUpToSave != null) {
+                                    await _notificationSettingsService.setWakeUpTime(wakeUpToSave);
+                                    print("[RegistrationTime] Jam bangun ${wakeUpToSave.format(context)} disimpan ke settings service.");
+                                  }
+                                  if (sleepToSave != null) {
+                                    await _notificationSettingsService.setSleepTime(sleepToSave);
+                                    print("[RegistrationTime] Jam tidur ${sleepToSave.format(context)} disimpan ke settings service.");
+                                  }
+                                  
+                                  if (mounted) {
+                                    Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const MainScreen(),
+                                      ),
+                                      (Route<dynamic> route) => false,
+                                    );
+                                  }
                                 } else {
-                                  print("Gagal menambahkan pengguna.");
+                                  if (mounted) {
+                                     ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Gagal mendaftar. Coba lagi."))
+                                    );
+                                  }
                                 }
                               } catch (e) {
-                                print("Error saat menambahkan pengguna: $e");
+                                Navigator.of(context).pop();
+                                print("[RegistrationTime] Error saat menambahkan pengguna: $e");
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text("Terjadi kesalahan: ${e.toString()}"))
+                                  );
+                                }
                               }
                             }
                           : null,
@@ -312,32 +356,6 @@ class _RegistrationTimeState extends State<RegistrationTime> {
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
-// =======
-//                           if (userId > 0) {
-//                             print("Pengguna berhasil ditambahkan dengan ID: $userId");
-//                             if (mounted) { 
-//                               Navigator.of(context).pushAndRemoveUntil(
-//                                 MaterialPageRoute(
-//                                   builder: (context) => const AuthWrapperScreen(),
-//                                 ),
-//                                 (Route<dynamic> route) => false,
-//                               );
-//                             }
-//                           } else {
-//                             print("Gagal menambahkan pengguna.");
-//                           }
-//                         } catch (e) {
-//                           print("Error saat menambahkan pengguna: $e");
-//                         }
-//                       }
-//                     },
-//                     child: Text(
-//                       "DAFTAR",
-//                       style: GoogleFonts.inter(
-//                         fontSize: 16,
-//                         fontWeight: FontWeight.bold,
-//                         color: Colors.white,
-// >>>>>>> f39970d2774572efe9fdbbb31b98de0587bd5d9c
                       ),
                     ),
                   ),
@@ -349,67 +367,49 @@ class _RegistrationTimeState extends State<RegistrationTime> {
       ),
     );
   }
-
-  Widget _buildTimeInput(String hint, TextEditingController controller) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextField(
-            controller: controller,
-            readOnly: true,
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: const TextStyle(color: Colors.grey),
-              filled: true,
-              fillColor: Colors.white,
-              enabledBorder: OutlineInputBorder(
-                borderSide:
-                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide:
-                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        GestureDetector(
-          onTap: () => _selectTime(context, controller),
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Color(0xFF00A6FB),
-              shape: BoxShape.circle,
-            ),
-            child: SvgPicture.asset(
-              'assets/images/clock.svg',
-              height: 24,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
+
+TimeOfDay? _parseTimeStringToTimeOfDay(String? timeString) {
+  if (timeString == null || timeString.isEmpty) return null;
+  try {
+    final parts = timeString.split(':');
+    if (parts.length == 2) {
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    }
+  } catch (e) {
+    print("Error parsing time string for validation: '$timeString' - $e");
+  }
+  return null;
+}
+
+TimeOfDay? _parseTimeStringForService(String? timeString) {
+    if (timeString == null || timeString.isEmpty) return null;
+    try {
+      final parts = timeString.split(':');
+      if (parts.length == 2) {
+        return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+      }
+    } catch (e) {
+      print("Error parsing time string for service: '$timeString' - $e");
+    }
+    return null;
+  }
 
 class TimePickerInput extends StatefulWidget {
   final String label;
   final TextEditingController controller;
 
-  const TimePickerInput(
-      {Key? key, required this.label, required this.controller})
-      : super(key: key);
+  const TimePickerInput({
+    super.key,
+    required this.label,
+    required this.controller,
+  });
 
   @override
-  _TimePickerInputState createState() => _TimePickerInputState();
+  TimePickerInputState createState() => TimePickerInputState();
 }
 
-class _TimePickerInputState extends State<TimePickerInput> {
+class TimePickerInputState extends State<TimePickerInput> {
   Future<void> _selectTime(BuildContext context) async {
     TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -418,26 +418,26 @@ class _TimePickerInputState extends State<TimePickerInput> {
       builder: (BuildContext context, Widget? child) {
         return Theme(
           data: ThemeData(
-            primaryColor: const Color(0xFF00A6FB), // Warna utama biru
-            hintColor: const Color(0xFF00A6FB),
-            colorScheme: const ColorScheme.light(
+            primaryColor: Color(0xFF00A6FB), // Warna utama biru
+            hintColor: Color(0xFF00A6FB),
+            colorScheme: ColorScheme.light(
               primary: Color(0xFF00A6FB), // Warna utama
               onPrimary: Colors.white, // Warna teks di atas warna utama
-              onSurface: const Color(0xFF2F2E41), // Warna teks utama
+              onSurface: Color(0xFF2F2E41), // Warna teks utama
             ),
             timePickerTheme: TimePickerThemeData(
               backgroundColor: Colors.white,
-              hourMinuteColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
-                      ? const Color(0xFF00A6FB)
-                      : const Color(0xFFE8F7FF)),
-              hourMinuteTextColor: MaterialStateColor.resolveWith((states) =>
-                  states.contains(MaterialState.selected)
+              hourMinuteColor: WidgetStateColor.resolveWith((states) =>
+                  states.contains(WidgetState.selected)
+                      ? Color(0xFF00A6FB)
+                      : Color(0xFFE8F7FF)),
+              hourMinuteTextColor: WidgetStateColor.resolveWith((states) =>
+                  states.contains(WidgetState.selected)
                       ? Colors.white
-                      : const Color(0xFF2F2E41)),
-              dialHandColor: const Color(0xFF00A6FB),
-              dialBackgroundColor: const Color(0xFFE8F7FF),
-              entryModeIconColor: const Color(0xFF00A6FB),
+                      : Color(0xFF2F2E41)),
+              dialHandColor: Color(0xFF00A6FB),
+              dialBackgroundColor: Color(0xFFE8F7FF),
+              entryModeIconColor: Color(0xFF00A6FB),
             ),
           ),
           child: child!,
@@ -462,22 +462,22 @@ class _TimePickerInputState extends State<TimePickerInput> {
             readOnly: true,
             textAlign: TextAlign.left,
             style:
-                const TextStyle(fontSize: 16, color: const Color(0xFF2F2E41)),
+                TextStyle(fontSize: 16, color: Color(0xFF2F2E41)),
             onTap: () =>
-                _selectTime(context), // Tambahkan ini agar TextBox bisa diklik
+                _selectTime(context),
             decoration: InputDecoration(
               hintText: widget.label,
-              hintStyle: const TextStyle(color: Colors.grey),
+              hintStyle: TextStyle(color: Colors.grey),
               filled: true,
               fillColor: Colors.white,
               enabledBorder: OutlineInputBorder(
                 borderSide:
-                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                    BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(20),
               ),
               focusedBorder: OutlineInputBorder(
                 borderSide:
-                    const BorderSide(color: Color(0xFF00A6FB), width: 2),
+                    BorderSide(color: Color(0xFF00A6FB), width: 2),
                 borderRadius: BorderRadius.circular(20),
               ),
               contentPadding:
@@ -489,9 +489,8 @@ class _TimePickerInputState extends State<TimePickerInput> {
         GestureDetector(
           onTap: () => _selectTime(context),
           child: Container(
-            // color: Color(0xFF00A6FB),
             padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF00A6FB),
               shape: BoxShape.circle,
             ),

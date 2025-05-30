@@ -15,15 +15,11 @@ class TargetHidrasiController extends ChangeNotifier {
   TargetHidrasi? get currentTargetHidrasiObject => _currentTargetHidrasiObject;
 
   Future<void> initializeOrRefreshDailyTarget(int idPengguna, {bool isProfileChangeTrigger = false}) async {
-    // Cek jika sedang loading dan bukan dipicu oleh perubahan profil (untuk menghindari re-entry yang tidak perlu dari sumber lain)
     if (_isLoadingTarget && !isProfileChangeTrigger) {
-      print("[TargetHidrasiController] Sedang loading dan bukan dari profile change, initializeOrRefreshDailyTarget diabaikan untuk userId: $idPengguna.");
       return;
     }
-
-    print("[TargetHidrasiController] initializeOrRefreshDailyTarget dipanggil untuk userId: $idPengguna, isProfileChangeTrigger: $isProfileChangeTrigger. Jam: ${DateTime.now()}");
     _isLoadingTarget = true;
-    notifyListeners(); // Beritahu UI bahwa loading target dimulai
+    notifyListeners();
 
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
 
@@ -35,10 +31,7 @@ class TargetHidrasiController extends ChangeNotifier {
       if (targetDataMap != null && targetDataMap['target_hidrasi'] != null) {
         double newTarget = (targetDataMap['target_hidrasi'] as num).toDouble();
 
-        // Jika target dari repo tidak valid (0 atau negatif), hitung ulang menggunakan fallback dari repo
         if (newTarget <= 0) {
-          print("[TargetHidrasiController] Target dari repo tidak valid ($newTarget) untuk $today. Menggunakan fallback kalkulasi dari repo.");
-          // GUNAKAN NAMA METODE YANG BENAR DARI REPOSITORY ANDA
           newTarget = await _repository.fallbackCalculateTarget(idPengguna); 
         }
         _currentDailyTargetMl = newTarget;
@@ -57,10 +50,7 @@ class TargetHidrasiController extends ChangeNotifier {
         ),
         };
         _currentTargetHidrasiObject = TargetHidrasi.fromMap(completeMapForModel);
-        print("[TargetHidrasiController] Target harian di-refresh/diinisialisasi untuk $today: $_currentDailyTargetMl ml. Object: $_currentTargetHidrasiObject");
       } else {
-        print("[TargetHidrasiController] Gagal mendapatkan target dari repo untuk $today (null atau target_hidrasi null). Mencoba fallback kalkulasi.");
-        // Gunakan metode publik yang memanggil _calculateTargetHidrasi di repo
         _currentDailyTargetMl = await _repository.fallbackCalculateTarget(idPengguna); 
          _currentTargetHidrasiObject = TargetHidrasi(
             id: null,
@@ -70,24 +60,17 @@ class TargetHidrasiController extends ChangeNotifier {
             totalHidrasiHarian: 0.0,
             persentaseHidrasi: 0.0 
         );
-        print("[TargetHidrasiController] Fallback target: $_currentDailyTargetMl ml. Object: $_currentTargetHidrasiObject");
-        // Pertimbangkan untuk menyimpan target fallback ini ke DB jika belum ada entri untuk hari ini
-        // await _repository.createTargetHidrasi(idPengguna, _currentDailyTargetMl, today, 0.0);
       }
-    } catch (e) {
-      print("[TargetHidrasiController] Error saat initializeOrRefreshDailyTarget: $e");
-      _currentDailyTargetMl = 2000.0; // Nilai aman jika terjadi error parah
+    } catch (_) {
+      _currentDailyTargetMl = 2000.0;
       _currentTargetHidrasiObject = null;
     } finally {
       _isLoadingTarget = false;
-      print("[TargetHidrasiController] initializeOrRefreshDailyTarget selesai. _isLoadingTarget: $_isLoadingTarget. Jam: ${DateTime.now()}");
       notifyListeners();
     }
   }
 
   Future<void> forceRecalculateAndUpdateTargetAfterProfileChange(int userId) async {
-    print("[TargetHidrasiController] Memulai forceRecalculateAndUpdateTargetAfterProfileChange untuk userId: $userId. Jam: ${DateTime.now()}");
-    
     _isLoadingTarget = true;
     notifyListeners(); 
 
@@ -97,19 +80,15 @@ class TargetHidrasiController extends ChangeNotifier {
       updateSuccessInRepo = await _repository.updateTargetHidrasiValue(userId, today);
       
       if (updateSuccessInRepo) {
-        print("[TargetHidrasiController] updateTargetHidrasiValue di repo berhasil.");
       } else {
-        print("[TargetHidrasiController] updateTargetHidrasiValue di repo GAGAL. Target mungkin tidak terupdate di DB.");
       }
       await initializeOrRefreshDailyTarget(userId, isProfileChangeTrigger: true); 
 
     } catch (e) {
-      print("[TargetHidrasiController] Error saat forceRecalculate: $e");
       await initializeOrRefreshDailyTarget(userId, isProfileChangeTrigger: true);
     } finally {
       if (_isLoadingTarget) { 
         _isLoadingTarget = false;
-        print("[TargetHidrasiController] forceRecalculate (finally block) selesai. _isLoadingTarget: $_isLoadingTarget. Jam: ${DateTime.now()}");
         notifyListeners();
       }
     }
@@ -126,7 +105,7 @@ class TargetHidrasiController extends ChangeNotifier {
 
   Future<int> createTargetHidrasi(
     int idPengguna,
-    double targetHidrasiInput, // Ganti nama agar tidak bentrok dengan variabel kelas
+    double targetHidrasiInput,
     {double initialIntake = 0.0}
   ) async {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
@@ -173,10 +152,8 @@ class TargetHidrasiController extends ChangeNotifier {
     final String today = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours:7)));
     
     if (formattedDate == today && _currentTargetHidrasiObject != null && _currentTargetHidrasiObject!.tanggalHidrasi == formattedDate) {
-        print("[TargetHidrasiController] Mengembalikan _currentTargetHidrasiObject dari cache untuk $formattedDate");
         return _currentTargetHidrasiObject;
     }
-    print("[TargetHidrasiController] Mengambil target dari repo untuk $formattedDate");
     return await _repository.getTargetHidrasi(idPengguna, formattedDate); 
   }
   Future<void> kurangiHidrasi(int idPengguna, double jumlahHidrasi) async {
