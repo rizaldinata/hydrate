@@ -885,7 +885,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 borderRadius: BorderRadius.circular(15),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
+                                    color: Colors.black.withOpacity(0.1),
                                     offset: Offset(0, 2),
                                     blurRadius: 8,
                                   ),
@@ -899,12 +899,13 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 leading: Container(
                                   padding: EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withValues(alpha: 0.1),
+                                    color: Colors.amber.withOpacity(
+                                        0.1), // Warna disesuaikan dengan icon
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
-                                    Icons.star, 
-                                    color: Colors.amber, 
+                                    Icons.star, // Icon disesuaikan
+                                    color: Colors.amber, // Warna disesuaikan
                                     size: 24,
                                   ),
                                 ),
@@ -963,7 +964,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  'Logout Akun', 
+                                  'Hapus Akun', // Judul disesuaikan dari Hapus Akun ke Logout
                                   style: GoogleFonts.inter(
                                     fontSize: titleFontSize,
                                     fontWeight: FontWeight.w600,
@@ -971,7 +972,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  'Keluar dari sesi aplikasi ini', 
+                                  'Hapus data pengguna', // Subtitle disesuaikan
                                   style: GoogleFonts.inter(
                                     fontSize: screenWidth * 0.035,
                                     color: Colors.grey[600],

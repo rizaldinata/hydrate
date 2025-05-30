@@ -1,0 +1,2 @@
+C:/KULIAH/hydrate/android/app/.cxx/Debug/1yy4i1s5/x86/CMakeFiles/edit_cache.dir
+C:/KULIAH/hydrate/android/app/.cxx/Debug/1yy4i1s5/x86/CMakeFiles/rebuild_cache.dir

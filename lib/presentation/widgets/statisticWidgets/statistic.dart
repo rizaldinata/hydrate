@@ -2,11 +2,20 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+// Pastikan path ini sesuai dengan struktur proyek Anda
 import 'package:hydrate/core/utils/app_event_bus.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/riwayat_hidrasi_controller.dart';
 import 'package:intl/intl.dart';
+
+// Asumsi AppEvent sudah terdefinisi di app_event_bus.dart
+// Jika belum, Anda bisa menggunakan definisi sederhana ini untuk sementara:
+// class AppEvent {
+//   final String type;
+//   final dynamic data;
+//   AppEvent({required this.type, this.data});
+// }
 
 enum StatisticPeriod { weekly, monthly, yearly }
 
@@ -18,10 +27,10 @@ class HydrationStatsChart extends StatefulWidget {
 
   const HydrationStatsChart({
     super.key,
-    this.accentColor = Colors.blue,
+    this.accentColor = Colors.blueAccent, // Warna aksen yang lebih cerah
     this.cardColor,
-    this.primaryTextColor = Colors.black,
-    this.secondaryTextColor = Colors.grey,
+    this.primaryTextColor = Colors.black87, // Warna teks primer yang sedikit lebih lembut
+    this.secondaryTextColor = Colors.black54, // Warna teks sekunder yang sedikit lebih lembut
   });
 
   @override
@@ -31,16 +40,16 @@ class HydrationStatsChart extends StatefulWidget {
 class _HydrationStatsChartState extends State<HydrationStatsChart> {
   int touchedIndex = -1;
   StatisticPeriod currentPeriod = StatisticPeriod.weekly;
-  int currentIndex = 0; 
+  int currentIndex = 0;
   bool _isTargetLoading = false;
-  List<Map<String, dynamic>> _processedChartPoints = []; 
-  final TargetHidrasiRepository _targetHidrasiRepository = TargetHidrasiRepository(); 
+  List<Map<String, dynamic>> _processedChartPoints = [];
+  final TargetHidrasiRepository _targetHidrasiRepository = TargetHidrasiRepository();
 
   late RiwayatHidrasiController _riwayatHidrasiController;
   bool _isChartLoading = true;
   List<BarChartGroupData> _barGroups = [];
   List<String> _axisLabels = [];
-  double _maxYValue = 2500;
+  double _maxYValue = 100; // Default untuk Y-axis persentase (0-100% + buffer)
   int? _userId;
 
   final AppEventBus _eventBus = AppEventBus();
@@ -68,14 +77,16 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   }
 
   Future<void> _loadInitialData() async {
-    
-    if (_userId == null) { 
+    print("[HydrationStatsChart] _loadInitialData called");
+    if (!mounted) return;
+
+    if (_userId == null) {
       final session = SessionManager();
-      _userId = await session.getUserId(); 
+      _userId = await session.getUserId();
     }
 
     if (_userId != null) {
-      await _fetchChartData(_userId!); 
+      await _fetchChartData(_userId!);
     } else {
       if (mounted) {
         setState(() {
@@ -83,6 +94,8 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           _barGroups = [];
           _axisLabels = [];
           _processedChartPoints = [];
+          _maxYValue = 100; // Reset maxYValue
+          print("[HydrationStatsChart] User ID tidak ditemukan, chart tidak bisa dimuat.");
         });
       }
     }
@@ -92,35 +105,35 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     if (!mounted) return;
     setState(() {
       _isChartLoading = true;
+      // Kosongkan data sebelumnya agar tidak ada tampilan data lama saat loading
+      _barGroups = [];
+      _axisLabels = [];
+      _processedChartPoints = [];
     });
 
     DateTime referenceDate = _calculateReferenceDate();
 
     await _riwayatHidrasiController.fetchStatistikData(
-      userId: userId, 
-      periode: currentPeriod, 
-      referensiTanggal: referenceDate
-    );
+        userId: userId,
+        periode: currentPeriod, // Pastikan tipe ini sesuai dengan yang diharapkan controller
+        referensiTanggal: referenceDate);
 
-    if (_riwayatHidrasiController.statistikData.isNotEmpty) {
+    if (mounted && _riwayatHidrasiController.statistikData.isNotEmpty) {
       await _processRawDataToPercentages(userId, _riwayatHidrasiController.statistikData, referenceDate);
-    } else {
-      // Jika tidak ada data mentah, pastikan semua state chart dikosongkan dan loading selesai
-      if (mounted) {
-        setState(() {
-          _processedChartPoints = [];
-          _barGroups = [];
-          _axisLabels = [];
-          _maxYValue = 110; 
-          _isTargetLoading = false; // Penting
-        });
-      }
+    } else if (mounted) {
+      setState(() {
+        _processedChartPoints = [];
+        _barGroups = [];
+        _axisLabels = [];
+        _maxYValue = 100;
+        _isTargetLoading = false;
+      });
     }
 
     if (mounted) {
       setState(() {
         _isChartLoading = false;
-        touchedIndex = -1; 
+        touchedIndex = -1;
       });
     }
   }
@@ -129,67 +142,74 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     if (!mounted) return;
     setState(() {
       _isTargetLoading = true;
-      _barGroups = [];
-      _axisLabels = [];
-      _processedChartPoints = [];
     });
 
     List<Map<String, dynamic>> tempProcessedPoints = [];
     List<BarChartGroupData> tempBarGroups = [];
     List<String> tempAxisLabels = [];
-    double calculatedMaxY = 100.0;
+    double newCalculatedMaxY = 100.0; // Default max Y untuk persentase
 
-    final barWidth = _calculateBarWidth(MediaQuery.of(context).size.width);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final barWidth = _calculateBarWidth(screenWidth);
 
-    final String todayForTarget = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7)));
+    final String todayForTarget = DateFormat('yyyy-MM-dd').format(DateTime.now().toUtc().add(Duration(hours: 7))); // Sesuaikan zona waktu jika perlu
+    print("[ChartStats - _processRawDataToPercentages] Memanggil _targetHidrasiRepository.getTargetHidrasiHarian untuk userId: $userId, tanggal: $todayForTarget");
     final targetDataToday = await _targetHidrasiRepository.getTargetHidrasiHarian(userId, todayForTarget);
-    double dailyTargetGeneral = (targetDataToday?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0; 
+    double dailyTargetGeneral = (targetDataToday?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0;
     if (dailyTargetGeneral <= 0) dailyTargetGeneral = 2500.0;
 
-     if (rawDataMl.isNotEmpty) {
-        for (int i = 0; i < rawDataMl.length; i++) {
-          final item = rawDataMl[i];
-          final x = (item['x'] as num).toInt();
-          final yMl = (item['y'] as num).toDouble();
-          final label = item['label'] as String? ?? '';
-          double percentage = 0;
-          double currentPeriodTargetMl = dailyTargetGeneral; 
+    if (rawDataMl.isNotEmpty) {
+      bool anyExceeds100 = false;
+      for (int i = 0; i < rawDataMl.length; i++) {
+        final item = rawDataMl[i];
+        final x = (item['x'] as num).toInt();
+        final yMl = (item['y'] as num).toDouble();
+        final label = item['label'] as String? ?? '';
+        double percentage = 0;
+        double currentPeriodTargetMl = dailyTargetGeneral;
 
-          if (currentPeriod == StatisticPeriod.weekly) {
-            currentPeriodTargetMl = dailyTargetGeneral; 
-          } else if (currentPeriod == StatisticPeriod.monthly) {
-            currentPeriodTargetMl = dailyTargetGeneral * 7; 
-          } else if (currentPeriod == StatisticPeriod.yearly) {
-            currentPeriodTargetMl = dailyTargetGeneral * 30.44; 
-          }
+        if (currentPeriod == StatisticPeriod.weekly) {
+          currentPeriodTargetMl = dailyTargetGeneral;
+        } else if (currentPeriod == StatisticPeriod.monthly) {
+          currentPeriodTargetMl = dailyTargetGeneral * 7; // Asumsi target mingguan untuk perbandingan di chart bulanan per minggu
+        } else if (currentPeriod == StatisticPeriod.yearly) {
+          currentPeriodTargetMl = dailyTargetGeneral * 30.44; // Asumsi target bulanan untuk perbandingan di chart tahunan per bulan
+        }
 
-          if (currentPeriodTargetMl > 0) {
-            percentage = (yMl / currentPeriodTargetMl) * 100;
-          }
-          percentage = percentage.clamp(0.0, 150.0); 
+        if (currentPeriodTargetMl > 0) {
+          percentage = (yMl / currentPeriodTargetMl) * 100;
+        }
+        if (percentage > 100) anyExceeds100 = true;
+        percentage = percentage.clamp(0.0, 150.0); // Izinkan data persentase > 100 (misal max 150% untuk data), tapi tampilan bar akan diklem
 
-          tempProcessedPoints.add({
-            'x': x,
-            'originalY_ml': yMl,
-            'target_ml_for_period': currentPeriodTargetMl,
-            'percentageY': percentage,
-            'label': label
-          });
+        tempProcessedPoints.add({
+          'x': x,
+          'originalY_ml': yMl,
+          'target_ml_for_period': currentPeriodTargetMl,
+          'percentageY': percentage, // Persentase aktual untuk tooltip
+          'label': label
+        });
 
-          double barDisplayPercentage = percentage.clamp(0.0, 100.0); 
-          tempBarGroups.add(makeGroupData(x, barDisplayPercentage, barWidth: barWidth, isTouched: x == touchedIndex));
-          tempAxisLabels.add(label);
+        double barDisplayPercentage = percentage.clamp(0.0, 100.0); // Klem tinggi bar visual di 100%
+        tempBarGroups.add(makeGroupData(x, barDisplayPercentage, barWidth: barWidth, isTouched: x == touchedIndex));
+        tempAxisLabels.add(label);
       }
-     }
+      newCalculatedMaxY = anyExceeds100 ? 100.0 : 100.0; // Beri headroom jika ada data > 100%
+    } else {
+      newCalculatedMaxY = 100.0; // Default untuk chart kosong
+    }
+
+    print("[ChartStats - _processRawDataToPercentages] tempBarGroups yang akan di-set: ${tempBarGroups.length}");
 
     if (mounted) {
       setState(() {
         _processedChartPoints = tempProcessedPoints;
         _barGroups = tempBarGroups;
         _axisLabels = tempAxisLabels;
-        _maxYValue = calculatedMaxY; 
+        _maxYValue = newCalculatedMaxY; // Update maxYValue
         _isTargetLoading = false;
-      });   
+        print("[ChartStats - _processRawDataToPercentages] Selesai. BarGroups: ${_barGroups.length}, AxisLabels: ${_axisLabels.length}, MaxY: $_maxYValue");
+      });
     }
   }
 
@@ -207,47 +227,57 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   }
 
   double _calculateBarWidth(double screenWidth) {
-    // Logika yang sama seperti di _buildChartCard Anda
-    return screenWidth < 300 ? 8.0 : (screenWidth < 400 ? 10.0 : 12.0);
+    int numberOfBars = 7;
+    if(currentPeriod == StatisticPeriod.monthly) numberOfBars = _axisLabels.isNotEmpty ? _axisLabels.length : 4;
+    else if(currentPeriod == StatisticPeriod.yearly) numberOfBars = 12;
+
+    if (numberOfBars == 0) numberOfBars = 7; // fallback
+
+    double totalGroupSpace = screenWidth / numberOfBars;
+    double calculatedBarWidth = totalGroupSpace * 0.5;
+
+    return calculatedBarWidth.clamp(8.0, 22.0);
   }
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final availableWidth = constraints.maxWidth;
-        final optimalHeight = _calculateOptimalHeight(availableWidth);
-        
-        return Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            _buildPeriodSelector(),
-            _buildChartCard(context, optimalHeight, availableWidth),
-          ],
-        );
-      }
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final availableWidth = constraints.maxWidth;
+      final optimalHeight = _calculateOptimalHeight(availableWidth);
+
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          _buildPeriodSelector(),
+          _buildChartCard(context, optimalHeight, availableWidth),
+        ],
+      );
+    });
   }
 
   Widget _buildPeriodSelector() {
+    final Color unselectedButtonColor = widget.cardColor ?? Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3);
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: widget.cardColor ?? Colors.grey[100],
+        color: unselectedButtonColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
+        border: Border.all(color: Theme.of(context).dividerColor.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _buildPeriodButton('Mingguan', StatisticPeriod.weekly),
-          ),
-          Expanded(
-            child: _buildPeriodButton('Bulanan', StatisticPeriod.monthly),
-          ),
-          Expanded(
-            child: _buildPeriodButton('Tahunan', StatisticPeriod.yearly),
-          ),
+          Expanded(child: _buildPeriodButton('Mingguan', StatisticPeriod.weekly)),
+          Expanded(child: _buildPeriodButton('Bulanan', StatisticPeriod.monthly)),
+          Expanded(child: _buildPeriodButton('Tahunan', StatisticPeriod.yearly)),
         ],
       ),
     );
@@ -257,14 +287,18 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     final isSelected = currentPeriod == period;
     return GestureDetector(
       onTap: () {
-        setState(() {
-          currentPeriod = period;
-          currentIndex = 0; 
-        });
-        _loadInitialData();
+        if (mounted) {
+          setState(() {
+            currentPeriod = period;
+            currentIndex = 0;
+            _isChartLoading = true;
+          });
+          _loadInitialData();
+        }
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected ? widget.accentColor : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
@@ -274,7 +308,7 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
           textAlign: TextAlign.center,
           style: TextStyle(
             color: isSelected ? Colors.white : widget.primaryTextColor,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
             fontSize: 12,
           ),
         ),
@@ -284,58 +318,109 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
 
   double _calculateOptimalHeight(double width) {
     if (width < 300) {
-      return 320; 
+      return 320;
     } else if (width < 400) {
-      return 360; 
+      return 360;
     } else {
-      return 390; 
+      return 390;
     }
   }
 
   Widget _buildChartCard(BuildContext context, double height, double width) {
-    final horizontalPadding = width < 350 ? 8.0 : 16.0;
-    final titlePadding = width < 350 ? 12.0 : 20.0;
-    final chartPadding = width < 350 ? 8.0 : 16.0;
-    
-    final barWidth = width < 300 ? 8.0 : (width < 400 ? 10.0 : 12.0);
-    final groupSpace = width < 300 ? 8.0 : (width < 400 ? 12.0 : 14.0);
-    
-    final titleFontSize = width < 350 ? 16.0 : 20.0;
-    final subtitleFontSize = width < 350 ? 10.0 : 12.0;
+    final horizontalPadding = width < 350 ? 10.0 : 16.0;
+    final titlePadding = width < 350 ? 12.0 : 16.0;
+    final chartPaddingHorizontal = width < 350 ? 8.0 : 12.0;
+    final chartPaddingTop = 16.0;
+
+    // Perhitungan barWidth dan groupSpace dipindahkan ke sini agar context selalu tersedia
+    // dan ukuran chart yang sebenarnya (setelah padding) digunakan.
+    // Perlu 40 untuk reservedSize Y-axis kiri, dan padding horizontal kiri kanan dari chart itu sendiri
+    final double chartAreaWidth = width - (horizontalPadding * 2) - (chartPaddingHorizontal * 2) - 44;
+    final barWidthValue = _calculateBarWidth(chartAreaWidth);
+    final groupSpace = barWidthValue * 0.8;
+
+    final titleFontSize = width < 350 ? 17.0 : 19.0;
+    final subtitleFontSize = width < 350 ? 11.0 : 12.5;
     final legendFontSize = width < 350 ? 10.0 : 11.0;
-    
-    return SizedBox(
+
+    final cardBgColor = widget.cardColor ?? Theme.of(context).cardColor;
+
+    Widget chartContent;
+    if (_isChartLoading || _isTargetLoading) {
+      chartContent = Center(key: ValueKey('loading'), child: CircularProgressIndicator(color: widget.accentColor));
+    } else if (_userId == null) {
+      chartContent = Center(
+        key: ValueKey('no_user'),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "User ID tidak ditemukan.\nStatistik tidak dapat dimuat.",
+            style: TextStyle(color: widget.secondaryTextColor, fontSize: subtitleFontSize, height: 1.5),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    } else if (_barGroups.isEmpty) {
+      chartContent = Center(
+        key: ValueKey('no_data'),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
+            "Tidak ada data untuk periode ini.",
+            style: TextStyle(color: widget.secondaryTextColor, fontSize: subtitleFontSize, height: 1.5),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    } else {
+      chartContent = BarChart(
+        key: ValueKey('chart_data'),
+        mainBarData(barWidthValue, groupSpace),
+        swapAnimationDuration: Duration(milliseconds: 350),
+        swapAnimationCurve: Curves.easeInOutCubic,
+      );
+    }
+
+    return Container(
       height: height,
       child: Card(
-        color: widget.cardColor,
-        elevation: 4,
+        color: cardBgColor,
+        elevation: 3,
+        shadowColor: Colors.black.withOpacity(0.1),
         margin: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        clipBehavior: Clip.hardEdge,
+        clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.only(top: 12, bottom: 8, left: 4, right: 4),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeader(titlePadding, titleFontSize, subtitleFontSize),
               _buildNavigationRow(titlePadding),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(chartPadding, 16, chartPadding, 0),
-                  child: BarChart(
-                    _isChartLoading 
-                        ? BarChartData() 
-                        : mainBarData(barWidth, groupSpace), 
+                  padding: EdgeInsets.only(
+                    left: chartPaddingHorizontal,
+                    right: chartPaddingHorizontal,
+                    top: chartPaddingTop,
+                    bottom: 8,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      return FadeTransition(opacity: animation, child: child);
+                    },
+                    child: chartContent,
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Center(
-                  child: _buildLegend(legendFontSize),
+              if (!_isChartLoading && !_isTargetLoading && _barGroups.isNotEmpty && _userId != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0, top: 4.0),
+                  child: Center(
+                    child: _buildLegend(legendFontSize),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -343,54 +428,65 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     );
   }
 
-  Widget _buildHeader(double titlePadding, double titleFontSize, double subtitleFontSize) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.fromLTRB(titlePadding, 16, titlePadding, 0),
-          child: Text(
-            _getChartTitle(),
-            style: TextStyle(
-              color: widget.primaryTextColor,
-              fontSize: titleFontSize,
-              fontWeight: FontWeight.bold,
+  Widget _buildHeader(double horizontalTitlePadding, double titleFontSize, double subtitleFontSize) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: horizontalTitlePadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 12, bottom: 2),
+            child: Text(
+              _getChartTitle(),
+              style: TextStyle(
+                color: widget.primaryTextColor,
+                fontSize: titleFontSize,
+                fontWeight: FontWeight.bold,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-        Padding(
-          padding: EdgeInsets.fromLTRB(titlePadding, 4, titlePadding, 0),
-          child: Text(
-            _getChartSubtitle(),
-            style: TextStyle(
-              color: widget.secondaryTextColor,
-              fontSize: subtitleFontSize,
+          Padding(
+            padding: EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Persentase pencapaian target hidrasi',
+              style: TextStyle(
+                color: widget.secondaryTextColor,
+                fontSize: subtitleFontSize,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
-            overflow: TextOverflow.ellipsis,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _buildNavigationRow(double padding) {
+  Widget _buildNavigationRow(double horizontalNavPadding) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(padding, 8, padding, 0),
+      padding: EdgeInsets.symmetric(horizontal: horizontalNavPadding - 8, vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           IconButton(
-            onPressed: _canNavigatePrevious() ? () {
-              setState(() {
-                currentIndex++;
-                touchedIndex = -1;
-              });
-              _loadInitialData();
-            } : null,
+            tooltip: 'Periode Sebelumnya',
+            splashRadius: 20,
+            onPressed: _canNavigatePrevious()
+                ? () {
+                    if (mounted) {
+                      setState(() {
+                        currentIndex++;
+                        touchedIndex = -1;
+                         _isChartLoading = true;
+                      });
+                      _loadInitialData();
+                    }
+                  }
+                : null,
             icon: Icon(
-              Icons.chevron_left,
-              color: _canNavigatePrevious() ? widget.primaryTextColor : Colors.grey.withValues(alpha: 0.5),
+              Icons.chevron_left_rounded,
+              size: 28,
+              color: _canNavigatePrevious() ? widget.primaryTextColor : widget.secondaryTextColor.withOpacity(0.4),
             ),
           ),
           Expanded(
@@ -402,19 +498,28 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
           IconButton(
-            onPressed: _canNavigateNext() ? () {
-              setState(() {
-                currentIndex--;
-                touchedIndex = -1;
-              });
-              _loadInitialData();
-            } : null,
+            tooltip: 'Periode Berikutnya',
+            splashRadius: 20,
+            onPressed: _canNavigateNext()
+                ? () {
+                    if (mounted) {
+                      setState(() {
+                        currentIndex--;
+                        touchedIndex = -1;
+                        _isChartLoading = true;
+                      });
+                      _loadInitialData();
+                    }
+                  }
+                : null,
             icon: Icon(
-              Icons.chevron_right,
-              color: _canNavigateNext() ? widget.primaryTextColor : Colors.grey.withValues(alpha: 0.5),
+              Icons.chevron_right_rounded,
+              size: 28,
+              color: _canNavigateNext() ? widget.primaryTextColor : widget.secondaryTextColor.withOpacity(0.4),
             ),
           ),
         ],
@@ -425,22 +530,11 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   String _getChartTitle() {
     switch (currentPeriod) {
       case StatisticPeriod.weekly:
-        return 'Hidrasi Mingguan';
+        return 'Statistik Mingguan';
       case StatisticPeriod.monthly:
-        return 'Hidrasi Bulanan';
+        return 'Statistik Bulanan';
       case StatisticPeriod.yearly:
-        return 'Hidrasi Tahunan';
-    }
-  }
-
-  String _getChartSubtitle() {
-    switch (currentPeriod) {
-      case StatisticPeriod.weekly:
-        return 'Konsumsi air harian dalam mililiter (ml)';
-      case StatisticPeriod.monthly:
-        return 'Konsumsi air mingguan dalam mililiter (ml)';
-      case StatisticPeriod.yearly:
-        return 'Konsumsi air bulanan dalam mililiter (ml)';
+        return 'Statistik Tahunan';
     }
   }
 
@@ -449,19 +543,18 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
     switch (currentPeriod) {
       case StatisticPeriod.weekly:
         final weekDate = now.subtract(Duration(days: currentIndex * 7));
-        return 'Minggu ${_getWeekOfMonth(weekDate)} - ${_getMonthName(weekDate.month)} ${weekDate.year}';
+        if (currentIndex == 0) return 'Minggu Ini (${_getMonthName(weekDate.month)} ${weekDate.year})';
+        if (currentIndex == 1) return 'Minggu Lalu (${_getMonthName(weekDate.month)} ${weekDate.year})';
+        // Untuk minggu yang lebih lama, bisa menampilkan rentang tanggal
+        final firstDayOfWeek = weekDate.subtract(Duration(days: weekDate.weekday % 7)); // Minggu
+        final lastDayOfWeek = firstDayOfWeek.add(Duration(days: 6)); // Sabtu
+        return '${DateFormat('d MMM').format(firstDayOfWeek)} - ${DateFormat('d MMM yyyy').format(lastDayOfWeek)}';
       case StatisticPeriod.monthly:
         final monthDate = DateTime(now.year, now.month - currentIndex, 1);
         return '${_getMonthName(monthDate.month)} ${monthDate.year}';
       case StatisticPeriod.yearly:
         return 'Tahun ${now.year - currentIndex}';
     }
-  }
-
-  int _getWeekOfMonth(DateTime date) {
-    final firstDayOfMonth = DateTime(date.year, date.month, 1);
-    final daysDifference = date.difference(firstDayOfMonth).inDays;
-    return (daysDifference / 7).floor() + 1;
   }
 
   String _getMonthName(int month) {
@@ -483,11 +576,11 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   int _getMaxIndex() {
     switch (currentPeriod) {
       case StatisticPeriod.weekly:
-        return 52; // 52 minggu dalam setahun
+        return 52 * 2; // Maks 2 tahun
       case StatisticPeriod.monthly:
-        return 12; // 12 bulan
+        return 12 * 2; // Maks 2 tahun
       case StatisticPeriod.yearly:
-        return 5; // 5 tahun ke belakang
+        return 5; // Maks 5 tahun
     }
   }
 
@@ -497,24 +590,24 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.5)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+              colors: [widget.accentColor, widget.accentColor.withOpacity(0.6)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(4),
+            shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         Text(
-          'Konsumsi Air',
+          'Pencapaian Target (%)',
           style: TextStyle(
             fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: widget.primaryTextColor,
+            fontWeight: FontWeight.w500,
+            color: widget.primaryTextColor.withOpacity(0.9),
           ),
         ),
       ],
@@ -522,196 +615,227 @@ class _HydrationStatsChartState extends State<HydrationStatsChart> {
   }
 
   BarChartData mainBarData(double barWidth, double groupSpace) {
-  return BarChartData(
-    barTouchData: BarTouchData( // (LOGIKA TOOLTIP AKAN DIPERBARUI DI BAWAH)
-      touchTooltipData: BarTouchTooltipData(
-        getTooltipColor: (_) => Colors.blueGrey.withValues(alpha: 0.8),
-        tooltipBorder: BorderSide.none,
-        tooltipMargin: 8,
-        getTooltipItem: (group, groupIndex, rod, rodIndex) {
-          if (groupIndex < 0 || groupIndex >= _processedChartPoints.length) {
-            return null;
-          }
-          final pointData = _processedChartPoints[groupIndex];
-          final String label = pointData['label'];
-          final double percentage = rod.toY; // Ini sudah persentase
-          final double originalMl = pointData['originalY_ml'];
-          
-          return BarTooltipItem(
-            '$label\n',
-            TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: (MediaQuery.of(context).size.width < 350 ? 11 : 13),
-            ),
-            children: <TextSpan>[
-              TextSpan(
-                text: '${percentage.toStringAsFixed(0)}%', // Tampilkan persentase
-                style: TextStyle(
-                  color: widget.accentColor, // Warna aksen Anda
-                  fontSize: (MediaQuery.of(context).size.width < 350 ? 10 : 12),
-                  fontWeight: FontWeight.w500,
-                ),
+    final screenWidth = MediaQuery.of(context).size.width;
+    return BarChartData(
+      barTouchData: BarTouchData(
+        enabled: true,
+        touchTooltipData: BarTouchTooltipData(
+          getTooltipColor: (group) => Colors.black87.withOpacity(0.9),
+          tooltipBorder: BorderSide(color: widget.accentColor.withOpacity(0.5), width: 0.5),
+          tooltipPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          tooltipMargin: 10,
+           // Jika fl_chart Anda versi < 0.60.0, tooltipRoundedRadius mungkin belum ada
+           // tooltipRoundedRadius: 8,
+          getTooltipItem: (group, groupIndex, rod, rodIndex) {
+            if (groupIndex < 0 || groupIndex >= _processedChartPoints.length) {
+              return null;
+            }
+            final pointData = _processedChartPoints[groupIndex];
+            final String label = pointData['label'];
+            final double actualPercentage = pointData['percentageY']; // Persentase aktual bisa > 100
+            final double originalMl = pointData['originalY_ml'];
+
+            return BarTooltipItem(
+              '$label\n',
+              TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: (screenWidth < 350 ? 11.5 : 13),
+                height: 1.3,
               ),
-              TextSpan(
-                text: ' (${originalMl.toStringAsFixed(0)} ml)', // Tampilkan ml asli
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: (MediaQuery.of(context).size.width < 350 ? 9 : 11),
-                  fontWeight: FontWeight.w400,
+              children: <TextSpan>[
+                TextSpan(
+                  text: '${actualPercentage.toStringAsFixed(0)}%',
+                  style: TextStyle(
+                    color: widget.accentColor,
+                    fontSize: (screenWidth < 350 ? 10.5 : 12),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
-      touchCallback: (FlTouchEvent event, barTouchResponse) {
-        // ... (logika touchCallback Anda tetap sama) ...
-      },
-    ),
-    titlesData: FlTitlesData(
-      show: true,
-      rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          getTitlesWidget: getTitles, // getTitles sekarang menggunakan _axisLabels dari state
-          reservedSize: 24,
-        ),
-      ),
-      leftTitles: AxisTitles( // KONFIGURASI SUMBU Y (KIRI) UNTUK PERSENTASE
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: 20, // Tampilkan label setiap 20%
-          reservedSize: (MediaQuery.of(context).size.width < 350 ? 28 : 36), // Ruang untuk label
-          getTitlesWidget: (double value, TitleMeta meta) {
-            if (value > 100 || value < 0) return Container(); // Hanya 0-100%
-            final style = TextStyle(
-              color: widget.secondaryTextColor,
-              fontWeight: FontWeight.bold,
-              fontSize: (MediaQuery.of(context).size.width < 350 ? 8 : 10),
-            );
-            return Padding(
-              padding: const EdgeInsets.only(right: 4.0),
-              child: Text('${value.toInt()}%', style: style, textAlign: TextAlign.right),
+                TextSpan(
+                  text: ' (${originalMl.toStringAsFixed(0)} ml)',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.85),
+                    fontSize: (screenWidth < 350 ? 9.5 : 11),
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ],
+              textAlign: TextAlign.center,
             );
           },
         ),
+        touchCallback: (FlTouchEvent event, barTouchResponse) {
+          if (mounted) {
+            setState(() {
+              if (!event.isInterestedForInteractions ||
+                  barTouchResponse == null ||
+                  barTouchResponse.spot == null) {
+                touchedIndex = -1;
+                return;
+              }
+              touchedIndex = barTouchResponse.spot!.touchedBarGroupIndex;
+            });
+          }
+        },
+        handleBuiltInTouches: true,
+        touchExtraThreshold: EdgeInsets.all(4),
       ),
-    ),
-    borderData: FlBorderData( /* ... (tetap sama) ... */ ),
-    barGroups: _isChartLoading || _isTargetLoading ? [] : _barGroups, // Gunakan _barGroups dari state
-    gridData: FlGridData(show: true, drawVerticalLine: false, horizontalInterval: 20), // Grid horizontal per 20%
-    groupsSpace: groupSpace,
-    maxY: _maxYValue, // Gunakan _maxYValue dari state (misal, 110)
-  );
-}
+      titlesData: FlTitlesData(
+        show: true,
+        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            getTitlesWidget: getTitles,
+            reservedSize: 28,
+            interval: 1,
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: 25,
+            reservedSize: screenWidth < 350 ? 38 : 44,
+            getTitlesWidget: (double value, TitleMeta meta) {
+              if (value < 0 || value > _maxYValue) return Container();
+              if (value == 0 && _maxYValue > 25) return Container();
+              if (value > 100 && _maxYValue <= 100) return Container();
 
-  List<BarChartGroupData> showingGroups(double barWidth) {
-    switch (currentPeriod) {
-      case StatisticPeriod.weekly:
-        return _getWeeklyData(barWidth);
-      case StatisticPeriod.monthly:
-        return _getMonthlyData(barWidth);
-      case StatisticPeriod.yearly:
-        return _getYearlyData(barWidth);
-    }
-  }
-
-  List<BarChartGroupData> _getWeeklyData(double barWidth) {
-    // Simulasi data mingguan (7 hari)
-    final List<double> dailyHydration = [1200, 1850, 1500, 2100, 1650, 1400, 900];
-    return List.generate(7, (i) {
-      return makeGroupData(
-        i,
-        dailyHydration[i],
-        barWidth: barWidth,
-        isTouched: i == touchedIndex,
-      );
-    });
-  }
-
-  List<BarChartGroupData> _getMonthlyData(double barWidth) {
-    // Simulasi data bulanan (4 minggu)
-    final List<double> weeklyHydration = [12000, 14500, 13200, 11800];
-    return List.generate(4, (i) {
-      return makeGroupData(
-        i,
-        weeklyHydration[i],
-        barWidth: barWidth,
-        isTouched: i == touchedIndex,
-      );
-    });
-  }
-
-  List<BarChartGroupData> _getYearlyData(double barWidth) {
-    // Simulasi data tahunan (12 bulan)
-    final List<double> monthlyHydration = [
-      45000, 42000, 48000, 50000, 52000, 55000,
-      58000, 56000, 53000, 49000, 46000, 44000
-    ];
-    return List.generate(12, (i) {
-      return makeGroupData(
-        i,
-        monthlyHydration[i],
-        barWidth: barWidth,
-        isTouched: i == touchedIndex,
-      );
-    });
+              final style = TextStyle(
+                color: widget.secondaryTextColor,
+                fontWeight: FontWeight.w500,
+                fontSize: (screenWidth < 350 ? 9 : 10.5),
+              );
+              return Padding(
+                padding: const EdgeInsets.only(right: 6.0),
+                child: Text('${value.toInt()}%', style: style, textAlign: TextAlign.right),
+              );
+            },
+          ),
+        ),
+      ),
+      borderData: FlBorderData(
+        show: true,
+        border: Border(
+          bottom: BorderSide(color: widget.secondaryTextColor.withOpacity(0.3), width: 1),
+          left: BorderSide(color: widget.secondaryTextColor.withOpacity(0.3), width: 1),
+        ),
+      ),
+      barGroups: _barGroups,
+      gridData: FlGridData(
+        show: true,
+        drawVerticalLine: false,
+        horizontalInterval: 25,
+        getDrawingHorizontalLine: (value) {
+           if (value == 0 && _maxYValue > 25) return FlLine(color: Colors.transparent);
+          return FlLine(
+            color: widget.secondaryTextColor.withOpacity(0.15),
+            strokeWidth: 0.8,
+          );
+        },
+      ),
+      groupsSpace: groupSpace,
+      maxY: _maxYValue,
+    );
   }
 
   BarChartGroupData makeGroupData(
-    int x, 
-    double y, 
+    int x,
+    double y, // Ini adalah barDisplayPercentage (0-100)
     {bool isTouched = false, required double barWidth}
   ) {
+    final rodColor = isTouched ? widget.accentColor.withOpacity(0.9) : widget.accentColor;
+    final rodY = isTouched ? (y + (100 * 0.05)).clamp(y, 100.0) : y.clamp(0.0, 100.0); // Pastikan y juga di-clamp
+
     return BarChartGroupData(
       x: x,
       barRods: [
         BarChartRodData(
-          toY: isTouched ? y + (y * 0.05) : y, // 5% increase when touched
-          color: isTouched ? widget.accentColor.withValues(alpha: 0.85) : widget.accentColor,
+          toY: rodY, // rodY sudah di-clamp ke 100%
           gradient: LinearGradient(
-            colors: [widget.accentColor, widget.accentColor.withValues(alpha: 0.7)],
+            colors: [
+              rodColor,
+              rodColor.withOpacity(isTouched ? 0.7 : 0.6)
+            ],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
           width: barWidth,
           borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(6),
-            topRight: Radius.circular(6),
+            topLeft: Radius.circular(5),
+            topRight: Radius.circular(5),
           ),
           backDrawRodData: BackgroundBarChartRodData(
-            show: false,
+            show: true,
+            toY: 100, // Latar belakang hingga 100%
+            color: widget.accentColor.withOpacity(0.08),
           ),
         ),
       ],
+      showingTooltipIndicators: isTouched ? [0] : [],
     );
   }
 
   Widget getTitles(double value, TitleMeta meta) {
-    final screenWidth = MediaQuery.of(context).size.width; // Dapatkan screenWidth
+    final screenWidth = MediaQuery.of(context).size.width;
     final style = TextStyle(
-      color: Colors.grey, 
-      fontWeight: FontWeight.bold, 
-      fontSize: (screenWidth < 350 ? 9.0 : 10.0) // Sesuaikan font
-    );
-    
+        color: widget.secondaryTextColor,
+        fontWeight: FontWeight.w500,
+        fontSize: (screenWidth < 350 ? 9.0 : 10.0));
+
     String textToDisplay = '';
     int index = value.toInt();
 
     if (index >= 0 && index < _axisLabels.length) {
       textToDisplay = _axisLabels[index];
+      // Anda bisa menambahkan logika pemotongan label di sini jika diperlukan
+      // Misalnya:
+      // if (currentPeriod == StatisticPeriod.weekly && textToDisplay.length > 3 && screenWidth < 380) {
+      //   textToDisplay = textToDisplay.substring(0, 1); // Hanya huruf pertama untuk mingguan jika sempit
+      // } else if (textToDisplay.length > 5 && screenWidth < 380) {
+      //    textToDisplay = textToDisplay.substring(0,3) + "..";
+      // }
     }
-    
+
     return SideTitleWidget(
       meta: meta,
       space: 8,
-      child: Text(
-        textToDisplay,
-        style: style
-      ),
+      child: Text(textToDisplay, style: style, overflow: TextOverflow.ellipsis),
     );
   }
+
+  // Fungsi-fungsi placeholder yang tidak terpakai jika data dari controller:
+  // _generateAxisLabels, _calculateDynamicMaxY, _processDataToBarGroups,
+  // showingGroups, _getWeeklyData, _getMonthlyData, _getYearlyData.
+  // Anda bisa menghapusnya jika yakin tidak akan dipakai.
+  // Saya membiarkannya karena ada di kode asli yang Anda berikan.
+
+   List<String> _generateAxisLabels(List<Map<String, dynamic>> data) {
+     if (data.isEmpty) return [];
+     return data.map((item) => item['label'] as String? ?? '').toList();
+   }
+
+   double _calculateDynamicMaxY(List<Map<String, dynamic>> data) {
+     if (data.isEmpty) return 100;
+     double maxPercent = 0;
+
+     for (var item in data) {
+       if ((item['percentageY'] as num).toDouble() > maxPercent) {
+         maxPercent = (item['percentageY'] as num).toDouble();
+       }
+     }
+     return maxPercent > 100 ? (maxPercent * 1.1).clamp(110, 150) : 100;
+   }
+
+   List<BarChartGroupData> _processDataToBarGroups(List<Map<String, dynamic>> data) {
+     final barWidth = _calculateBarWidth(MediaQuery.of(context).size.width);
+     return data.map((item) {
+       final x = (item['x'] as num).toInt();
+       // Jika data 'y' adalah persentase, maka perlu di-clamp ke 100 untuk bar
+       final y = (item['percentageY'] as num).toDouble().clamp(0.0, 100.0);
+       return makeGroupData(x, y, barWidth: barWidth, isTouched: x == touchedIndex);
+     }).toList();
+   }
 }

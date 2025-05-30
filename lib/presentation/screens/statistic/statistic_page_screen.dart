@@ -93,9 +93,11 @@ class StatisticPageScreenState extends State<StatisticPageScreen> {
                           weeklyAverage: stats.weeklyAverageIntake,
                           monthlyAverage: stats.monthlyAverageIntake,
                           drinkFrequency: stats.averageDailyDrinkFrequency,
-                          currentDailyIntake: stats.todayIntake,
-                          averageDailyTarget: stats.averageDailyTarget,
+                          currentDailyIntake: stats.todayIntake, // ✅ Parameter yang sudah ada
+                          averageDailyTarget: stats.averageDailyTarget, // ✅ Parameter yang sudah ada  
+                          averageCompletionRate: stats.averageCompletionRate, // ✅ Parameter baru yang ditambahkan
                           accentColor: const Color(0xFF00A6FB),
+                          // completionPercentage: 78, // ❌ Hapus parameter lama ini
                         );
                       },
                     ),
