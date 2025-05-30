@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hydrate/presentation/controllers/notifikasi_controller.dart';
 import 'package:hydrate/presentation/widgets/Main/animated_progress_circle.dart';
 import 'package:hydrate/presentation/widgets/Main/customInputWater_widget.dart';
+import 'package:hydrate/presentation/widgets/Main/drink_status_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
@@ -46,8 +47,8 @@ class HomeScreensState extends State<HomeScreens>
   final RiwayatHidrasiController _riwayatHidrasiController =
       RiwayatHidrasiController();
   final TargetHidrasiRepository _targetHidrasiRepository =
-      TargetHidrasiRepository(); 
-  
+      TargetHidrasiRepository();
+
   String todayDate = DateFormat('yyyy-MM-dd')
       .format(DateTime.now().toUtc().add(const Duration(hours: 7)));
 
@@ -81,14 +82,16 @@ class HomeScreensState extends State<HomeScreens>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        print("[HomeScreen - initState] Memanggil _fetchDataAndUpdateScreen untuk pemuatan awal.");
+        print(
+            "[HomeScreen - initState] Memanggil _fetchDataAndUpdateScreen untuk pemuatan awal.");
         _fetchDataAndUpdateScreen(forceTargetRecalculation: false);
       }
     });
 
     _eventSubscription = _eventBus.stream.listen((AppEvent event) {
       if (event.type == 'refresh_all' || event.type == 'refresh_home_page') {
-        print("[HomeScreen - EventBus] Event '${event.type}' diterima. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
+        print(
+            "[HomeScreen - EventBus] Event '${event.type}' diterima. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
         _fetchDataAndUpdateScreen(forceTargetRecalculation: true);
       }
     });
@@ -106,22 +109,25 @@ class HomeScreensState extends State<HomeScreens>
     super.dispose();
   }
 
-  Future<void> _fetchDataAndUpdateScreen({bool forceTargetRecalculation = false}) async {
+  Future<void> _fetchDataAndUpdateScreen(
+      {bool forceTargetRecalculation = false}) async {
     if (!mounted) return;
-    
+
     setState(() {
       _isHomeScreenLoading = true;
     });
 
-    print("[HomeScreen - _fetchDataAndUpdateScreen] Memulai. Force recalculate: $forceTargetRecalculation. Jam: ${DateTime.now()}");
-    
+    print(
+        "[HomeScreen - _fetchDataAndUpdateScreen] Memulai. Force recalculate: $forceTargetRecalculation. Jam: ${DateTime.now()}");
+
     final session = SessionManager();
     final localUserId = await session.getUserId();
 
     if (localUserId != null) {
       if (mounted) {
         // Pastikan idPengguna di state terisi
-        if (idPengguna != localUserId) { // Hanya update jika berbeda atau null
+        if (idPengguna != localUserId) {
+          // Hanya update jika berbeda atau null
           setState(() {
             idPengguna = localUserId;
           });
@@ -129,27 +135,32 @@ class HomeScreensState extends State<HomeScreens>
 
         // 1. Muat data pengguna untuk tampilan (misal nama)
         await _loadUserDisplayData(localUserId);
-        
+
         // 2. Minta TargetHidrasiController untuk menginisialisasi atau menghitung ulang target
-        final targetController = Provider.of<TargetHidrasiController>(context, listen: false);
+        final targetController =
+            Provider.of<TargetHidrasiController>(context, listen: false);
         if (forceTargetRecalculation) {
-          print("[HomeScreen] Meminta TargetHidrasiController untuk MEMAKSA kalkulasi ulang target untuk userId: $localUserId");
-          await targetController.forceRecalculateAndUpdateTargetAfterProfileChange(localUserId);
+          print(
+              "[HomeScreen] Meminta TargetHidrasiController untuk MEMAKSA kalkulasi ulang target untuk userId: $localUserId");
+          await targetController
+              .forceRecalculateAndUpdateTargetAfterProfileChange(localUserId);
         } else {
-          print("[HomeScreen] Meminta TargetHidrasiController untuk INISIALISASI target (jika perlu) untuk userId: $localUserId");
+          print(
+              "[HomeScreen] Meminta TargetHidrasiController untuk INISIALISASI target (jika perlu) untuk userId: $localUserId");
           await targetController.initializeOrRefreshDailyTarget(localUserId);
         }
-        
+
         // 3. Muat data intake harian (ini akan menggunakan target terbaru dari controller untuk persentase)
-        await _loadTodayIntake(localUserId); 
-        
+        await _loadTodayIntake(localUserId);
+
         // 4. Muat ulang state countdown UI timer notifikasi
-        await _loadCountdownState(); 
+        await _loadCountdownState();
 
         // --- KIRIM EVENT SETELAH SEMUA PROSES UPDATE TARGET DI HOMESCREEN SELESAI ---
         // Ini akan memberi tahu MainScreen untuk me-refresh halaman Statistik
         _eventBus.fire('home_target_processing_complete');
-        print("[HomeScreen - _fetchDataAndUpdateScreen] Mengirim event 'home_target_processing_complete'. Jam: ${DateTime.now()}");
+        print(
+            "[HomeScreen - _fetchDataAndUpdateScreen] Mengirim event 'home_target_processing_complete'. Jam: ${DateTime.now()}");
         // ---------------------------------------------------------------------------------
       }
     } else {
@@ -166,26 +177,32 @@ class HomeScreensState extends State<HomeScreens>
     }
 
     if (mounted) {
-      setState(() { _isHomeScreenLoading = false; });
+      setState(() {
+        _isHomeScreenLoading = false;
+      });
     }
   }
 
   void refresh() {
-    print("[HomeScreen - refresh] Metode refresh() publik dipanggil. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
+    print(
+        "[HomeScreen - refresh] Metode refresh() publik dipanggil. Memanggil _fetchDataAndUpdateScreen (force recalculate). Jam: ${DateTime.now()}");
     _fetchDataAndUpdateScreen(forceTargetRecalculation: true);
   }
 
   Future<void> _loadUserDisplayData(int currentUserId) async {
     try {
-      print("[HomeScreen - _loadUserDisplayData] Memulai untuk userId: $currentUserId. Jam: ${DateTime.now()}");
+      print(
+          "[HomeScreen - _loadUserDisplayData] Memulai untuk userId: $currentUserId. Jam: ${DateTime.now()}");
       final pengguna = await _penggunaController.getPenggunaById(currentUserId);
       if (mounted && pengguna != null) {
         setState(() {
           namaPengguna = pengguna.nama;
         });
-        print("[HomeScreen - _loadUserDisplayData] Nama pengguna dimuat: ${pengguna.nama}");
+        print(
+            "[HomeScreen - _loadUserDisplayData] Nama pengguna dimuat: ${pengguna.nama}");
       } else if (pengguna == null) {
-        print("[HomeScreen - _loadUserDisplayData] Pengguna tidak ditemukan untuk userId: $currentUserId");
+        print(
+            "[HomeScreen - _loadUserDisplayData] Pengguna tidak ditemukan untuk userId: $currentUserId");
       }
     } catch (e) {
       print("[HomeScreen - _loadUserDisplayData] Error: $e");
@@ -194,28 +211,35 @@ class HomeScreensState extends State<HomeScreens>
 
   Future<void> _loadTodayIntake(int currentUserId) async {
     if (!mounted) return;
-    
-    final targetController = Provider.of<TargetHidrasiController>(context, listen: false);
-    double actualTargetForCalculation = targetController.currentDailyTargetMl; 
+
+    final targetController =
+        Provider.of<TargetHidrasiController>(context, listen: false);
+    double actualTargetForCalculation = targetController.currentDailyTargetMl;
     if (actualTargetForCalculation <= 0) {
-        // Jika controller belum punya target valid, coba ambil dari repo sebagai fallback sementara
-        // Namun, idealnya controller sudah diinisialisasi dengan benar oleh _fetchDataAndUpdateScreen
-        final targetDataMap = await _targetHidrasiRepository.getTargetHidrasiHarian(currentUserId, todayDate);
-        actualTargetForCalculation = (targetDataMap?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0;
-        print("[HomeScreen - _loadTodayIntake] Menggunakan target fallback dari repo: $actualTargetForCalculation");
+      // Jika controller belum punya target valid, coba ambil dari repo sebagai fallback sementara
+      // Namun, idealnya controller sudah diinisialisasi dengan benar oleh _fetchDataAndUpdateScreen
+      final targetDataMap = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(currentUserId, todayDate);
+      actualTargetForCalculation =
+          (targetDataMap?['target_hidrasi'] as num?)?.toDouble() ?? 2500.0;
+      print(
+          "[HomeScreen - _loadTodayIntake] Menggunakan target fallback dari repo: $actualTargetForCalculation");
     }
     if (actualTargetForCalculation <= 0) actualTargetForCalculation = 2500.0;
 
     try {
-      final targetHarianData = await _targetHidrasiRepository.getTargetHidrasiHarian(currentUserId, todayDate);
+      final targetHarianData = await _targetHidrasiRepository
+          .getTargetHidrasiHarian(currentUserId, todayDate);
       double totalHidrasi = 0.0;
 
       if (targetHarianData != null) {
-        totalHidrasi = (targetHarianData['total_hidrasi_harian'] as num?)?.toDouble() ?? 0.0;
+        totalHidrasi =
+            (targetHarianData['total_hidrasi_harian'] as num?)?.toDouble() ??
+                0.0;
       }
-      
-      double persentaseHidrasi = (actualTargetForCalculation > 0) 
-          ? (totalHidrasi / actualTargetForCalculation) * 100 
+
+      double persentaseHidrasi = (actualTargetForCalculation > 0)
+          ? (totalHidrasi / actualTargetForCalculation) * 100
           : 0.0;
 
       if (mounted) {
@@ -225,10 +249,11 @@ class HomeScreensState extends State<HomeScreens>
           // Variabel 'target' lokal tidak lagi di-set di sini. UI akan menggunakan dari Provider.
         });
       }
-      print("[HomeScreen - _loadTodayIntake] Data hidrasi dimuat: $totalHidrasi mL dari target $actualTargetForCalculation mL (${_valueNotifier.value.toStringAsFixed(1)}%)");
+      print(
+          "[HomeScreen - _loadTodayIntake] Data hidrasi dimuat: $totalHidrasi mL dari target $actualTargetForCalculation mL (${_valueNotifier.value.toStringAsFixed(1)}%)");
     } catch (e) {
       print("[HomeScreen - _loadTodayIntake] Error: $e");
-       if (mounted) {
+      if (mounted) {
         setState(() {
           currentIntake = 0;
           _valueNotifier.value = 0;
@@ -258,9 +283,9 @@ class HomeScreensState extends State<HomeScreens>
     if (state == AppLifecycleState.resumed) {
       print("[HomeScreen] App resumed. Merefresh intake dan countdown timer.");
       if (idPengguna != null) {
-        _loadTodayIntake(idPengguna!); 
+        _loadTodayIntake(idPengguna!);
       }
-      _loadCountdownState();        
+      _loadCountdownState();
     } else if (state == AppLifecycleState.paused) {
       _saveCurrentTimerState();
     }
@@ -387,7 +412,8 @@ class HomeScreensState extends State<HomeScreens>
     _playDrinkingSound();
 
     try {
-      final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
+      final targetControllerProvider =
+          Provider.of<TargetHidrasiController>(context, listen: false);
 
       await _riwayatHidrasiController.tambahRiwayatHidrasi(
         fkIdPengguna: idPengguna!,
@@ -398,34 +424,37 @@ class HomeScreensState extends State<HomeScreens>
       previousIntake = currentIntake;
       double newTotalIntake = currentIntake + amount;
 
-      double currentTargetForCalc = targetControllerProvider.currentDailyTargetMl;
+      double currentTargetForCalc =
+          targetControllerProvider.currentDailyTargetMl;
       if (currentTargetForCalc <= 0) currentTargetForCalc = 2500.0;
 
       // Optimistic UI update
       if (mounted) {
         setState(() {
           currentIntake = newTotalIntake;
-          _valueNotifier.value = currentTargetForCalc > 0 
-              ? min(100, (currentIntake / currentTargetForCalc) * 100) 
+          _valueNotifier.value = currentTargetForCalc > 0
+              ? min(100, (currentIntake / currentTargetForCalc) * 100)
               : 0;
         });
       }
 
       // Fetch fresh data to confirm
-      await _loadTodayIntake(idPengguna!); // Muat ulang intake untuk memastikan data & persentase sinkron
-      _eventBus.fire('refresh_statistics'); 
-
+      await _loadTodayIntake(
+          idPengguna!); // Muat ulang intake untuk memastikan data & persentase sinkron
+      _eventBus.fire('refresh_statistics');
     } catch (e) {
       print("Gagal menyimpan riwayat: $e");
       if (mounted) {
-        final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
-        double currentTargetForCalc = targetControllerProvider.currentDailyTargetMl;
+        final targetControllerProvider =
+            Provider.of<TargetHidrasiController>(context, listen: false);
+        double currentTargetForCalc =
+            targetControllerProvider.currentDailyTargetMl;
         if (currentTargetForCalc <= 0) currentTargetForCalc = 2500.0;
 
         setState(() {
-          currentIntake = previousIntake; 
-          _valueNotifier.value = currentTargetForCalc > 0 
-              ? min(100, (currentIntake / currentTargetForCalc) * 100) 
+          currentIntake = previousIntake;
+          _valueNotifier.value = currentTargetForCalc > 0
+              ? min(100, (currentIntake / currentTargetForCalc) * 100)
               : 0;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -457,12 +486,14 @@ class HomeScreensState extends State<HomeScreens>
   }
 
   void _startCountdown() async {
-    await NotificationController.cancelScheduledNotifications(); // Tambahkan await
+    await NotificationController
+        .cancelScheduledNotifications(); // Tambahkan await
 
-    int reminderIntervalInSeconds = await _notificationSettingsService.getNotificationInterval();
+    int reminderIntervalInSeconds =
+        await _notificationSettingsService.getNotificationInterval();
 
     await NotificationController.schedulePeriodicHydrationNotification(
-      intervalInSeconds: reminderIntervalInSeconds, 
+      intervalInSeconds: reminderIntervalInSeconds,
     );
 
     _countdownTimer?.cancel();
@@ -476,7 +507,8 @@ class HomeScreensState extends State<HomeScreens>
     final now = DateTime.now().millisecondsSinceEpoch;
     final endTimeMillis = now + _remainingTime.inMilliseconds;
 
-    SharedPreferences.getInstance().then((prefs) async { // jadikan async
+    SharedPreferences.getInstance().then((prefs) async {
+      // jadikan async
       await prefs.setInt(_endTimeKey, endTimeMillis);
       await prefs.setBool('timer_has_started', true);
     });
@@ -590,7 +622,8 @@ class HomeScreensState extends State<HomeScreens>
 
   //? fungsi alert untuk ucapan selamat
   bool hasShownCongrats = false;
-  void checkTargetAndShowAlert(BuildContext context, double currentTargetFromController) {
+  void checkTargetAndShowAlert(
+      BuildContext context, double currentTargetFromController) {
     if (!mounted) return;
 
     // Reset if intake drops below target (e.g. data correction)
@@ -598,7 +631,9 @@ class HomeScreensState extends State<HomeScreens>
       hasShownCongrats = false;
     }
 
-    if (currentIntake >= currentTargetFromController && !hasShownCongrats && currentTargetFromController > 0) {
+    if (currentIntake >= currentTargetFromController &&
+        !hasShownCongrats &&
+        currentTargetFromController > 0) {
       hasShownCongrats = true;
 
       final confettiController =
@@ -663,7 +698,8 @@ class HomeScreensState extends State<HomeScreens>
                         child: ElevatedButton(
                           onPressed: () {
                             if (mounted)
-                              confettiController.dispose(); // Dispose only if mounted
+                              confettiController
+                                  .dispose(); // Dispose only if mounted
                             Navigator.pop(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -731,7 +767,8 @@ class HomeScreensState extends State<HomeScreens>
 
     bool isOverallLoading = _isHomeScreenLoading || isTargetControllerLoading;
 
-    print("[HomeScreen Build] idPengguna: $idPengguna, namaPengguna: $namaPengguna, _isHomeScreenLoading: $_isHomeScreenLoading, isTargetControllerLoading: $isTargetControllerLoading, isOverallLoading: $isOverallLoading");
+    print(
+        "[HomeScreen Build] idPengguna: $idPengguna, namaPengguna: $namaPengguna, _isHomeScreenLoading: $_isHomeScreenLoading, isTargetControllerLoading: $isTargetControllerLoading, isOverallLoading: $isOverallLoading");
 
     if (idPengguna == null || namaPengguna == null || isOverallLoading) {
       // Check idPengguna as well
@@ -746,231 +783,157 @@ class HomeScreensState extends State<HomeScreens>
     double screenHeight = MediaQuery.of(context).size.height;
 
     if (uiTargetMl > 0) {
-        _valueNotifier.value = min(100, (currentIntake / uiTargetMl) * 100);
+      _valueNotifier.value = min(100, (currentIntake / uiTargetMl) * 100);
     } else {
-        _valueNotifier.value = 0;
+      _valueNotifier.value = 0;
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFFE8F7FF),
       body: SingleChildScrollView(
-        child: Stack(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.05,
-                  vertical: screenHeight * 0.07),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "HYDRATE",
-                    style: TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.blue,
-                        fontFamily: "Gluten"),
-                  ),
-                  Transform.translate(
-                    offset: Offset(0, screenHeight * -0.008),
-                    child: Text(
-                      "Hai, ${truncateName(namaPengguna!, 20)}", // namaPengguna is now checked for null
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+          child: Stack(
+        children: [
+          Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.05, vertical: screenHeight * 0.07),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "HYDRATE",
+                  style: TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.blue,
+                      fontFamily: "Gluten"),
+                ),
+                Transform.translate(
+                  offset: Offset(0, screenHeight * -0.008),
+                  child: Text(
+                    "Hai, ${truncateName(namaPengguna!, 20)}", // namaPengguna is now checked for null
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  Text(
-                    currentIntake >= uiTargetMl && uiTargetMl > 0
-                        ? "Pencapaianmu hari ini telah selesai."
-                        : "Ayo selesaikan pencapaianmu hari ini!",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: currentIntake >= uiTargetMl && uiTargetMl > 0
-                          ? const Color(0xFF07BAE4)
-                          : Colors.black54,
-                    ),
+                ),
+                Text(
+                  currentIntake >= uiTargetMl && uiTargetMl > 0
+                      ? "Pencapaianmu hari ini telah selesai."
+                      : "Ayo selesaikan pencapaianmu hari ini!",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: currentIntake >= uiTargetMl && uiTargetMl > 0
+                        ? const Color(0xFF07BAE4)
+                        : Colors.black54,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            // Lingkaran Proress
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: screenHeight * 0.2,
-                  ),
-                  AnimatedWaterProgressCircle(
-                    currentIntake: currentIntake,
-                    target: uiTargetMl,
-                    screenWidth: screenWidth,
-                  ),
-                  // Padding(
-                  //   padding: EdgeInsets.all(screenWidth * 0.1),
-                  //   child: Center(
-                  //       child: DashedCircularProgressBar.aspectRatio(
-                  //     aspectRatio: 1,
-                  //     valueNotifier: _valueNotifier,
-                  //     progress: _valueNotifier.value > 100
-                  //         ? 100
-                  //         : _valueNotifier.value, // Cap progress at 100
-                  //     startAngle: 230,
-                  //     sweepAngle: 260,
-                  //     foregroundColor: const Color(0xFF00A6FB),
-                  //     backgroundColor: const Color(0xFFA1E3F9),
-                  //     foregroundStrokeWidth: 15,
-                  //     backgroundStrokeWidth: 15,
-                  //     animation: true,
-                  //     seekSize: 10,
-                  //     seekColor: const Color(0xffeeeeee),
-                  //     child: Center(
-                  //       child: ValueListenableBuilder(
-                  //         valueListenable: _valueNotifier,
-                  //         builder: (_, double value, __) => Column(
-                  //           mainAxisSize: MainAxisSize.min,
-                  //           children: [
-                  //             Text(
-                  //               '${min(100, value.ceil())}%',
-                  //               style: const TextStyle(
-                  //                 color: Color(0xFF2F2E41),
-                  //                 fontWeight: FontWeight.w300,
-                  //                 fontSize: 40,
-                  //               ),
-                  //             ),
-                  //             Row(
-                  //               mainAxisAlignment: MainAxisAlignment.center,
-                  //               children: [
-                  //                 Text(
-                  //                   '${currentIntake.toInt()} mL',
-                  //                   style: TextStyle(
-                  //                     color:
-                  //                         currentIntake >= target && target > 0
-                  //                             ? Colors.blue
-                  //                             : Colors.red,
-                  //                     fontWeight: FontWeight.w600,
-                  //                     fontSize: 16,
-                  //                   ),
-                  //                 ),
-                  //                 Text(
-                  //                   ' / ${target.toInt()} mL',
-                  //                   style: const TextStyle(
-                  //                     color: Color(0xFF2F2E41),
-                  //                     fontWeight: FontWeight.w500,
-                  //                     fontSize: 16,
-                  //                   ),
-                  //                 ),
-                  //               ],
-                  //             ),
-                  //           ],
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   )),
-                  // ),
-                  Transform.translate(
-                    offset: Offset(0, screenHeight * -0.05),
-                    child: Container(
-                      width: screenWidth * 0.75,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: (_isCountdownActive &&
-                                  _remainingTime > Duration.zero)
-                              ? [
-                                  const Color(0xFF2AD1D1),
-                                  const Color(0xFF2AD1D1),
-                                ]
-                              : [
-                                  // Colors for "SAATNYA MINUM!" or when no timer
-                                  const Color(0xFF4EE9BD),
-                                  const Color(0xFF07BAE4),
-                                ],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
+          ),
+
+          // Gunakan DrinkStatusWidget
+          DrinkStatusWidget(
+            isCountdownActive: _isCountdownActive,
+            remainingTime: _remainingTime,
+            currentIntake: currentIntake.toInt(),
+            screenHeight: screenHeight,
+            formatTime: _formatTime,
+            onStatusChange: () {
+              // Callback ini dipanggil ketika status berubah
+              // Anda bisa menambahkan logic tambahan di sini jika diperlukan
+              print("Status widget changed");
+            },
+          ),
+
+          // Lingkaran Progress (sisanya tetap sama)
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: screenHeight *
+                      0.25, // Adjusted to accommodate the moved button
+                ),
+                AnimatedWaterProgressCircle(
+                  currentIntake: currentIntake,
+                  target: uiTargetMl,
+                  screenWidth: screenWidth,
+                ),
+                SizedBox(
+                    height: screenHeight *
+                        0.05), // Replace Transform.translate with SizedBox
+                Container(
+                  width: screenWidth * (0.8 + 0.04),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: const BorderRadius.all(Radius.circular(10)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF2F2E41).withOpacity(0.1),
+                        blurRadius: 12,
+                        offset: const Offset(1, 2),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        (_isCountdownActive && _remainingTime.inSeconds > 0)
-                            ? "Hidrasi selanjutnya ${_formatTime(_remainingTime)}"
-                            : ((_isCountdownActive && currentIntake > 0) ||
-                                    (_isCountdownActive &&
-                                        _remainingTime.inSeconds <=
-                                            0)) // Show if active and intake > 0 OR active and time is up
-                                ? "SAATNYA MINUM!"
-                                : "Tekan gelas untuk minum!", // Default when no timer and no intake
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
+                    ],
                   ),
-                  Container(
-                    width: screenWidth * (0.8 + 0.04),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF2F2E41).withOpacity(0.1),
-                          blurRadius: 12,
-                          offset: const Offset(1, 2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildDrinkOption(
-                            'assets/images/glass/100ml_glass.svg', 100),
-                        _buildDrinkOption(
-                            'assets/images/glass/150ml_glass.svg', 150),
-                        _buildDrinkOption(
-                            'assets/images/glass/200ml_glass.svg', 200),
-                        GestureDetector(
-                          onTap: () => _showAddWaterModal(context),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 10),
-                            child: SizedBox(
-                              width: 40,
-                              height: 40,
-                              child: FloatingActionButton(
-                                heroTag: "addWaterHome", // Unique heroTag
-                                backgroundColor: Colors.blue,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                onPressed: () {
-                                  _showAddWaterModal(context);
-                                },
-                                child:
-                                    const Icon(Icons.add, color: Colors.white),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildDrinkOption(
+                          'assets/images/glass/100ml_glass.svg', 100),
+                      _buildDrinkOption(
+                          'assets/images/glass/150ml_glass.svg', 150),
+                      _buildDrinkOption(
+                          'assets/images/glass/200ml_glass.svg', 200),
+                      GestureDetector(
+                        onTap: () => _showAddWaterModal(context),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: FloatingActionButton(
+                              heroTag: "addWaterHome", // Unique heroTag
+                              backgroundColor: Colors.blue,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
                               ),
+                              onPressed: () {
+                                _showAddWaterModal(context);
+                              },
+                              child: const Icon(Icons.add, color: Colors.white),
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        ],
+      )),
     );
   }
+
+
+// Method untuk menangani klik pada drink options
+void _handleDrinkOptionClick(int amount) {
+  setState(() {
+    currentIntake += amount;
+    _isCountdownActive = true;
+    _remainingTime = Duration(minutes: 15, seconds: 20); // atau durasi yang diinginkan
+  });
+  
+  // Start countdown timer
+  _startCountdown();
+}
+
 
   Widget _buildDrinkOption(String gambar, double amount) {
     return Column(
@@ -1132,7 +1095,8 @@ class HomeScreensState extends State<HomeScreens>
 
   void _showAddWaterModal(BuildContext context) {
     int selectedWater = 250;
-    final targetControllerProvider = Provider.of<TargetHidrasiController>(context, listen: false);
+    final targetControllerProvider =
+        Provider.of<TargetHidrasiController>(context, listen: false);
 
     showModalBottomSheet(
       context: context,
@@ -1170,14 +1134,14 @@ class HomeScreensState extends State<HomeScreens>
               } catch (e) {
                 print("Error saat menambah air: $e");
                 if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Gagal menyimpan data minum.")),
-                    );
-                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Gagal menyimpan data minum.")),
+                  );
+                }
               }
 
               _startCountdown();
-              _startDrinkingWithCooldown(newSelectedWater.toDouble()); 
+              _startDrinkingWithCooldown(newSelectedWater.toDouble());
               Navigator.pop(bottomSheetContext);
             },
           ),
