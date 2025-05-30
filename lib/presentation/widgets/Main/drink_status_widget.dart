@@ -7,7 +7,8 @@ class DrinkStatusWidget extends StatefulWidget {
   final int currentIntake;
   final double screenHeight;
   final Function(Duration) formatTime;
-  final VoidCallback? onStatusChange; // Callback untuk memberitahu parent widget
+  final VoidCallback?
+      onStatusChange; // Callback untuk memberitahu parent widget
 
   const DrinkStatusWidget({
     Key? key,
@@ -34,7 +35,8 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
       if (_showFullMessage) {
         return Text(
           "${widget.formatTime(widget.remainingTime)} Hidrasi selanjutnya",
-          key: const ValueKey('full_message'), // Tambahkan key untuk AnimatedSwitcher
+          key: const ValueKey(
+              'full_message'), // Tambahkan key untuk AnimatedSwitcher
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
@@ -42,7 +44,8 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
         );
       } else {
         return Row(
-          key: const ValueKey('short_message'), // Tambahkan key untuk AnimatedSwitcher
+          key: const ValueKey(
+              'short_message'), // Tambahkan key untuk AnimatedSwitcher
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -70,7 +73,8 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
     } else {
       return const Text(
         "SAATNYA MINUM !",
-        key: ValueKey('drink_now_message'), // Tambahkan key untuk AnimatedSwitcher
+        key: ValueKey(
+            'drink_now_message'), // Tambahkan key untuk AnimatedSwitcher
         style: TextStyle(
           color: Colors.white,
           fontWeight: FontWeight.bold,
@@ -118,7 +122,8 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
 
   // Method untuk memulai animasi setelah minum atau countdown dimulai
   void startDrinkAnimation() {
-    if (mounted) { // Pastikan widget masih mounted
+    if (mounted) {
+      // Pastikan widget masih mounted
       setState(() {
         _showFullMessage = true;
       });
@@ -136,7 +141,8 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
         widget.isCountdownActive &&
         widget.remainingTime.inSeconds > 0 &&
         _showFullMessage) {
-      _messageTimer?.cancel(); // Batalkan timer yang mungkin akan membuka/menutup lagi
+      _messageTimer
+          ?.cancel(); // Batalkan timer yang mungkin akan membuka/menutup lagi
       setState(() {
         _showFullMessage = false;
       });
@@ -146,25 +152,24 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
     }
   }
 
-
   @override
   void initState() {
     super.initState();
     _lastIntake = widget.currentIntake;
     // Jika countdown sudah aktif saat widget pertama kali dibuat
     if (widget.isCountdownActive && widget.remainingTime.inSeconds > 0) {
-        // Awalnya tampilkan pesan singkat jika diinginkan, atau biarkan full dan timer akan menutupnya.
-        // Untuk kasus ini, kita biarkan _showFullMessage = true (default)
-        // dan _startCloseTimer akan dipanggil di didUpdateWidget jika kondisi terpenuhi,
-        // atau jika user minum.
-        // Jika ingin langsung singkat saat init:
-        // _showFullMessage = false;
-        // Namun, lebih konsisten jika startDrinkAnimation yang mengaturnya.
-        // Jika widget dimulai dengan countdown aktif, kita mungkin ingin langsung memulai animasi juga.
-        startDrinkAnimation();
+      // Awalnya tampilkan pesan singkat jika diinginkan, atau biarkan full dan timer akan menutupnya.
+      // Untuk kasus ini, kita biarkan _showFullMessage = true (default)
+      // dan _startCloseTimer akan dipanggil di didUpdateWidget jika kondisi terpenuhi,
+      // atau jika user minum.
+      // Jika ingin langsung singkat saat init:
+      // _showFullMessage = false;
+      // Namun, lebih konsisten jika startDrinkAnimation yang mengaturnya.
+      // Jika widget dimulai dengan countdown aktif, kita mungkin ingin langsung memulai animasi juga.
+      startDrinkAnimation();
     } else if (!widget.isCountdownActive) {
-        // Jika dimulai dengan "SAATNYA MINUM!"
-        _showFullMessage = true;
+      // Jika dimulai dengan "SAATNYA MINUM!"
+      _showFullMessage = true;
     }
   }
 
@@ -173,13 +178,14 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
     super.didUpdateWidget(oldWidget);
 
     bool intakeChanged = widget.currentIntake != _lastIntake;
-    
 
     // Deteksi jika countdown baru dimulai (dari tidak aktif menjadi aktif)
-    bool countdownJustStarted = !oldWidget.isCountdownActive && widget.isCountdownActive;
+    bool countdownJustStarted =
+        !oldWidget.isCountdownActive && widget.isCountdownActive;
 
     if (countdownJustStarted || intakeChanged) {
-      _lastIntake = widget.currentIntake; // Update _lastIntake di sini agar lebih akurat
+      _lastIntake =
+          widget.currentIntake; // Update _lastIntake di sini agar lebih akurat
       startDrinkAnimation();
     }
 
@@ -187,7 +193,8 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
     // Atau jika menjadi tidak aktif karena alasan lain.
     if (oldWidget.isCountdownActive && !widget.isCountdownActive) {
       _messageTimer?.cancel();
-      if (mounted) { // Pastikan widget masih mounted
+      if (mounted) {
+        // Pastikan widget masih mounted
         setState(() {
           _showFullMessage = true; // Tampilkan "SAATNYA MINUM!"
         });
@@ -203,9 +210,9 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: widget.screenHeight * 0.22, // Adjust this value to position above circle
-      right: 0, // Menempel ke sisi kanan
+    return Padding(
+      padding: EdgeInsets.only(
+          top: widget.screenHeight * 0.02, right: widget.screenHeight * 0),
       child: GestureDetector(
         onTap: _handleTap,
         child: AnimatedContainer(
@@ -213,13 +220,15 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: (widget.isCountdownActive && widget.remainingTime.inSeconds > 0)
+              colors: (widget.isCountdownActive &&
+                      widget.remainingTime.inSeconds > 0)
                   ? [
                       const Color(0xFF2AD1D1),
                       const Color(0xFF07BAE4),
                     ]
                   : [
-                      const Color(0xFF4EE9BD), // Warna berbeda saat "SAATNYA MINUM!"
+                      const Color(
+                          0xFF4EE9BD), // Warna berbeda saat "SAATNYA MINUM!"
                       const Color(0xFF07BAE4),
                     ],
               begin: Alignment.centerLeft,
@@ -229,13 +238,15 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
               topLeft: Radius.circular(25),
               bottomLeft: Radius.circular(25),
               topRight: Radius.circular(0), // Tidak ada radius di kanan atas
-              bottomRight: Radius.circular(0), // Tidak ada radius di kanan bawah
+              bottomRight:
+                  Radius.circular(0), // Tidak ada radius di kanan bawah
             ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFF07BAE4).withOpacity(0.3),
                 blurRadius: 8,
-                offset: const Offset(-2, 4), // Shadow ke kiri karena menempel kanan
+                offset:
+                    const Offset(-2, 4), // Shadow ke kiri karena menempel kanan
               ),
             ],
           ),
@@ -246,17 +257,23 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
               // Kondisi untuk icon:
               // 1. Tampil jika BUKAN countdown aktif (berarti "SAATNYA MINUM")
               // 2. ATAU jika countdown aktif DAN pesan penuh ditampilkan
-              if (!(widget.isCountdownActive && widget.remainingTime.inSeconds > 0) ||
-                  (widget.isCountdownActive && widget.remainingTime.inSeconds > 0 && _showFullMessage)) ...[
+              if (!(widget.isCountdownActive &&
+                      widget.remainingTime.inSeconds > 0) ||
+                  (widget.isCountdownActive &&
+                      widget.remainingTime.inSeconds > 0 &&
+                      _showFullMessage)) ...[
                 Container(
                   decoration: BoxDecoration(
                     // color: Colors.white, // Tidak perlu background lagi jika icon sudah putih
                     borderRadius: BorderRadius.circular(50),
                   ),
                   // Gunakan icon jam untuk countdown aktif (pesan penuh), icon drink untuk status minum
-                  child: (widget.isCountdownActive && widget.remainingTime.inSeconds > 0)
-                      ? const Icon(Icons.access_time, color: Colors.white, size: 16)
-                      : const Icon(Icons.local_drink, color: Colors.white, size: 16),
+                  child: (widget.isCountdownActive &&
+                          widget.remainingTime.inSeconds > 0)
+                      ? const Icon(Icons.access_time,
+                          color: Colors.white, size: 16)
+                      : const Icon(Icons.local_drink,
+                          color: Colors.white, size: 16),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -267,13 +284,15 @@ class _DrinkStatusWidgetState extends State<DrinkStatusWidget> {
                     opacity: animation,
                     child: SizeTransition(
                       sizeFactor: animation,
-                      axis: Axis.horizontal, // Atau Axis.vertical sesuai preferensi
+                      axis: Axis
+                          .horizontal, // Atau Axis.vertical sesuai preferensi
                       axisAlignment: -1.0, // Mulai dari kiri
                       child: child,
                     ),
                   );
                 },
-                child: _getStatusMessage(), // Key sudah diatur di dalam _getStatusMessage
+                child:
+                    _getStatusMessage(), // Key sudah diatur di dalam _getStatusMessage
               ),
             ],
           ),

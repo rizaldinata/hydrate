@@ -450,7 +450,8 @@ class HomeScreensState extends State<HomeScreens>
 
   Future<void> _startCountdown() async {
     final prefs = await SharedPreferences.getInstance();
-    bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false;
+    bool areNotificationsGloballyEnabled =
+        prefs.getBool('notifications_enabled') ?? false;
 
     if (!areNotificationsGloballyEnabled) {
       _countdownTimer?.cancel();
@@ -473,17 +474,21 @@ class HomeScreensState extends State<HomeScreens>
     const Duration reminderInterval = Duration(hours: 1);
     DateTime now = DateTime.now();
     DateTime scheduledNotificationTime;
-    DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
-    DateTime todaySleep = DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
+    DateTime todayWakeUp =
+        DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
+    DateTime todaySleep =
+        DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
 
     DateTime currentPeriodStart;
     DateTime currentPeriodEnd;
 
-    if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
+    if (sleep.hour > wakeUp.hour ||
+        (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
       currentPeriodStart = todayWakeUp;
       currentPeriodEnd = todaySleep;
 
-      if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
+      if (now.isAfter(currentPeriodEnd) ||
+          now.isAtSameMomentAs(currentPeriodEnd)) {
         currentPeriodStart = todayWakeUp.add(const Duration(days: 1));
         currentPeriodEnd = todaySleep.add(const Duration(days: 1));
       }
@@ -507,12 +512,14 @@ class HomeScreensState extends State<HomeScreens>
 
     if (now.isBefore(currentPeriodStart)) {
       scheduledNotificationTime = currentPeriodStart;
-    } else if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
+    } else if (now.isAfter(currentPeriodEnd) ||
+        now.isAtSameMomentAs(currentPeriodEnd)) {
       scheduledNotificationTime = currentPeriodStart;
       if (scheduledNotificationTime.isBefore(now)) {
-        DateTime nextWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
-        if(nextWakeUp.isBefore(now) || nextWakeUp.isAtSameMomentAs(now)) {
-          nextWakeUp = nextWakeUp.add(const Duration(days:1));
+        DateTime nextWakeUp =
+            DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
+        if (nextWakeUp.isBefore(now) || nextWakeUp.isAtSameMomentAs(now)) {
+          nextWakeUp = nextWakeUp.add(const Duration(days: 1));
         }
         scheduledNotificationTime = nextWakeUp;
       }
@@ -520,8 +527,10 @@ class HomeScreensState extends State<HomeScreens>
       if (proposedNextTime.isBefore(currentPeriodEnd)) {
         scheduledNotificationTime = proposedNextTime;
       } else {
-        if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
-          scheduledNotificationTime = currentPeriodStart.add(const Duration(days: 1));
+        if (sleep.hour > wakeUp.hour ||
+            (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
+          scheduledNotificationTime =
+              currentPeriodStart.add(const Duration(days: 1));
         } else {
           scheduledNotificationTime = DateTime(
               currentPeriodEnd.year,
@@ -530,7 +539,8 @@ class HomeScreensState extends State<HomeScreens>
               wakeUp.hour,
               wakeUp.minute);
           if (scheduledNotificationTime.isBefore(currentPeriodEnd)) {
-            scheduledNotificationTime = scheduledNotificationTime.add(const Duration(days: 1));
+            scheduledNotificationTime =
+                scheduledNotificationTime.add(const Duration(days: 1));
           }
         }
       }
@@ -549,10 +559,12 @@ class HomeScreensState extends State<HomeScreens>
       DateTime checkTodaySleep =
           DateTime(now.year, now.month, now.day, sleep.hour, sleep.minute);
 
-      if (sleep.hour > wakeUp.hour || (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
+      if (sleep.hour > wakeUp.hour ||
+          (sleep.hour == wakeUp.hour && sleep.minute > wakeUp.minute)) {
         checkPeriodStart = checkTodayWakeUp;
         checkPeriodEnd = checkTodaySleep;
-        if (correctedTime.isAfter(checkPeriodEnd) || correctedTime.isBefore(checkPeriodStart)) {
+        if (correctedTime.isAfter(checkPeriodEnd) ||
+            correctedTime.isBefore(checkPeriodStart)) {
           correctedTime = checkTodayWakeUp.add(const Duration(days: 1));
         }
       } else {
@@ -563,7 +575,8 @@ class HomeScreensState extends State<HomeScreens>
           checkPeriodStart = checkTodayWakeUp.subtract(const Duration(days: 1));
           checkPeriodEnd = checkTodaySleep;
         }
-        if (correctedTime.isAfter(checkPeriodEnd) || correctedTime.isBefore(checkPeriodStart)) {
+        if (correctedTime.isAfter(checkPeriodEnd) ||
+            correctedTime.isBefore(checkPeriodStart)) {
           if (now.isAfter(checkPeriodEnd)) {
             correctedTime = checkPeriodStart.add(Duration(
                 days: (checkPeriodStart.isBefore(checkTodayWakeUp) &&
