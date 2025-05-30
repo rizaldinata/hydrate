@@ -107,6 +107,7 @@ flutter:
   assets:
     - assets/
     - assets/images/
+    - assets/images/gif/
     - assets/images/berhasil.svg
     - assets/images/glass/
     - assets/images/logo.png
