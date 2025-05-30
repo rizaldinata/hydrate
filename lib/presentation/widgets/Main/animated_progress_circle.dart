@@ -304,7 +304,7 @@ void _updateAnimationPlaybackBasedOnState() {
 }
 
 // --- PAINTERS ---
-const double _GLOBAL_ARC_STROKE_WIDTH = 15.0;
+const double _globalArcStrokeWidth = 15.0;
 
 class CircleBackgroundPainter extends CustomPainter {
   final ProgressState progressState;
@@ -314,7 +314,7 @@ class CircleBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2 - (_GLOBAL_ARC_STROKE_WIDTH / 2) - 1.0; 
+    final radius = math.min(size.width, size.height) / 2 - (_globalArcStrokeWidth / 2) - 1.0; 
 
     Color fillColor;
     switch (progressState) {
@@ -322,7 +322,6 @@ class CircleBackgroundPainter extends CustomPainter {
       case ProgressState.critical:
       case ProgressState.empty:
       case ProgressState.normal:
-      default:
         fillColor = appPageBackgroundColor;
         break;
     }

@@ -18,7 +18,6 @@ class NotificationSettingsService {
     final prefs = await SharedPreferences.getInstance();
     final hour = prefs.getInt(_wakeUpHourKey) ?? defaultWakeUpHour;
     final minute = prefs.getInt(_wakeUpMinuteKey) ?? defaultWakeUpMinute;
-    print("[NotificationSettingsService] getWakeUpTime: $hour:$minute. Jam: ${DateTime.now()}");
     return TimeOfDay(hour: hour, minute: minute);
   }
 
@@ -32,7 +31,6 @@ class NotificationSettingsService {
     final prefs = await SharedPreferences.getInstance();
     final hour = prefs.getInt(_sleepHourKey) ?? defaultSleepHour;
     final minute = prefs.getInt(_sleepMinuteKey) ?? defaultSleepMinute;
-    print("[NotificationSettingsService] getSleepTime: $hour:$minute. Jam: ${DateTime.now()}");
     return TimeOfDay(hour: hour, minute: minute);
   }
 

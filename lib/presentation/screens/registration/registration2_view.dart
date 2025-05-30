@@ -279,8 +279,6 @@ class RegistrationTimeState extends State<RegistrationTime> {
                                 return; 
                               }
 
-                              print("[RegistrationTime] Tombol DAFTAR ditekan. Data: Nama=$nama, Gender=$jenisKelamin, Berat=$beratBadan, Bangun=$jamBangun, Tidur=$jamTidur. Jam: ${DateTime.now()}");
-
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
@@ -290,7 +288,6 @@ class RegistrationTimeState extends State<RegistrationTime> {
                               );
 
                               try {
-                                print("[RegistrationTime] Memanggil _penggunaController.tambahPengguna...");
                                 int userId =
                                     await _penggunaController.tambahPengguna(
                                   nama,
@@ -300,26 +297,20 @@ class RegistrationTimeState extends State<RegistrationTime> {
                                   jamTidur,
                                 );
 
-                                print("[RegistrationTime] Hasil dari tambahPengguna, userId: $userId");
-
                                 if (mounted) Navigator.of(context).pop();
 
                                 if (userId > 0) {
                                   final session = SessionManager();
-                                  print("[RegistrationTime] AKAN menyimpan UserId $userId ke session...");
                                   await session.saveUserId(userId);
-                                  print("[RegistrationTime] UserId $userId SELESAI disimpan ke session.");
 
                                   TimeOfDay? wakeUpToSave = _parseTimeStringForService(jamBangun);
                                   TimeOfDay? sleepToSave = _parseTimeStringForService(jamTidur);
 
                                   if (wakeUpToSave != null) {
                                     await _notificationSettingsService.setWakeUpTime(wakeUpToSave);
-                                    print("[RegistrationTime] Jam bangun ${wakeUpToSave.format(context)} disimpan ke settings service.");
                                   }
                                   if (sleepToSave != null) {
                                     await _notificationSettingsService.setSleepTime(sleepToSave);
-                                    print("[RegistrationTime] Jam tidur ${sleepToSave.format(context)} disimpan ke settings service.");
                                   }
                                   
                                   if (mounted) {
@@ -340,7 +331,6 @@ class RegistrationTimeState extends State<RegistrationTime> {
                                 }
                               } catch (e) {
                                 Navigator.of(context).pop();
-                                print("[RegistrationTime] Error saat menambahkan pengguna: $e");
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(content: Text("Terjadi kesalahan: ${e.toString()}"))
@@ -376,8 +366,8 @@ TimeOfDay? _parseTimeStringToTimeOfDay(String? timeString) {
     if (parts.length == 2) {
       return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
     }
-  } catch (e) {
-    print("Error parsing time string for validation: '$timeString' - $e");
+  } catch (_) {
+    return null;
   }
   return null;
 }
@@ -389,8 +379,8 @@ TimeOfDay? _parseTimeStringForService(String? timeString) {
       if (parts.length == 2) {
         return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
       }
-    } catch (e) {
-      print("Error parsing time string for service: '$timeString' - $e");
+    } catch (_) {
+      return null;
     }
     return null;
   }

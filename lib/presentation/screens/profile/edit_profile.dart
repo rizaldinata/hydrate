@@ -172,11 +172,9 @@ class _EditProfileState extends State<EditProfile> {
       if (success && mounted) {
         if (wakeUpTime != null) {
           await _notificationSettingsService.setWakeUpTime(wakeUpTime!);
-          print("[EditProfile] Jam bangun ${wakeUpTime!.format(context)} disimpan ke settings service.");
         }
         if (sleepTime != null) {
           await _notificationSettingsService.setSleepTime(sleepTime!);
-          print("[EditProfile] Jam tidur ${sleepTime!.format(context)} disimpan ke settings service.");
         }
         Navigator.pop(context, true);
         _showOverlaySuccess("Profil berhasil diperbarui!");

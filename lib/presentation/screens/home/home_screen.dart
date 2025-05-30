@@ -113,16 +113,13 @@ class HomeScreensState extends State<HomeScreens>
     bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false; 
 
     if (!areNotificationsGloballyEnabled) {
-      print("[HomeScreen - _scheduleWakeUpNotification] Notifikasi global DINONAKTIFKAN, notifikasi bangun tidak dijadwalkan.");
       return;
     }
     
     if (idPengguna == null) {
-        print("[HomeScreen - _scheduleWakeUpNotification] idPengguna null, tidak bisa mengambil pengaturan waktu.");
         final session = SessionManager();
         idPengguna = await session.getUserId();
         if (idPengguna == null) {
-            print("[HomeScreen - _scheduleWakeUpNotification] Tetap tidak bisa mendapatkan idPengguna. Batal penjadwalan.");
             return;
         }
     }
@@ -144,58 +141,6 @@ class HomeScreensState extends State<HomeScreens>
     const int wakeUpNotificationId = 200; 
 
     await AwesomeNotifications().cancel(wakeUpNotificationId); 
-
-    print("[HomeScreen - _scheduleWakeUpNotification] Menjadwalkan notifikasi bangun untuk: $nextWakeUpNotificationTime");
-    
-    await NotificationController.scheduleNextHydrationNotification(
-        exactNotificationTime: nextWakeUpNotificationTime,
-        title: 'Bangun Tidur! Waktunya Minum Air 💧',
-        body: 'Awali harimu dengan hidrasi yang cukup!',
-        notificationId: wakeUpNotificationId, 
-        payload: {'type': 'wake_up_reminder'} 
-    );
-  }
-
-  Future<void> _scheduleWakeUpNotification() async {
-    if (!mounted) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false; 
-
-    if (!areNotificationsGloballyEnabled) {
-      print("[HomeScreen - _scheduleWakeUpNotification] Notifikasi global DINONAKTIFKAN, notifikasi bangun tidak dijadwalkan.");
-      return;
-    }
-    
-    if (idPengguna == null) {
-        print("[HomeScreen - _scheduleWakeUpNotification] idPengguna null, tidak bisa mengambil pengaturan waktu.");
-        final session = SessionManager();
-        idPengguna = await session.getUserId();
-        if (idPengguna == null) {
-            print("[HomeScreen - _scheduleWakeUpNotification] Tetap tidak bisa mendapatkan idPengguna. Batal penjadwalan.");
-            return;
-        }
-    }
-
-
-    final TimeOfDay wakeUp = await _notificationSettingsService.getWakeUpTime();
-    DateTime now = DateTime.now();
-    DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
-    DateTime nextWakeUpNotificationTime;
-
-    if (now.isBefore(todayWakeUp)) {
-      nextWakeUpNotificationTime = todayWakeUp;
-    } else {
-      nextWakeUpNotificationTime = todayWakeUp.add(const Duration(days: 1));
-    }
-    
-    nextWakeUpNotificationTime = nextWakeUpNotificationTime.add(const Duration(seconds: 10));
-
-    const int wakeUpNotificationId = 200; 
-
-    await AwesomeNotifications().cancel(wakeUpNotificationId); 
-
-    print("[HomeScreen - _scheduleWakeUpNotification] Menjadwalkan notifikasi bangun untuk: $nextWakeUpNotificationTime");
     
     await NotificationController.scheduleNextHydrationNotification(
         exactNotificationTime: nextWakeUpNotificationTime,
@@ -275,8 +220,6 @@ class HomeScreensState extends State<HomeScreens>
           namaPengguna = null;
         });
       }
-      print("[HomeScreen - _loadUserDisplayData] Error: $e");
-      // Handle error, mungkin tampilkan pesan ke user
     }
   }
 
@@ -485,7 +428,6 @@ class HomeScreensState extends State<HomeScreens>
     bool areNotificationsGloballyEnabled = prefs.getBool('notifications_enabled') ?? false; 
 
     if (!areNotificationsGloballyEnabled) {
-      print("[HomeScreen - _startCountdown] Notifikasi global DINONAKTIFKAN. Tidak menjadwalkan. Jam: ${DateTime.now()}"); 
       _countdownTimer?.cancel();
       if (mounted) {
         setState(() {
@@ -498,18 +440,12 @@ class HomeScreensState extends State<HomeScreens>
       return; 
     }
 
-    print("[HomeScreen - _startCountdown] Notifikasi global AKTIF. Memulai proses penjadwalan. Jam: ${DateTime.now()}"); 
-
     await NotificationController.cancelScheduledNotifications();
-
-    print("[HomeScreen - _startCountdown] Jadwal lama dibatalkan. Jam: ${DateTime.now()}");
 
     final TimeOfDay wakeUp = await _notificationSettingsService.getWakeUpTime();
     final TimeOfDay sleep = await _notificationSettingsService.getSleepTime();
 
-    print("[HomeScreen - _startCountdown] Pengaturan Waktu: Bangun=${wakeUp.hour}:${wakeUp.minute}, Tidur=${sleep.hour}:${sleep.minute}"); 
-
-    const Duration reminderInterval = Duration(minutes: 1);
+    const Duration reminderInterval = Duration(hours: 1);
     DateTime now = DateTime.now();
     DateTime scheduledNotificationTime;
     DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
@@ -549,8 +485,6 @@ class HomeScreensState extends State<HomeScreens>
     } else if (now.isAfter(currentPeriodEnd) || now.isAtSameMomentAs(currentPeriodEnd)) {
       scheduledNotificationTime = currentPeriodStart; 
       if (scheduledNotificationTime.isBefore(now)) {
-        print("[HS - _startCountdown] KOREKSI WAKTU: Waktu terjadwal awal ($scheduledNotificationTime) terlalu dekat/lampau dari $now.");
-        print("[HS - _startCountdown] WAKTU TERJADWAL SETELAH KOREKSI: $scheduledNotificationTime");
         DateTime nextWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
           if(nextWakeUp.isBefore(now) || nextWakeUp.isAtSameMomentAs(now)) {
               nextWakeUp = nextWakeUp.add(const Duration(days:1));
@@ -610,7 +544,6 @@ class HomeScreensState extends State<HomeScreens>
       }
     }
 
-    print("[HomeScreen - _startCountdown] AKAN MENJADWALKAN notifikasi untuk: $scheduledNotificationTime. Jam: ${DateTime.now()}"); 
     await NotificationController.scheduleNextHydrationNotification(
         exactNotificationTime: scheduledNotificationTime,
     );
@@ -619,7 +552,6 @@ class HomeScreensState extends State<HomeScreens>
         _endTime = scheduledNotificationTime; 
         _remainingTime = _endTime!.isAfter(now) ? _endTime!.difference(now) : Duration.zero;
         _isCountdownActive = _remainingTime > Duration.zero;
-        print("[HomeScreen - _startCountdown] UI Timer diupdate. EndTime: $_endTime, Sisa waktu: $_remainingTime, Aktif: $_isCountdownActive. Jam: ${DateTime.now()}"); 
       });
       await _saveCurrentTimerState(); 
       if(_isCountdownActive) { 
@@ -641,7 +573,6 @@ class HomeScreensState extends State<HomeScreens>
     final overlay = Overlay.of(context);
     // Each call to this function should have its own AnimationController
     final animationController = AnimationController(
-      vsync: this,
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
@@ -716,7 +647,7 @@ class HomeScreensState extends State<HomeScreens>
           if (overlayEntry?.mounted ?? false) overlayEntry?.remove();
           animationController.dispose();
         });
-      } else if(!mounted || (overlayEntry?.mounted ?? false && animationController.status == AnimationStatus.dismissed)) {
+      } else if(!mounted || (overlayEntry?.mounted ?? false)) {
         if (overlayEntry?.mounted ?? false) overlayEntry?.remove();
         animationController.dispose(); 
       }
@@ -1089,7 +1020,7 @@ class HomeScreensState extends State<HomeScreens>
           if (overlayEntry?.mounted ?? false) overlayEntry?.remove();
           animationController.dispose(); // Dispose setelah selesai
         });
-      } else if(!mounted || (overlayEntry?.mounted ?? false && animationController.status == AnimationStatus.dismissed)) {
+      } else if(!mounted || (overlayEntry?.mounted ?? false)) {
         if (overlayEntry?.mounted ?? false) overlayEntry?.remove();
         animationController.dispose();
       }
@@ -1189,11 +1120,5 @@ class HomeScreensState extends State<HomeScreens>
 
   void _showOverlayError(String message) {
     _showOverlay(context, message, Colors.redAccent, isError: true);
-  }
-
-  void _showOverlaySuccess(String message) {
-    // Biasanya sudah ditangani oleh _showAddedWaterPopup
-    // Jika perlu, bisa panggil _showOverlay di sini dengan warna sukses
-    // _showOverlay(context, message, Colors.green.withOpacity(0.9));
   }
 }

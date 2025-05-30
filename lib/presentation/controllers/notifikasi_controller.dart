@@ -44,9 +44,6 @@ class NotificationController {
 
   @pragma('vm:entry-point')
   static Future<void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
-
-    print('[NotificationController] Notification CREATED. ID: ${receivedNotification.id}, Channel: ${receivedNotification.channelKey}, LifeCycle: ${receivedNotification.createdLifeCycle}. Jam: ${DateTime.now()}');
-
     if (receivedNotification.createdLifeCycle == NotificationLifeCycle.Foreground) {
       final prefs = await SharedPreferences.getInstance();
       bool areNotificationsGloballyEnabled = prefs.getBool(_notificationsEnabledKey) ?? false;
@@ -147,10 +144,9 @@ class NotificationController {
     required DateTime exactNotificationTime,
     String title = 'Saatnya Minum! 💧',
     String body = 'Jangan lupa jaga hidrasi Anda hari ini.', 
-    int notificationId = NotificationController.kScheduledHydrationNotificationId, // Default ke ID hidrasi reguler
+    int notificationId = NotificationController.kScheduledHydrationNotificationId,
     Map<String, String?>? payload, 
   }) async {
-    print("[NotificationController] AKAN memanggil AwesomeNotifications().createNotification untuk: $exactNotificationTime. Jam: ${DateTime.now()}"); 
     await AwesomeNotifications().createNotification(
       content: NotificationContent(
         id: notificationId,
@@ -175,35 +171,21 @@ class NotificationController {
     DateTime todayWakeUp = DateTime(now.year, now.month, now.day, wakeUp.hour, wakeUp.minute);
     DateTime nextWakeUpNotificationTime;
 
-  if (now.isBefore(todayWakeUp)) {
-    // Jika jam bangun hari ini belum lewat, jadwalkan untuk hari ini
-    nextWakeUpNotificationTime = todayWakeUp;
-  } else {
-    // Jika jam bangun hari ini sudah lewat, jadwalkan untuk besok
-    nextWakeUpNotificationTime = todayWakeUp.add(const Duration(days: 1));
+    if (now.isBefore(todayWakeUp)) {
+      nextWakeUpNotificationTime = todayWakeUp;
+    } else {
+      nextWakeUpNotificationTime = todayWakeUp.add(const Duration(days: 1));
+    }
+    
+    nextWakeUpNotificationTime = nextWakeUpNotificationTime.add(const Duration(seconds: 10));
+
+    await AwesomeNotifications().cancel(200);
+
+    await NotificationController.scheduleNextHydrationNotification(
+        exactNotificationTime: nextWakeUpNotificationTime,
+        title: 'Selamat Pagi! Waktunya Minum Air 💧',
+        body: 'Mulailah harimu dengan segelas air untuk menjaga hidrasi.',
+        notificationId: 200,
+    );
   }
-  
-  // Beri sedikit buffer agar tidak terlalu mepet dan ada kemungkinan terlewat jika ada delay sistem
-  // Misalnya, jadwalkan 10 detik setelah jam bangun
-  nextWakeUpNotificationTime = nextWakeUpNotificationTime.add(const Duration(seconds: 10));
-
-
-  // Kita perlu ID yang berbeda untuk notifikasi bangun ini agar tidak bentrok
-  // dengan notifikasi hidrasi reguler (yang pakai ID 10 misalnya).
-  // Misalnya, kita gunakan ID 200 untuk notifikasi bangun.
-  // Batalkan dulu jika ada jadwal notifikasi bangun sebelumnya dengan ID yang sama.
-  await AwesomeNotifications().cancel(200); // Batalkan jadwal lama untuk ID 200
-
-  print("[_scheduleWakeUpNotification] Menjadwalkan notifikasi bangun untuk: $nextWakeUpNotificationTime");
-  await NotificationController.scheduleNextHydrationNotification( // Gunakan metode yang sama tapi dengan ID & konten berbeda jika mau
-      exactNotificationTime: nextWakeUpNotificationTime,
-      // Anda bisa membuat konten notifikasi khusus untuk jam bangun
-      title: 'Selamat Pagi! Waktunya Minum Air 💧',
-      body: 'Mulailah harimu dengan segelas air untuk menjaga hidrasi.',
-      // Pastikan metode scheduleNextHydrationNotification bisa menerima ID kustom atau Anda buat metode baru
-      // notificationId: 200 // Jika metode Anda mendukung ID kustom
-  );
-  // Jika scheduleNextHydrationNotification tidak mendukung custom ID, Anda bisa buat metode baru di NotificationController
-  // khusus untuk notifikasi bangun yang menggunakan ID berbeda.
-}
 }
