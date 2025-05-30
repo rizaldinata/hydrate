@@ -9,7 +9,7 @@
     <application
         android:label="Hydrate"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"> <activity
+        android:icon="@mipmap/launcher_icon"> <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
