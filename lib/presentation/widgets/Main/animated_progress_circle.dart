@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-// Enum untuk status progres (tetap sama)
+// Enum ProgressState tetap sama
 enum ProgressState {
   empty,
   normal,
   exceeded,
   critical,
 }
+
+// Warna latar belakang utama aplikasi Anda
+const Color appPageBackgroundColor = Color(0xFFE8F7FF);
+// Warna untuk track pinggiran/arc, sedikit lebih gelap dari background agar terlihat
+const Color arcTrackColorEmpty = Color(0xFFCCE7F8); // Sedikit lebih gelap dari abu-abu standar
+const Color arcTrackColorActive = Color(0xFFCCE7F8); // Sedikit lebih gelap dari appPageBackgroundColor
 
 class AnimatedWaterProgressCircle extends StatefulWidget {
   final double currentIntake;
@@ -28,26 +34,26 @@ class AnimatedWaterProgressCircle extends StatefulWidget {
 
 class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircle>
     with TickerProviderStateMixin {
-  // Animation Controllers
   late AnimationController _waveController;
-  late AnimationController _exclamationMarkMovementController; // Hanya untuk gerakan tanda seru
-  late AnimationController _progressDisplayController;  // Untuk animasi persentase progres
+  late AnimationController _exclamationMarkMovementController;
+  late AnimationController _progressDisplayController;
 
-  // Animations
   late Animation<double> _waveAnimation;
   late Animation<double> _exclamationMarkMovementAnimation;
   late Animation<double> _progressDisplayAnimation;
 
-  double _currentAnimatedProgressPercent = 0.0;
+  // Variabel _currentAnimatedProgressPercent tidak lagi secara langsung digunakan untuk mengontrol tampilan
+  // _progressDisplayAnimation.value menjadi sumber utama untuk nilai animasi
+
   final double _arcStrokeWidth = 15.0;
 
   @override
   void initState() {
     super.initState();
     _setupWaveAnimation();
-    _setupProgressDisplayAnimation();
-    _setupEmptyStateAnimations(); // Sekarang hanya untuk tanda seru
-    _updateAnimationPlaybackBasedOnState();
+    _setupProgressDisplayAnimation(); // Dipanggil setelah _waveController
+    _setupEmptyStateAnimations(); // Dipanggil setelah _progressDisplayController
+    _updateAnimationPlaybackBasedOnState(); // Dipanggil setelah semua controller
   }
 
   void _setupWaveAnimation() {
@@ -61,29 +67,31 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
 
   void _setupProgressDisplayAnimation() {
     _progressDisplayController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    final initialProgressPercent = widget.target > 0
+    // Nilai awal untuk animasi (bisa > 100%)
+    final initialProgressForAnimation = widget.target > 0
         ? (widget.currentIntake / widget.target * 100)
         : 0.0;
-    _currentAnimatedProgressPercent = math.min(100.0, math.max(0.0, initialProgressPercent));
+
     _progressDisplayAnimation = Tween<double>(
-      begin: _currentAnimatedProgressPercent,
-      end: _currentAnimatedProgressPercent,
+      begin: initialProgressForAnimation,
+      end: initialProgressForAnimation,
     ).animate(CurvedAnimation(
       parent: _progressDisplayController,
       curve: Curves.easeInOutCubic,
     ));
+    // Jalankan controller sekali agar nilai awal diterapkan jika tidak ada update awal
+    // _progressDisplayController.forward(); // Tidak perlu forward di sini, didUpdateWidget akan handle
   }
 
   void _setupEmptyStateAnimations() {
-    // Animasi gerakan tanda seru
     _exclamationMarkMovementController = AnimationController(
-      duration: const Duration(milliseconds: 1000), // Durasi untuk satu siklus kiri-kanan
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-    _exclamationMarkMovementAnimation = Tween<double>(begin: -6.0, end: 6.0) // Jarak pergerakan
+    _exclamationMarkMovementAnimation = Tween<double>(begin: -6.0, end: 6.0)
         .animate(CurvedAnimation(
       parent: _exclamationMarkMovementController,
       curve: Curves.easeInOutSine,
@@ -92,6 +100,7 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
 
   void _updateAnimationPlaybackBasedOnState() {
     final progressState = _getProgressState();
+    if (!mounted) return;
 
     if (progressState == ProgressState.empty) {
       if (!_exclamationMarkMovementController.isAnimating) {
@@ -103,7 +112,10 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
         _exclamationMarkMovementController.stop();
         _exclamationMarkMovementController.reset();
       }
-      if (progressState != ProgressState.critical) {
+      if ((progressState == ProgressState.normal ||
+              progressState == ProgressState.exceeded ||
+              progressState == ProgressState.critical) &&
+          widget.currentIntake > 0) {
         if (!_waveController.isAnimating) _waveController.repeat();
       } else {
         if (_waveController.isAnimating) _waveController.stop();
@@ -114,29 +126,26 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
   @override
   void didUpdateWidget(AnimatedWaterProgressCircle oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final newProgressPercent = widget.target > 0
+    final newProgressForAnimation = widget.target > 0
         ? (widget.currentIntake / widget.target * 100)
         : 0.0;
-    final cappedNewProgressPercent = math.min(100.0, math.max(0.0, newProgressPercent));
 
-    if ((cappedNewProgressPercent - _currentAnimatedProgressPercent).abs() > 0.01) {
+    if ((newProgressForAnimation - _progressDisplayAnimation.value).abs() > 0.01) {
       _progressDisplayAnimation = Tween<double>(
-        begin: _currentAnimatedProgressPercent,
-        end: cappedNewProgressPercent,
+        begin: _progressDisplayAnimation.value,
+        end: newProgressForAnimation,
       ).animate(CurvedAnimation(
         parent: _progressDisplayController,
         curve: Curves.easeInOutCubic,
       ));
       _progressDisplayController.forward(from: 0.0);
-      _currentAnimatedProgressPercent = cappedNewProgressPercent;
-    } else if (cappedNewProgressPercent != _currentAnimatedProgressPercent) {
-       _currentAnimatedProgressPercent = cappedNewProgressPercent;
-       if (!_progressDisplayController.isAnimating) {
-          _progressDisplayAnimation = ConstantTween<double>(cappedNewProgressPercent)
-              .animate(_progressDisplayController);
-          // Mungkin perlu setState() jika teks tidak update otomatis,
-          // tapi AnimatedBuilder seharusnya menangani ini.
-       }
+    } else if (newProgressForAnimation != _progressDisplayAnimation.value) {
+        if (mounted && !_progressDisplayController.isAnimating) {
+         setState(() { // Pastikan UI di-rebuild untuk perubahan nilai instan
+            _progressDisplayAnimation = ConstantTween<double>(newProgressForAnimation)
+                .animate(_progressDisplayController);
+         });
+        }
     }
     _updateAnimationPlaybackBasedOnState();
   }
@@ -152,49 +161,54 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
   ProgressState _getProgressState() {
     if (widget.target <= 0) return ProgressState.empty;
     if (widget.currentIntake <= 0) return ProgressState.empty;
-    if (widget.currentIntake > 2 * widget.target) return ProgressState.critical;
-    if (widget.currentIntake > widget.target) return ProgressState.exceeded;
+    final ratio = widget.currentIntake / widget.target;
+    if (ratio > 2.0) return ProgressState.critical;
+    if (ratio > 1.0) return ProgressState.exceeded;
     return ProgressState.normal;
   }
 
-  // Warna untuk teks persentase
-  Color _getPercentageTextColor(ProgressState state) {
-    if (state == ProgressState.empty) return Colors.transparent;
-    switch (state) {
-      case ProgressState.critical: return Colors.red.shade700;
-      case ProgressState.exceeded: return Colors.orange.shade700;
-      default: return const Color(0xFF003D7A); // Biru tua
+  // MODIFIED: Disesuaikan agar warna teks persen lebih cocok dengan gambar sampel
+ Color _getPercentageTextColor(ProgressState state) {
+    if (state == ProgressState.empty && widget.currentIntake <=0) return Colors.transparent;
+
+    if (state == ProgressState.critical) {
+      // Untuk state critical (arc merah), teks "100%" berwarna gelap seperti di gambar
+      return Colors.black.withOpacity(0.85);
     }
+    if (state == ProgressState.exceeded) {
+      // Untuk state exceeded (arc oranye), teks "100%" berwarna oranye
+      return Colors.orange.shade700;
+    }
+    // Untuk state normal:
+    // Jika sudah mencapai atau melebihi target (teks akan "100%"), warna oranye
+    // Jika kurang dari target, warna biru tua standar
+    return (widget.target > 0 && widget.currentIntake >= widget.target)
+        ? Colors.orange.shade700
+        : const Color(0xFF003D7A);
   }
 
-  // Warna untuk teks "currentIntake"
+
   Color _getCurrentIntakeValueColor(ProgressState state) {
-    if (state == ProgressState.empty) return Colors.transparent;
-
-    // Jika target belum tercapai (dan bukan kondisi empty)
-    if (widget.currentIntake < widget.target && widget.target > 0 && state == ProgressState.normal) {
-      return Colors.red.shade600; // Warna merah jika target belum terpenuhi
+    if (state == ProgressState.empty && widget.currentIntake <=0) return Colors.transparent;
+    if (state == ProgressState.exceeded || state == ProgressState.critical) {
+      return Colors.black.withOpacity(0.75); // Gelap agar kontras dengan latar air/warna arc
     }
-
-    // Warna berdasarkan state jika target sudah terpenuhi atau kondisi khusus
-    switch (state) {
-      case ProgressState.critical: return Colors.red.shade800;
-      case ProgressState.exceeded: return Colors.orange.shade700;
-      case ProgressState.normal: // Target terpenuhi
-        return const Color(0xFF007ACC); // Warna biru "sukses"
-      default: return const Color(0xFF005A8D); // Fallback
+    if (widget.target > 0 && widget.currentIntake < widget.target && state == ProgressState.normal) {
+      return Colors.red.shade600;
     }
+    return Colors.orange.shade700;
   }
 
-  // Warna untuk teks "/ target mL"
   Color _getTargetUnitTextColor(ProgressState state) {
-    if (state == ProgressState.empty) return Colors.transparent;
-     switch (state) {
-      case ProgressState.critical: return Colors.red.shade600.withOpacity(0.8);
-      case ProgressState.exceeded: return Colors.orange.shade600.withOpacity(0.8);
-      default: return const Color(0xFF005A8D).withOpacity(0.8);
+    if (state == ProgressState.empty && widget.currentIntake <=0) return Colors.transparent;
+    if (state == ProgressState.exceeded || state == ProgressState.critical) {
+      return Colors.black.withOpacity(0.65);
     }
+    return (widget.target > 0 && widget.currentIntake >= widget.target)
+        ? Colors.orange.shade600.withOpacity(0.8)
+        : const Color(0xFF005A8D).withOpacity(0.8);
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -207,26 +221,24 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
           aspectRatio: 1,
           child: AnimatedBuilder(
             animation: Listenable.merge([
-              _progressDisplayController,
-              _waveController,
-              _exclamationMarkMovementController,
+              _progressDisplayController, _waveController, _exclamationMarkMovementController,
             ]),
             builder: (context, child) {
               return Stack(
                 alignment: Alignment.center,
                 children: [
                   CustomPaint(
-                    painter: CircleBackgroundPainter(
-                        progressState: progressState,
-                        strokeWidth: _arcStrokeWidth),
+                    painter: CircleBackgroundPainter(progressState: progressState),
                     size: Size.infinite,
                   ),
-                  progressState == ProgressState.empty
-                      ? _buildEmptyStateVisuals()
-                      : _buildWaterVisuals(progressState),
+                  if (progressState != ProgressState.empty && widget.currentIntake > 0)
+                     _buildWaterVisuals(progressState)
+                  else if (progressState == ProgressState.empty)
+                    _buildEmptyStateVisuals(),
+
                   CustomPaint(
                     painter: ProgressArcPainter(
-                      progress: _progressDisplayAnimation.value,
+                      progress: _progressDisplayAnimation.value, // Nilai aktual untuk warna arc
                       startAngleDegrees: -90,
                       sweepAngleDegrees: 360,
                       progressState: progressState,
@@ -234,7 +246,7 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
                     ),
                     size: Size.infinite,
                   ),
-                  _buildCentralTextContent(progressState),
+                  _buildCentralTextContent(progressState), // Akan menggunakan nilai yang di-cap untuk teks %
                 ],
               );
             },
@@ -244,151 +256,92 @@ class _AnimatedWaterProgressCircleState extends State<AnimatedWaterProgressCircl
     );
   }
 
+  // MODIFIED: Teks persentase di-cap pada 100%
   Widget _buildCentralTextContent(ProgressState progressState) {
-    if (progressState == ProgressState.empty) {
-      return Container(); 
-    }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          '${_progressDisplayAnimation.value.ceil()}%',
-          style: TextStyle(
-            color: _getPercentageTextColor(progressState),
-            fontWeight: FontWeight.w300,
-            fontSize: widget.screenWidth * 0.12,
-            fontFamily: 'Roboto',
-          ),
-        ),
-        SizedBox(height: widget.screenWidth * 0.015),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Text(
-              '${widget.currentIntake.toInt()}',
-              style: TextStyle(
-                color: _getCurrentIntakeValueColor(progressState), // Menggunakan warna baru
-                fontWeight: FontWeight.w600,
-                fontSize: widget.screenWidth * 0.05,
-                fontFamily: 'Roboto',
-              ),
-            ),
-            Text(
-              ' / ${widget.target.toInt()} mL',
-              style: TextStyle(
-                color: _getTargetUnitTextColor(progressState), // Warna untuk unit target
-                fontWeight: FontWeight.w400,
-                fontSize: widget.screenWidth * 0.04,
-                fontFamily: 'Roboto',
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+    if (progressState == ProgressState.empty && widget.currentIntake <=0 ) return Container();
+
+    // Ambil nilai animasi aktual (bisa > 100)
+    final double animatedProgressValue = _progressDisplayAnimation.value;
+    // Cap nilai persentase yang akan ditampilkan di teks menjadi maksimal 100.0
+    final double displayPercentageForText = math.min(animatedProgressValue, 100.0);
+
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Text('${displayPercentageForText.ceil()}%', // Gunakan nilai yang sudah di-cap
+          style: TextStyle(color: _getPercentageTextColor(progressState), fontWeight: FontWeight.w300, fontSize: widget.screenWidth * 0.12, fontFamily: 'Roboto')),
+      SizedBox(height: widget.screenWidth * 0.015),
+      Row(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
+        Text('${widget.currentIntake.toInt()}',
+            style: TextStyle(color: _getCurrentIntakeValueColor(progressState), fontWeight: FontWeight.w600, fontSize: widget.screenWidth * 0.05, fontFamily: 'Roboto')),
+        Text(' / ${widget.target.toInt()} mL',
+            style: TextStyle(color: _getTargetUnitTextColor(progressState), fontWeight: FontWeight.w400, fontSize: widget.screenWidth * 0.04, fontFamily: 'Roboto')),
+      ])]);
   }
 
   Widget _buildWaterVisuals(ProgressState progressState) {
-    return CustomPaint(
-      painter: WaterWavePainter(
-        wavePhase: _waveAnimation.value,
-        waterLevel: widget.target > 0 ? widget.currentIntake / widget.target : 0.0,
-        progressState: progressState,
-        arcStrokeWidth: _arcStrokeWidth,
-      ),
-      size: Size.infinite,
-    );
+    return CustomPaint(painter: WaterWavePainter(
+      wavePhase: _waveAnimation.value,
+      waterLevel: widget.target > 0 ? widget.currentIntake / widget.target : 0.0,
+      progressState: progressState,
+      arcStrokeWidth: _arcStrokeWidth),
+      size: Size.infinite);
   }
 
   Widget _buildEmptyStateVisuals() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Gelas statis (sedikit miring)
-        Transform.rotate(
-          angle: -0.15, // Kemiringan statis yang lebih sedikit
-          child: CustomPaint(
-            painter: EmptyGlassPainter(screenWidth: widget.screenWidth),
-            // Ukuran untuk painter gelas disesuaikan agar tidak terlalu besar
-            size: Size(widget.screenWidth * 0.25, widget.screenWidth * 0.35), 
-          ),
-        ),
-        // Tanda seru yang bergerak dan lebih besar
-        Transform.translate(
-          offset: Offset(_exclamationMarkMovementAnimation.value, -widget.screenWidth * 0.12), // Sesuaikan offset Y
-          child: CustomPaint(
-            painter: ExclamationPainter(screenWidth: widget.screenWidth, isLarge: true), // Tambah parameter isLarge
-            // Ukuran canvas untuk painter tanda seru diperbesar
-            size: Size(widget.screenWidth * 0.12, widget.screenWidth * 0.18), 
-          ),
-        ),
-      ],
+    return Stack(alignment: Alignment.center, children: [
+      Transform.rotate(angle: -0.15, child: CustomPaint(painter: EmptyGlassPainter(screenWidth: widget.screenWidth), size: Size(widget.screenWidth * 0.25, widget.screenWidth * 0.35))),
+      Transform.translate(offset: Offset(_exclamationMarkMovementAnimation.value, -widget.screenWidth * 0.12),
+          child: CustomPaint(painter: ExclamationPainter(screenWidth: widget.screenWidth, isLarge: true), size: Size(widget.screenWidth * 0.12, widget.screenWidth * 0.18)))]
     );
   }
 }
 
 // --- PAINTERS ---
+const double _GLOBAL_ARC_STROKE_WIDTH = 15.0;
 
 class CircleBackgroundPainter extends CustomPainter {
-  // ... (Kode Painter ini tetap sama seperti sebelumnya) ...
   final ProgressState progressState;
-  final double strokeWidth;
 
-  CircleBackgroundPainter({required this.progressState, required this.strokeWidth});
+  CircleBackgroundPainter({required this.progressState});
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 2 - strokeWidth / 2;
+    final radius = math.min(size.width, size.height) / 2 - (_GLOBAL_ARC_STROKE_WIDTH / 2) - 1.0; 
 
-    Color gradColorLight;
-    Color gradColorDark;
-
+    Color fillColor;
     switch (progressState) {
-      case ProgressState.critical:
-        gradColorLight = Colors.red.shade100;
-        gradColorDark = Colors.red.shade200;
-        break;
       case ProgressState.exceeded:
-        gradColorLight = Colors.orange.shade100;
-        gradColorDark = Colors.orange.shade200;
-        break;
+      case ProgressState.critical:
       case ProgressState.empty:
-        gradColorLight = Colors.grey.shade200;
-        gradColorDark = Colors.grey.shade300;
+      case ProgressState.normal:
+      default:
+        fillColor = appPageBackgroundColor;
         break;
-      default: // normal
-        gradColorLight = const Color(0xFFCDEBFF); 
-        gradColorDark = const Color(0xFFA1D6FF); 
     }
 
     final backgroundPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [gradColorLight, gradColorDark],
-        stops: const [0.5, 1.0],
-      ).createShader(Rect.fromCircle(center: center, radius: radius))
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
+      ..color = fillColor
+      ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(center, radius, backgroundPaint);
+    if (radius > 0) {
+      canvas.drawCircle(center, radius, backgroundPaint);
+    }
   }
 
   @override
   bool shouldRepaint(covariant CircleBackgroundPainter oldDelegate) =>
-      oldDelegate.progressState != progressState || oldDelegate.strokeWidth != strokeWidth;
+      oldDelegate.progressState != progressState;
 }
 
 class ProgressArcPainter extends CustomPainter {
   final double progress; 
   final double startAngleDegrees;
-  final double sweepAngleDegrees; 
+  final double sweepAngleDegrees;
   final ProgressState progressState;
   final double strokeWidth;
 
   ProgressArcPainter({
-    required this.progress,
+    required this.progress, // progress di sini adalah nilai animasi aktual, bisa > 100
     required this.startAngleDegrees,
     required this.sweepAngleDegrees,
     required this.progressState,
@@ -399,59 +352,66 @@ class ProgressArcPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2 - strokeWidth / 2;
+    if (radius <= 0) return;
+
     final rect = Rect.fromCircle(center: center, radius: radius);
+    final startAngleRad = startAngleDegrees * (math.pi / 180);
 
-    Color solidProgressColor; // Warna solid untuk progres
-
-    switch (progressState) {
-      case ProgressState.critical:
-        solidProgressColor = Colors.red.shade600; // Merah pekat
-        break;
-      case ProgressState.exceeded:
-        solidProgressColor = Colors.orange.shade600; // Oranye pekat
-        break;
-      case ProgressState.empty: 
-         return; // Jangan gambar progres jika kosong
-      default: // normal
-        solidProgressColor = const Color(0xFF007ACC);  // Biru solid
+    Color currentTrackColor;
+    if (progressState == ProgressState.empty) {
+      currentTrackColor = arcTrackColorEmpty;
+    } else {
+      currentTrackColor = arcTrackColorActive;
     }
 
-    final progressPaint = Paint()
-      ..color = solidProgressColor // Menggunakan warna solid
+    final trackPaint = Paint()
+      ..color = currentTrackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round; 
+      ..strokeCap = StrokeCap.butt;
+    canvas.drawArc(rect, startAngleRad, sweepAngleDegrees * (math.pi / 180), false, trackPaint);
 
-    // Hapus shader untuk gradien
-    // progressPaint.shader = SweepGradient(...).createShader(rect);
+    if (progressState != ProgressState.empty && progress > 0) {
+      Color solidProgressColor;
+      switch (progressState) {
+        case ProgressState.critical:
+          solidProgressColor = Colors.red.shade600;
+          break;
+        case ProgressState.exceeded:
+          solidProgressColor = Colors.orange.shade600;
+          break;
+        case ProgressState.normal:
+        default:
+          solidProgressColor = const Color(0xFF007ACC);
+          break;
+      }
 
-    final startAngleRad = startAngleDegrees * (math.pi / 180);
-    final currentSweepRad = (sweepAngleDegrees * progress / 100) * (math.pi / 180);
-
-    if (currentSweepRad > 0.001) { 
-      canvas.drawArc(
-        rect,
-        startAngleRad,
-        currentSweepRad,
-        false,
-        progressPaint,
-      );
-    }
-
-    // Indikator (seek) di ujung busur progres
-    if (progress > 0 && progress < 100) { 
-      final seekAngle = startAngleRad + currentSweepRad;
-      final seekX = center.dx + radius * math.cos(seekAngle);
-      final seekY = center.dy + radius * math.sin(seekAngle);
-
-      final seekFillPaint = Paint()..color = Colors.white;
-      final seekBorderPaint = Paint()
-        ..color = solidProgressColor // Border warna sama dengan progres
+      final progressPaint = Paint()
+        ..color = solidProgressColor
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0;
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round;
 
-      canvas.drawCircle(Offset(seekX, seekY), strokeWidth * 0.25, seekFillPaint);
-      canvas.drawCircle(Offset(seekX, seekY), strokeWidth * 0.25, seekBorderPaint);
+      // Panjang visual busur di-cap pada 100% (satu lingkaran penuh)
+      final actualProgressForArcDisplay = math.min(progress, 100.0); 
+      final currentSweepRad = (sweepAngleDegrees * actualProgressForArcDisplay / 100) * (math.pi / 180);
+
+
+      if (currentSweepRad.abs() > 0.001) {
+        canvas.drawArc(rect, startAngleRad, currentSweepRad, false, progressPaint);
+      }
+      
+      // Seek indicator hanya untuk state normal dan progress < 100%
+      if (progress > 0 && progress < 100 && progressState == ProgressState.normal) {
+        final seekAngle = startAngleRad + currentSweepRad;
+        final seekX = center.dx + radius * math.cos(seekAngle);
+        final seekY = center.dy + radius * math.sin(seekAngle);
+        final seekRadius = strokeWidth * 0.35;
+        final seekFillPaint = Paint()..color = Colors.white;
+        final seekBorderPaint = Paint()..color = solidProgressColor..style = PaintingStyle.stroke..strokeWidth = strokeWidth * 0.15;
+        canvas.drawCircle(Offset(seekX, seekY), seekRadius, seekFillPaint);
+        canvas.drawCircle(Offset(seekX, seekY), seekRadius, seekBorderPaint);
+      }
     }
   }
 
@@ -462,14 +422,11 @@ class ProgressArcPainter extends CustomPainter {
       oldDelegate.strokeWidth != strokeWidth;
 }
 
-
 class WaterWavePainter extends CustomPainter {
-  // ... (Kode Painter ini tetap sama seperti sebelumnya) ...
   final double wavePhase;
   final double waterLevel; 
   final ProgressState progressState;
   final double arcStrokeWidth;
-
 
   WaterWavePainter({
     required this.wavePhase,
@@ -480,74 +437,49 @@ class WaterWavePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (waterLevel <= 0.001) return;
+    if (progressState == ProgressState.empty || waterLevel <= 0.001) {
+      return;
+    }
 
     final center = Offset(size.width / 2, size.height / 2);
-    final waterRadius = math.min(size.width, size.height) / 2 - arcStrokeWidth - 3.0; 
+    final waterRadius = math.min(size.width, size.height) / 2 - arcStrokeWidth - 1.5; 
+    if (waterRadius <= 0) return;
 
     final clipPath = Path()..addOval(Rect.fromCircle(center: center, radius: waterRadius));
     canvas.clipPath(clipPath);
 
-    final cappedWaterLevelForDrawing = math.min(waterLevel, 1.5); 
-    final waterSurfaceY = size.height * (1 - cappedWaterLevelForDrawing);
+    final cappedVisualWaterLevel = math.min(waterLevel, 1.0);
+    final waterSurfaceY = size.height * (1 - cappedVisualWaterLevel);
 
-
-    Color gradLight, gradDark;
-    switch (progressState) {
-      case ProgressState.critical:
-        gradLight = Colors.red.shade200;
-        gradDark = Colors.red.shade400;
-        break;
-      case ProgressState.exceeded:
-        gradLight = Colors.orange.shade200;
-        gradDark = Colors.orange.shade400;
-        break;
-      default: 
-        gradLight = const Color(0xFFA0E0FF); 
-        gradDark = const Color(0xFF4AA8FF);  
-    }
+    const Color gradLight = Color(0xFFA0E0FF);
+    const Color gradDark = Color(0xFF4AA8FF);
 
     final waterPaint = Paint()
       ..shader = LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [gradLight, gradDark],
-        stops: const [0.2, 0.8],
-      ).createShader(Rect.fromLTWH(0, waterSurfaceY - 20, size.width, size.height - (waterSurfaceY - 20)))
+        begin: Alignment.topCenter, end: Alignment.bottomCenter,
+        colors: [gradLight, gradDark], stops: const [0.2, 0.8],
+      ).createShader(Rect.fromLTWH(0, waterSurfaceY - size.height * 0.1, size.width, size.height - (waterSurfaceY - size.height * 0.1)))
       ..style = PaintingStyle.fill;
 
     final wavePath = Path();
-    final amplitude = 5.0; 
-    final frequency = 2.0; 
-
-    wavePath.moveTo(0, waterSurfaceY); 
+    final amplitude = 5.0;
+    final frequency = 2.0;
+    wavePath.moveTo(0, waterSurfaceY);
     for (double x = 0; x <= size.width; x++) {
-      double yOffset;
-      if (progressState == ProgressState.critical) {
-        yOffset = 0; 
-      } else {
-        yOffset = amplitude * math.sin(frequency * x * (math.pi / 180) + wavePhase) +
-                  amplitude * 0.4 * math.sin(frequency * 0.8 * x * (math.pi / 180) + wavePhase * 1.2 + math.pi / 4);
-      }
+      double yOffset = amplitude * math.sin(frequency * x * (math.pi / 180) + wavePhase) +
+          amplitude * 0.4 * math.sin(frequency * 0.8 * x * (math.pi / 180) + wavePhase * 1.2 + math.pi / 4);
       wavePath.lineTo(x, waterSurfaceY + yOffset);
     }
-    wavePath.lineTo(size.width, size.height); 
-    wavePath.lineTo(0, size.height);        
-    wavePath.close();
-
+    wavePath.lineTo(size.width, size.height); wavePath.lineTo(0, size.height); wavePath.close();
     canvas.drawPath(wavePath, waterPaint);
 
-    if (progressState != ProgressState.critical && waterLevel > 0.05) {
-      final foamPaint = Paint()
-        ..color = Colors.white.withOpacity(0.5)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
-      
+    if (cappedVisualWaterLevel > 0.05) {
+      final foamPaint = Paint()..color = Colors.white.withOpacity(0.5)..style = PaintingStyle.stroke..strokeWidth = 1.5;
       final foamPath = Path();
       foamPath.moveTo(0, waterSurfaceY);
-      for (double x = 0; x <= size.width; x+=2) {
-         final yOffset = amplitude * 0.3 * math.sin(frequency * 1.5 * x * (math.pi / 180) + wavePhase * 1.5 + math.pi / 2) - 1.0;
-         foamPath.lineTo(x, waterSurfaceY + yOffset);
+      for (double x = 0; x <= size.width; x += 2) {
+        final yOffset = amplitude * 0.3 * math.sin(frequency * 1.5 * x * (math.pi / 180) + wavePhase * 1.5 + math.pi / 2) - 1.0;
+        foamPath.lineTo(x, waterSurfaceY + yOffset);
       }
       canvas.drawPath(foamPath, foamPaint);
     }
@@ -557,104 +489,48 @@ class WaterWavePainter extends CustomPainter {
   bool shouldRepaint(covariant WaterWavePainter oldDelegate) =>
       oldDelegate.wavePhase != wavePhase ||
       oldDelegate.waterLevel != waterLevel ||
-      oldDelegate.progressState != progressState ||
+      oldDelegate.progressState != progressState || 
       oldDelegate.arcStrokeWidth != arcStrokeWidth;
 }
-
 
 class EmptyGlassPainter extends CustomPainter {
   final double screenWidth;
   EmptyGlassPainter({required this.screenWidth});
-
   @override
-  void paint(Canvas canvas, Size size) { 
+  void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    
-    final glassWidth = size.width * 0.8; 
-    final glassHeight = size.height * 0.9;
-    final glassBaseHeight = glassHeight * 0.15;
-    final glassRimHeight = 5.0;
-
-    final glassFillPaint = Paint()
-      ..color = const Color(0xFFD0EFFF).withOpacity(0.5) // Warna isi lebih transparan
-      ..style = PaintingStyle.fill;
-
-    final glassStrokePaint = Paint()
-      ..color = const Color(0xFF87CEFA).withOpacity(0.7) // Warna outline lebih lembut
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5; // Stroke lebih tipis
-
+    final glassWidth = size.width * 0.8; final glassHeight = size.height * 0.9;
+    final glassBaseHeight = glassHeight * 0.15; final glassRimHeight = 5.0;
+    final glassFillPaint = Paint()..color = const Color(0xFFD0EFFF).withOpacity(0.5)..style = PaintingStyle.fill;
+    final glassStrokePaint = Paint()..color = const Color(0xFF87CEFA).withOpacity(0.7)..style = PaintingStyle.stroke..strokeWidth = 1.5;
     final glassPath = Path()
-      ..moveTo(center.dx - glassWidth / 2, center.dy - glassHeight / 2 + glassRimHeight) 
-      ..lineTo(center.dx - glassWidth / 2 * 0.7, center.dy + glassHeight / 2 - glassBaseHeight) 
-      ..quadraticBezierTo( 
-          center.dx, center.dy + glassHeight / 2 + glassBaseHeight * 0.3, 
-          center.dx + glassWidth / 2 * 0.7, center.dy + glassHeight / 2 - glassBaseHeight) 
-      ..lineTo(center.dx + glassWidth / 2, center.dy - glassHeight / 2 + glassRimHeight); 
-
-    canvas.drawPath(glassPath, glassFillPaint);
-    canvas.drawPath(glassPath, glassStrokePaint);
-
-    final rimRect = Rect.fromCenter(
-      center: Offset(center.dx, center.dy - glassHeight / 2 + glassRimHeight / 2),
-      width: glassWidth,
-      height: glassRimHeight * 1.5,
-    );
-    canvas.drawOval(rimRect, glassStrokePaint..style = PaintingStyle.fill ..color = const Color(0xFFB0E0E6).withOpacity(0.6));
-    canvas.drawOval(rimRect, glassStrokePaint..style = PaintingStyle.stroke);
+      ..moveTo(center.dx - glassWidth / 2, center.dy - glassHeight / 2 + glassRimHeight)
+      ..lineTo(center.dx - glassWidth / 2 * 0.7, center.dy + glassHeight / 2 - glassBaseHeight)
+      ..quadraticBezierTo(center.dx, center.dy + glassHeight / 2 + glassBaseHeight * 0.3, center.dx + glassWidth / 2 * 0.7, center.dy + glassHeight / 2 - glassBaseHeight)
+      ..lineTo(center.dx + glassWidth / 2, center.dy - glassHeight / 2 + glassRimHeight);
+    canvas.drawPath(glassPath, glassFillPaint); canvas.drawPath(glassPath, glassStrokePaint);
+    final rimRect = Rect.fromCenter(center: Offset(center.dx, center.dy - glassHeight / 2 + glassRimHeight / 2), width: glassWidth, height: glassRimHeight * 1.5);
+    canvas.drawOval(rimRect, Paint()..style = PaintingStyle.fill ..color = const Color(0xFFB0E0E6).withOpacity(0.6));
+    canvas.drawOval(rimRect, glassStrokePaint);
   }
-
   @override
   bool shouldRepaint(covariant EmptyGlassPainter oldDelegate) => oldDelegate.screenWidth != screenWidth;
 }
 
 class ExclamationPainter extends CustomPainter {
-  final double screenWidth;
-  final bool isLarge; // Tambahkan parameter ini
-
+  final double screenWidth; final bool isLarge;
   ExclamationPainter({required this.screenWidth, this.isLarge = false});
-
   @override
-  void paint(Canvas canvas, Size size) { 
-    final paint = Paint()
-      ..color = Colors.red.shade500 
-      ..style = PaintingStyle.fill;
-
-    // Sesuaikan ukuran berdasarkan isLarge
-    final scaleFactor = isLarge ? 1.5 : 1.0; // Faktor skala jika isLarge true
-
-    final barWidth = size.width * 0.35 * scaleFactor;
-    final barHeight = size.height * 0.6 * scaleFactor;
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.red.shade500..style = PaintingStyle.fill;
+    final scaleFactor = isLarge ? 1.5 : 1.0;
+    final barWidth = size.width * 0.35 * scaleFactor; final barHeight = size.height * 0.6 * scaleFactor;
     final dotRadius = size.width * 0.22 * scaleFactor;
-
-    // Pastikan tidak melebihi bounds jika diperbesar
-    final clampedBarHeight = math.min(barHeight, size.height * 0.7);
-    final clampedDotRadius = math.min(dotRadius, size.width * 0.3);
-    
-    final barCenterY = size.height * 0.3;
-    final dotCenterY = size.height * 0.82;
-
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(
-          center: Offset(size.width / 2, barCenterY),
-          width: barWidth,
-          height: clampedBarHeight,
-        ),
-        Radius.circular(barWidth / 2), 
-      ),
-      paint,
-    );
-
-    canvas.drawCircle(
-      Offset(size.width / 2, dotCenterY - (clampedBarHeight - barHeight)/2 ), // Sesuaikan posisi dot jika barHeight di-clamp
-      clampedDotRadius,
-      paint,
-    );
+    final clampedBarHeight = math.min(barHeight, size.height * 0.7); final clampedDotRadius = math.min(dotRadius, size.width * 0.3);
+    final barTopY = size.height * 0.15; final dotCenterY = barTopY + clampedBarHeight + clampedDotRadius * 1.5;
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(size.width / 2, barTopY + clampedBarHeight / 2), width: barWidth, height: clampedBarHeight), Radius.circular(barWidth / 3)), paint);
+    canvas.drawCircle(Offset(size.width / 2, dotCenterY), clampedDotRadius, paint);
   }
-
   @override
-  bool shouldRepaint(covariant ExclamationPainter oldDelegate) => 
-      oldDelegate.screenWidth != screenWidth || oldDelegate.isLarge != isLarge;
+  bool shouldRepaint(covariant ExclamationPainter oldDelegate) => oldDelegate.screenWidth != screenWidth || oldDelegate.isLarge != isLarge;
 }

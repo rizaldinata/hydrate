@@ -916,61 +916,6 @@ class ProfileScreenState extends State<ProfileScreen> {
                                 leading: Container(
                                   padding: EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(
-                                        0.1), // Warna disesuaikan dengan icon
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Icon(
-                                    Icons.star, // Icon disesuaikan
-                                    color: Colors.amber, // Warna disesuaikan
-                                    size: 24,
-                                  ),
-                                ),
-                                title: Text(
-                                  'Rating & Ulasan',
-                                  style: GoogleFonts.inter(
-                                    fontSize: titleFontSize,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF2F2E41),
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  'Beri rating dan ulasan',
-                                  style: GoogleFonts.inter(
-                                    fontSize: screenWidth * 0.035,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                trailing: Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.grey[400],
-                                  size: 16,
-                                ),
-                                onTap: _showRatingDialog,
-                              ),
-                            ),
-                            SizedBox(height: screenHeight * 0.02),
-                            Container(
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(15),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    offset: Offset(0, 2),
-                                    blurRadius: 8,
-                                  ),
-                                ],
-                              ),
-                              child: ListTile(
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 8,
-                                ),
-                                leading: Container(
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
                                     color: Colors.red.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -981,7 +926,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 title: Text(
-                                  'Logout Akun', // Judul disesuaikan dari Hapus Akun ke Logout
+                                  'Hapus Akun', // Judul disesuaikan dari Hapus Akun ke Logout
                                   style: GoogleFonts.inter(
                                     fontSize: titleFontSize,
                                     fontWeight: FontWeight.w600,
@@ -989,7 +934,7 @@ class ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                                 subtitle: Text(
-                                  'Keluar dari sesi aplikasi ini', // Subtitle disesuaikan
+                                  'Hapus data pengguna', // Subtitle disesuaikan
                                   style: GoogleFonts.inter(
                                     fontSize: screenWidth * 0.035,
                                     color: Colors.grey[600],
