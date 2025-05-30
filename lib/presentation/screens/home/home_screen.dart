@@ -7,7 +7,6 @@ import 'package:hydrate/presentation/widgets/Main/animated_progress_circle.dart'
 import 'package:hydrate/presentation/widgets/Main/customInputWater_widget.dart';
 import 'package:hydrate/presentation/widgets/Main/drink_status_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dashed_circular_progress_bar/dashed_circular_progress_bar.dart';
 import 'package:hydrate/core/utils/session_manager.dart';
 import 'package:hydrate/data/repositories/target_hidrasi_repository.dart';
 import 'package:hydrate/presentation/controllers/home_controller.dart'; // UI Controller
@@ -864,7 +863,7 @@ class HomeScreensState extends State<HomeScreens>
                 ),
                 SizedBox(
                     height: screenHeight *
-                        0.05), // Replace Transform.translate with SizedBox
+                        0.04), // Replace Transform.translate with SizedBox
                 Container(
                   width: screenWidth * (0.8 + 0.04),
                   padding: const EdgeInsets.all(16),
@@ -923,16 +922,16 @@ class HomeScreensState extends State<HomeScreens>
 
 
 // Method untuk menangani klik pada drink options
-void _handleDrinkOptionClick(int amount) {
-  setState(() {
-    currentIntake += amount;
-    _isCountdownActive = true;
-    _remainingTime = Duration(minutes: 15, seconds: 20); // atau durasi yang diinginkan
-  });
+// void _handleDrinkOptionClick(int amount) {
+//   setState(() {
+//     currentIntake += amount;
+//     _isCountdownActive = true;
+//     _remainingTime = Duration(minutes: 15, seconds: 20); // atau durasi yang diinginkan
+//   });
   
-  // Start countdown timer
-  _startCountdown();
-}
+//   // Start countdown timer
+//   _startCountdown();
+// }
 
 
   Widget _buildDrinkOption(String gambar, double amount) {
