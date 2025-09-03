@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:hydrate/presentation/screens/profile_screen.dart';
+import 'package:hydrate/presentation/screens/profile/profile_screen.dart';
 import 'package:hydrate/core/utils/app_event_bus.dart';
 
 class Navigasi extends StatefulWidget {
@@ -111,7 +111,7 @@ class _NavigasiState extends State<Navigasi> with TickerProviderStateMixin {
               animation: controller,
               builder: (context, child) {
                 return CustomPaint(
-                  painter: AppBarPainter(x: animation.value ?? position),
+                  painter: AppBarPainter(x: animation.value),
                   size: Size(
                       MediaQuery.of(context).size.width -
                           (2 * horizontalMargin),
@@ -226,10 +226,6 @@ class AppBarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    var paint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
     var paintCircle = Paint()
       ..color = Colors.blue
       ..style = PaintingStyle.fill;

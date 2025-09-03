@@ -4,7 +4,6 @@ import 'package:hydrate/data/models/profil_pengguna_model.dart';
 class ProfilPenggunaRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Method Repository Mengambil Data Profil Pengguna 
   Future<ProfilPengguna?> getProfilPenggunaByUserId(int fkIdPengguna) async {
     final db = await _dbHelper.database;
     final List<Map<String, dynamic>> result = await db.query(
@@ -15,7 +14,6 @@ class ProfilPenggunaRepository {
     return result.isNotEmpty ? ProfilPengguna.fromMap(result.first) : null;
   }
 
-  // Method Repository Update Profil Pengguna dengan jam bangun dan jam tidur
   Future<int> updateProfilPenggunaLengkap({
     required int fkIdPengguna,
     required String jenisKelamin,
@@ -28,7 +26,6 @@ class ProfilPenggunaRepository {
       final existingProfile = await getProfilPenggunaByUserId(fkIdPengguna);
       
       if (existingProfile == null) {
-        // Jika profil belum ada, buat baru
         return await db.insert(
           'profil_pengguna',
           {
@@ -40,7 +37,6 @@ class ProfilPenggunaRepository {
           },
         );
       } else {
-        // Update profil yang sudah ada
         return await db.update(
           'profil_pengguna',
           {
@@ -54,12 +50,10 @@ class ProfilPenggunaRepository {
         );
       }
     } catch (e) {
-      print("Error updating profile: $e");
       throw Exception('Database error: $e');
     }
   }
   
-  // Method lama dipertahankan untuk backward compatibility
   Future<int> updateProfilPengguna({
     required int fkIdPengguna,
     required String jenisKelamin,
@@ -78,7 +72,6 @@ class ProfilPenggunaRepository {
         jamTidur: jamTidur,
       );
     } catch (e) {
-      print("Error in updateProfilPengguna: $e");
       return 0;
     }
   }

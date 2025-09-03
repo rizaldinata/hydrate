@@ -6,17 +6,15 @@ class ProfilPenggunaController {
   final ProfilPenggunaRepository _profilRepo = ProfilPenggunaRepository();
   final PenggunaRepository _penggunaRepo = PenggunaRepository();
 
-  // Method untuk mengambil data profil
   Future<ProfilPengguna?> getProfilPengguna(int fkIdPengguna) async {
     try {
-      return await _profilRepo.getProfilPenggunaByUserId(fkIdPengguna);
-    } catch (e) {
-      print("Error fetching profile: $e");
+      ProfilPengguna? profil = await _profilRepo.getProfilPenggunaByUserId(fkIdPengguna);
+      return profil;
+    } catch (_) {
       return null;
     }
   }
 
-  // Update profil dengan jam bangun dan jam tidur
   Future<bool> updateProfilPenggunaLengkap({
     required int userId,
     required String nama,
@@ -26,10 +24,7 @@ class ProfilPenggunaController {
     required String jamTidur,
   }) async {
     try {
-      // Update nama di tabel pengguna
       final result1 = await _penggunaRepo.updateNama(userId, nama);
-      
-      // Update profil di tabel profil_pengguna
       final result2 = await _profilRepo.updateProfilPenggunaLengkap(
         fkIdPengguna: userId,
         jenisKelamin: jenisKelamin,
@@ -39,13 +34,11 @@ class ProfilPenggunaController {
       );
 
       return result1 > 0 && result2 > 0;
-    } catch (e) {
-      print("Error updating profile: $e");
-      throw Exception('Gagal mengupdate profil: $e');
+    } catch (_) {
+      throw Exception('Gagal mengupdate profil');
     }
   }
   
-  // Method lama dipertahankan untuk backward compatibility
   Future<bool> updateProfilDanNama({
     required int userId,
     required String nama,
@@ -53,7 +46,6 @@ class ProfilPenggunaController {
     required double beratBadan,
   }) async {
     try {
-      // Dapatkan data jam bangun dan jam tidur yang sudah ada
       final currentProfile = await getProfilPengguna(userId);
       final jamBangun = currentProfile?.jamBangun ?? 'Belum diatur';
       final jamTidur = currentProfile?.jamTidur ?? 'Belum diatur';
@@ -66,8 +58,7 @@ class ProfilPenggunaController {
         jamBangun: jamBangun,
         jamTidur: jamTidur,
       );
-    } catch (e) {
-      print("Error in updateProfilDanNama: $e");
+    } catch (_) {
       return false;
     }
   }
